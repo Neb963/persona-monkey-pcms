@@ -29,6 +29,21 @@ export function createSecretStore({
     }
   }
 
+  async function safeMutation(operation, secretRef, action) {
+    ensureOpen();
+    try {
+      return await action();
+    } catch (error) {
+      const normalized = normalizeSecretError(error);
+      if (normalized.code === SECRET_ERROR_CODES.TIMEOUT
+          || normalized.code === SECRET_ERROR_CODES.UNAVAILABLE
+          || normalized.code === SECRET_ERROR_CODES.PROTOCOL) {
+        throw secretError(SECRET_ERROR_CODES.UNCERTAIN, { secretRef, operation });
+      }
+      throw normalized;
+    }
+  }
+
   return Object.freeze({
     async probe() {
       return safe(async () => {
@@ -41,14 +56,14 @@ export function createSecretStore({
       ensureOpen();
       const secret = assertSecretValue(value);
       const ref = createSecretRef({ randomUUID });
-      await safe(() => backend.put(ref, secret));
+      await safeMutation("create", ref, () => backend.put(ref, secret));
       return ref;
     },
 
     async replace(secretRef, value) {
       const ref = assertSecretRef(secretRef);
       const secret = assertSecretValue(value);
-      await safe(() => backend.put(ref, secret));
+      await safeMutation("replace", ref, () => backend.put(ref, secret));
       return ref;
     },
 
@@ -59,7 +74,7 @@ export function createSecretStore({
 
     async delete(secretRef) {
       const ref = assertSecretRef(secretRef);
-      return safe(async () => {
+      return safeMutation("delete", ref, async () => {
         const result = await backend.delete(ref);
         return Object.freeze({ deleted: result?.deleted === true });
       });
