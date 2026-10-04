@@ -2,7 +2,9 @@
 
 Status: **CI_VERIFIED / implementation complete**
 
-Implementation checkpoint: `41ee6a0891298a37ab37470f2ffefec140723bc3`.
+Initial implementation checkpoint: `41ee6a0891298a37ab37470f2ffefec140723bc3`.
+
+Final code/hardening checkpoint: `8cc6816b2e97a4ef9cd946f7234e08c134dc0012`.
 
 ## Scope
 
@@ -48,7 +50,7 @@ Each mutation is revision fenced:
 
 The concrete IndexedDB adapter performs its read/check/write sequence inside one readwrite transaction. A deterministic transactional-IDB regression exercises create, read, stale-CAS rejection, delete, and version-change fencing through that production adapter.
 
-Stored values are copied and constrained to bounded data-only structures. Accessors, cycles, functions/symbols, exotic prototypes, non-finite numbers, unsafe prototype keys, excessive depth, and excessive node count fail closed.
+Stored values are copied and constrained to bounded data-only structures. Accessors (including array-index accessors), symbol-keyed properties, cycles, functions/symbols, exotic prototypes, non-finite numbers, unsafe prototype keys, excessive depth, and excessive node count fail closed rather than being silently dropped or evaluated.
 
 Static boundary tests confirm the P005 storage code does not use raw WebExtension APIs, native messaging, PersonaMonkey service/state objects, `cookieStoreId`, or Mullvad authority. The public broker source contains no raw `indexedDB` access.
 
@@ -63,8 +65,8 @@ The execution environment could not clone GitHub because outbound name resolutio
 - `extension/pcms/storage/errors.js` — `90d540b843f6fa0434758928fb06e2491c4b75d8`;
 - `extension/pcms/storage/migrations.js` — `8cf87143273b0198d70dd1685790eeffdc9a85d1`;
 - `extension/pcms/storage/indexeddb-backend.js` — `d2153bb8080b0e86a1801dc6ebf889cb042f8f35`;
-- `extension/pcms/storage/storage-broker.js` — `ae2cfb8397db9ce5254b3ff83ba6e36aa443c8f7`;
-- `tests/pcms/p005-storage.test.mjs` — `963d6a21c9f4b82c58df8a9b13af64a77d6331a7`;
+- `extension/pcms/storage/storage-broker.js` — `d3c1f7b528743103224325a9a2dd4657b9ea8e79`;
+- `tests/pcms/p005-storage.test.mjs` — `ac59753cac952971ee8458a48d6dcb92493f8635`;
 - `tests/pcms/p005-boundary.test.mjs` — `91aaa674d4905e0226d871e0a91f296ae4d0cdd3`.
 
 Commands actually run against those byte-identical files:
@@ -80,18 +82,27 @@ The current root Actions workflows do not discover `tests/pcms/**`; P005 does no
 
 ## Independent CI at implementation checkpoint
 
-Exact implementation checkpoint `41ee6a0891298a37ab37470f2ffefec140723bc3` passed:
+Initial implementation checkpoint `41ee6a0891298a37ab37470f2ffefec140723bc3` passed:
 
 - repository verification push run **37239616402** — success;
 - pinned Firefox Developer Edition push run **37239616475** — success.
+
+After the data-boundary hardening review, exact final code checkpoint `8cc6816b2e97a4ef9cd946f7234e08c134dc0012` passed all four independent runs:
+
+- repository verification push run **37239962330** — success;
+- pinned Firefox Developer Edition push run **37239962203** — success;
+- repository verification PR run **37239963443** — success;
+- pinned Firefox Developer Edition PR run **37239963450** — success.
 
 The Firefox workflow is a repository regression smoke on the exact pinned Developer Edition build. It is not represented as a focused IndexedDB browser test, and A005 requires U/I/C evidence rather than FDE evidence.
 
 ## Scope review
 
-Compared with the durable P005 claim checkpoint `aa66f30469073dddf90ef413e4009ee6415ec54a`, the implementation checkpoint is 8 commits ahead, 0 behind, and changes exactly six files:
+Compared with the durable P005 claim checkpoint `aa66f30469073dddf90ef413e4009ee6415ec54a`, the initial implementation checkpoint was 8 commits ahead, 0 behind, and changed exactly six product/test files. The subsequent hardening modifies only the broker and its P005 regression test. The final PR additionally contains only P005 governance/evidence records:
 
 - four files under `extension/pcms/storage/**`;
-- two files under `tests/pcms/**`.
+- two files under `tests/pcms/**`;
+- `docs/evidence/P005/README.md`;
+- P005 plan/roadmap/claim state records required by repository governance.
 
-All implementation paths are inside P005's claimed write paths. No successor phase is implemented by this branch.
+All product/test implementation paths are inside P005's claimed write paths. No successor phase is implemented by this branch.
