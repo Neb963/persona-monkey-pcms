@@ -12,16 +12,16 @@ Merge wave: 0
 - [x] T000.3 — T000.3 Verify generated views
 
 ## P001 — Hosted CI + pinned Firefox Developer Edition harness
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P000  
 Merge wave: 1
 
-- [ ] T001.1 — T001.1 Pin exact Mozilla FDE artifact
-- [ ] T001.2 — T001.2 Build isolated profile/install harness
-- [ ] T001.3 — T001.3 Prove browser CI evidence
+- [x] T001.1 — T001.1 Pin exact Mozilla FDE artifact
+- [x] T001.2 — T001.2 Build isolated profile/install harness
+- [x] T001.3 — T001.3 Prove browser CI evidence
 
 ## P002 — Import and preserve PersonaMonkey baseline
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P001  
 Merge wave: 1
 

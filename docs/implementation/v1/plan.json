@@ -68,7 +68,7 @@
     {
       "id": "P001",
       "title": "Hosted CI + pinned Firefox Developer Edition harness",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P000"
       ],
@@ -110,7 +110,7 @@
     {
       "id": "P002",
       "title": "Import and preserve PersonaMonkey baseline",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P001"
       ],

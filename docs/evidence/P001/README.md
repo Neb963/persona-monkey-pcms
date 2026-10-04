@@ -1,6 +1,6 @@
 # P001 — Hosted CI + pinned Firefox Developer Edition harness
 
-Status: **MERGED / integration verified**
+Status: **ACCEPTED**
 
 Implementation checkpoint: `f4a6c7e3b897d0fa869bbdec7742b61be5464af3`.
 
@@ -57,3 +57,12 @@ Merged `main` commit `142331c016856fae8a5446eaac9cb57e2491b9ef` passed:
 - smoke artifact ID `11312546519`, digest `sha256:441e0628a0a3bae246af0dc01889e16f2b2814a5e282bc2cdb3e7f3b8fe013db`.
 
 These runs establish integration evidence for the exact merged implementation. P001 is not marked ACCEPTED until this merged-state record itself is repository-verified.
+
+## Acceptance decision
+
+Merged-state governance checkpoint `8459112bfbce460f7381cc852e78e8d35e666ec0` passed:
+- repository verification run `37228104659`;
+- Firefox Developer Edition run `37228104609`;
+- smoke artifact ID `11312496886`, digest `sha256:568c80213e124d7c88efd9df6dc396810dfb9b8afd8be0f5c06af2ec2ee9e154`.
+
+A001-01, A001-02 and A001-03 are therefore accepted with both repository-contract and real hosted Firefox Developer Edition evidence. P001 is ACCEPTED. P002 becomes READY by dependency resolution only; no P002 implementation is included here.
