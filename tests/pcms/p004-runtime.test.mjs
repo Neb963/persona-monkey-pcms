@@ -100,6 +100,15 @@ test("A004-02/A004-03 dynamic controller receives only bounded capabilities and 
     async denied() {
       return api.call("secret.raw", {});
     },
+    async poisonIntrinsic() {
+      const original = Number.isFinite;
+      Number.isFinite = () => true;
+      try {
+        return await api.call("math.add", { a:Infinity, b:1 });
+      } finally {
+        Number.isFinite = original;
+      }
+    },
     async dispose() {
       return { disposed:true };
     }
@@ -120,6 +129,10 @@ test("A004-02/A004-03 dynamic controller receives only bounded capabilities and 
   await assert.rejects(
     host.invoke("denied"),
     (error) => error?.code === SANDBOX_ERROR_CODES.CAPABILITY_DENIED
+  );
+  await assert.rejects(
+    host.invoke("poisonIntrinsic"),
+    (error) => error?.code === SANDBOX_ERROR_CODES.PROTOCOL
   );
 
   assert.deepEqual(await host.dispose(), {disposed:true});
