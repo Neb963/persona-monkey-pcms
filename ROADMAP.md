@@ -48,13 +48,13 @@ Merge wave: 2
 - [x] T004.3 — T004.3 Lifecycle/isolation acceptance
 
 ## P005 — PCMS IndexedDB storage broker + migrations
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P002  
 Merge wave: 2
 
-- [ ] T005.1 — T005.1 DB/migration authority
-- [ ] T005.2 — T005.2 Namespaced storage/CAS
-- [ ] T005.3 — T005.3 restart/failure tests
+- [x] T005.1 — T005.1 DB/migration authority
+- [x] T005.2 — T005.2 Namespaced storage/CAS
+- [x] T005.3 — T005.3 restart/failure tests
 
 ## P006 — PCMS SecretStore host + SecretRef abstraction
 Status: **READY**  
@@ -66,7 +66,7 @@ Merge wave: 2
 - [ ] T006.3 — T006.3 redaction/failure tests
 
 ## P007 — Minimal Audit Journal
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P005  
 Merge wave: 3
 
@@ -75,7 +75,7 @@ Merge wave: 3
 - [ ] T007.3 — T007.3 replay tests
 
 ## P008 — Module archive/package/authority model
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P004, P005  
 Merge wave: 3
 

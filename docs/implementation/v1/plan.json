@@ -232,7 +232,7 @@
     {
       "id": "P005",
       "title": "PCMS IndexedDB storage broker + migrations",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P002"
       ],
@@ -310,7 +310,7 @@
     {
       "id": "P007",
       "title": "Minimal Audit Journal",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P005"
       ],
@@ -349,7 +349,7 @@
     {
       "id": "P008",
       "title": "Module archive/package/authority model",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P004",
         "P005"
