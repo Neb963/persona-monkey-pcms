@@ -4,8 +4,14 @@ const OBJECT_GET_OWN_PROPERTY_SYMBOLS = Object.getOwnPropertySymbols;
 const OBJECT_HAS_OWN = Object.hasOwn;
 const OBJECT_ENTRIES = Object.entries;
 const OBJECT_KEYS = Object.keys;
-const OBJECT_VALUES = Object.values;
+const OBJECT_FREEZE = Object.freeze;
+const OBJECT_PROTOTYPE = Object.prototype;
 const ARRAY_IS_ARRAY = Array.isArray;
+const ARRAY_PROTOTYPE = Array.prototype;
+const NUMBER_IS_FINITE = Number.isFinite;
+const NativeWeakSet = WeakSet;
+const NativeSet = Set;
+const SET_HAS = Function.call.bind(Set.prototype.has);
 const JSON_STRINGIFY = JSON.stringify.bind(JSON);
 const TEXT_ENCODER = new TextEncoder();
 const TEXT_ENCODE = TEXT_ENCODER.encode.bind(TEXT_ENCODER);
@@ -45,8 +51,9 @@ const SAFE_ERROR_MESSAGES = Object.freeze({
   [SANDBOX_ERROR_CODES.TIMEOUT]: "Sandbox operation timed out"
 });
 
-const STABLE_ERROR_CODES = Object.freeze(OBJECT_VALUES(SANDBOX_ERROR_CODES));
-const FORBIDDEN_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+const STABLE_ERROR_CODES = OBJECT_FREEZE(Object.values(SANDBOX_ERROR_CODES));
+const STABLE_ERROR_CODE_SET = new NativeSet(STABLE_ERROR_CODES);
+const FORBIDDEN_KEYS = new NativeSet(["__proto__", "prototype", "constructor"]);
 
 export class SandboxProtocolError extends Error {
   constructor(code, message = SAFE_ERROR_MESSAGES[code] || SAFE_ERROR_MESSAGES[SANDBOX_ERROR_CODES.PROTOCOL]) {
@@ -63,13 +70,17 @@ function fail(code = SANDBOX_ERROR_CODES.PROTOCOL) {
 function isPlainObject(value) {
   if (value === null || typeof value !== "object" || ARRAY_IS_ARRAY(value)) return false;
   const prototype = OBJECT_GET_PROTOTYPE_OF(value);
-  return prototype === Object.prototype || prototype === null;
+  return prototype === OBJECT_PROTOTYPE || prototype === null;
+}
+
+function setHas(set, value) {
+  return SET_HAS(set, value);
 }
 
 function assertExactKeys(value, expected) {
-  const actual = OBJECT_KEYS(value).sort();
-  const wanted = [...expected].sort();
-  if (actual.length !== wanted.length || actual.some((key, index) => key !== wanted[index])) fail();
+  const actual = OBJECT_KEYS(value);
+  if (actual.length !== expected.length) fail();
+  for (const key of expected) if (!OBJECT_HAS_OWN(value, key)) fail();
 }
 
 export function sandboxSerializedBytes(value) {
@@ -82,7 +93,7 @@ export function cloneSandboxJson(value, {
   maxNodes = SANDBOX_MAX_NODES,
   maxStringLength = SANDBOX_MAX_STRING_LENGTH
 } = {}) {
-  const ancestors = new WeakSet();
+  const ancestors = new NativeWeakSet();
   let nodes = 0;
 
   const visit = (input, depth) => {
@@ -90,7 +101,7 @@ export function cloneSandboxJson(value, {
     if (nodes > maxNodes || depth > maxDepth) fail();
     if (input === null || typeof input === "boolean") return input;
     if (typeof input === "number") {
-      if (!Number.isFinite(input)) fail();
+      if (!NUMBER_IS_FINITE(input)) fail();
       return input;
     }
     if (typeof input === "string") {
@@ -105,7 +116,7 @@ export function cloneSandboxJson(value, {
     try {
       const descriptors = OBJECT_GET_OWN_PROPERTY_DESCRIPTORS(input);
       if (ARRAY_IS_ARRAY(input)) {
-        if (OBJECT_GET_PROTOTYPE_OF(input) !== Array.prototype) fail();
+        if (OBJECT_GET_PROTOTYPE_OF(input) !== ARRAY_PROTOTYPE) fail();
         const out = new Array(input.length);
         for (const [key, descriptor] of OBJECT_ENTRIES(descriptors)) {
           if (key === "length") continue;
@@ -125,7 +136,7 @@ export function cloneSandboxJson(value, {
       if (!isPlainObject(input)) fail();
       const out = {};
       for (const [key, descriptor] of OBJECT_ENTRIES(descriptors)) {
-        if (FORBIDDEN_KEYS.has(key)
+        if (setHas(FORBIDDEN_KEYS, key)
             || key.length > 256
             || !descriptor.enumerable
             || !OBJECT_HAS_OWN(descriptor, "value")) fail();
@@ -153,7 +164,7 @@ export function assertSandboxRpcName(value, label = "RPC name") {
   if (typeof value !== "string"
       || value.length < 1
       || value.length > SANDBOX_MAX_CAPABILITY_NAME_LENGTH
-      || FORBIDDEN_KEYS.has(value)) {
+      || setHas(FORBIDDEN_KEYS, value)) {
     throw new SandboxProtocolError(SANDBOX_ERROR_CODES.PROTOCOL, label + " is invalid");
   }
   return value;
@@ -224,7 +235,7 @@ export function validateSandboxPortMessage(value, expectedSessionId) {
 export function validateSandboxError(error) {
   if (!isPlainObject(error)
       || typeof error.code !== "string"
-      || !STABLE_ERROR_CODES.includes(error.code)
+      || !setHas(STABLE_ERROR_CODE_SET, error.code)
       || typeof error.message !== "string"
       || error.message.length > 256) fail();
   assertExactKeys(error, ["code", "message"]);
@@ -232,6 +243,6 @@ export function validateSandboxError(error) {
 }
 
 export function safeSandboxError(code) {
-  const safeCode = STABLE_ERROR_CODES.includes(code) ? code : SANDBOX_ERROR_CODES.PROTOCOL;
-  return Object.freeze({ code: safeCode, message: SAFE_ERROR_MESSAGES[safeCode] });
+  const safeCode = setHas(STABLE_ERROR_CODE_SET, code) ? code : SANDBOX_ERROR_CODES.PROTOCOL;
+  return OBJECT_FREEZE({ code: safeCode, message: SAFE_ERROR_MESSAGES[safeCode] });
 }
