@@ -21,7 +21,7 @@ Merge wave: 1
 - [x] T001.3 — T001.3 Prove browser CI evidence
 
 ## P002 — Import and preserve PersonaMonkey baseline
-Status: **READY**  
+Status: **CLAIMED**  
 Depends on: P001  
 Merge wave: 1
 
