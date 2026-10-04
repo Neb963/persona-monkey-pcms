@@ -2,7 +2,9 @@
 
 Status: **CI_VERIFIED / implementation complete**
 
-Final implementation checkpoint: `a0d8dc0662fcdadda22b99c1e3bf25bb434c5a76`.
+Initial implementation checkpoint: `a0d8dc0662fcdadda22b99c1e3bf25bb434c5a76`.
+
+Final hardened code checkpoint: `3bcf614e50b03cb212c16f6e56c124becb60e1a9`.
 
 ## Scope
 
@@ -68,8 +70,8 @@ Exact tested blobs:
 - `extension/pcms/secrets/secret-ref.js` — `f5c3009d1745d23c047285fbacaa4aacb942a2c5`;
 - `extension/pcms/secrets/protocol.js` — `2c1df200d391e7c7491082e3e350a03af809bcb7`;
 - `extension/pcms/secrets/native-secret-backend.js` — `046116819f537ba105d552faa8231a77d9518e6d`;
-- `extension/pcms/secrets/secret-store.js` — `7d931f4ebb5f4279cb1b449752b4ac5d0febd9cc`;
-- `tests/pcms/p006-secret-store.test.mjs` — `3d6e2f67c91e8b6aede571f03f2fb28254676786`;
+- `extension/pcms/secrets/secret-store.js` — `a913708cb9e8656aa4fcb4a1ce57c661b0387475`;
+- `tests/pcms/p006-secret-store.test.mjs` — `928c221bf407e3e62135d1760f36e2c0b76ed5be`;
 - `tests/pcms/p006-boundary.test.mjs` — `cb647e15ad62570f8d82c7c41824bae399a51d89`.
 
 Commands actually run:
@@ -83,22 +85,24 @@ node --check extension/pcms/secrets/secret-store.js
 node --test tests/pcms/p006-*.test.mjs
 ```
 
-Result: **10 tests passed, 0 failed**.
+Result: **11 tests passed, 0 failed**.
 
 The current root workflows do not discover `tests/pcms/**`; P006 does not own `.github/**` or `package.json`, so this phase does not widen CI wiring outside its claim. The focused suite above is the direct U/I/C evidence.
 
 ## Independent CI
 
-Exact implementation checkpoint `a0d8dc0662fcdadda22b99c1e3bf25bb434c5a76` passed:
+Initial implementation checkpoint `a0d8dc0662fcdadda22b99c1e3bf25bb434c5a76` passed:
 
 - repository verification push run **37241774883** — success;
 - pinned Firefox Developer Edition push run **37241774800** — success.
+
+The final hardening additionally contains synchronous backend-construction/close failure containment; raw backend getter/close exception text cannot escape the SecretStore boundary.
 
 The FDE run is a repository regression smoke on the exact pinned browser build. It is not represented as an installed native secret-host test.
 
 ## Scope review
 
-Compared with durable claim checkpoint `fceac82370df0a35223c65e39cd0c23cc13b9403`, the implementation checkpoint is 14 commits ahead, 0 behind, and changes exactly seven files:
+Compared with durable claim checkpoint `fceac82370df0a35223c65e39cd0c23cc13b9403`, the final hardened code checkpoint changes exactly seven product/test files; subsequent branch commits are P006 evidence/governance only:
 
 - five files under `extension/pcms/secrets/**`;
 - two files under `tests/pcms/**`.
