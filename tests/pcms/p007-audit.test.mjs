@@ -379,6 +379,14 @@ test("A007-02 paged reads and synchronous projections are deterministic", async 
     }),
     (error) => error?.code === AUDIT_ERROR_CODES.PROJECTION_FAILED
   );
+
+  await assert.rejects(
+    journal.project({
+      initialState: {},
+      reducer: () => new Date()
+    }),
+    (error) => error?.code === AUDIT_ERROR_CODES.PROJECTION_FAILED
+  );
 });
 
 test("A007-03 restart replay reconstructs the same projection without using the journal as domain state", async () => {
