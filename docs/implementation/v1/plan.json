@@ -1,0 +1,1109 @@
+{
+  "schemaVersion": 1,
+  "authority": "docs/implementation/v1/plan.json",
+  "baseline": "v1",
+  "executionModel": {
+    "eligibility": "All dependencies ACCEPTED and no conflicting ACTIVE claim.",
+    "claimAcquisition": "serialized",
+    "implementation": "parallel when mechanically non-conflicting",
+    "finalLivePhases": [
+      "P025",
+      "P026"
+    ]
+  },
+  "statuses": [
+    "BLOCKED",
+    "READY",
+    "CLAIMED",
+    "IN_PROGRESS",
+    "PR_OPEN",
+    "MERGED",
+    "ACCEPTED"
+  ],
+  "phases": [
+    {
+      "id": "P000",
+      "title": "Repository bootstrap / architecture freeze",
+      "status": "ACCEPTED",
+      "dependsOn": [],
+      "mergeWave": 0,
+      "ownership": {
+        "writePaths": [
+          "AGENTS.md",
+          "README.md",
+          "docs/**",
+          "tools/**",
+          ".github/**",
+          "package.json",
+          ".gitignore",
+          "SECURITY.md",
+          "CONTRIBUTING.md",
+          "operator-inputs/README.md"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T000.1",
+          "title": "T000.1 Bootstrap authority and provenance"
+        },
+        {
+          "id": "T000.2",
+          "title": "T000.2 Establish claim/CI governance"
+        },
+        {
+          "id": "T000.3",
+          "title": "T000.3 Verify generated views"
+        }
+      ],
+      "acceptanceIds": [
+        "A000-01",
+        "A000-02",
+        "A000-03"
+      ]
+    },
+    {
+      "id": "P001",
+      "title": "Hosted CI + pinned Firefox Developer Edition harness",
+      "status": "READY",
+      "dependsOn": [
+        "P000"
+      ],
+      "mergeWave": 1,
+      "ownership": {
+        "writePaths": [
+          ".github/workflows/**",
+          "tools/firefox/**",
+          "docs/implementation/v1/browser-pin.json",
+          "tests/firefox/**",
+          "package.json",
+          "docs/evidence/P001/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T001.1",
+          "title": "T001.1 Pin exact Mozilla FDE artifact"
+        },
+        {
+          "id": "T001.2",
+          "title": "T001.2 Build isolated profile/install harness"
+        },
+        {
+          "id": "T001.3",
+          "title": "T001.3 Prove browser CI evidence"
+        }
+      ],
+      "acceptanceIds": [
+        "A001-01",
+        "A001-02",
+        "A001-03"
+      ]
+    },
+    {
+      "id": "P002",
+      "title": "Import and preserve PersonaMonkey baseline",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P001"
+      ],
+      "mergeWave": 1,
+      "ownership": {
+        "writePaths": [
+          "extension/**",
+          "native/**",
+          "scripts/**",
+          "tests/**",
+          "docs/upstream/**",
+          "package.json",
+          "CHANGELOG.md",
+          "LICENSE"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T002.1",
+          "title": "T002.1 Import exact upstream tree"
+        },
+        {
+          "id": "T002.2",
+          "title": "T002.2 Reconcile public-repo provenance"
+        },
+        {
+          "id": "T002.3",
+          "title": "T002.3 Prove inherited release baseline"
+        }
+      ],
+      "acceptanceIds": [
+        "A002-01",
+        "A002-02",
+        "A002-03"
+      ]
+    },
+    {
+      "id": "P003",
+      "title": "PCMS namespace/UI entry + internal Persona Broker contract",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P002"
+      ],
+      "mergeWave": 2,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T003.1",
+          "title": "T003.1 Define broker contract"
+        },
+        {
+          "id": "T003.2",
+          "title": "T003.2 Add PCMS namespace/bootstrap"
+        },
+        {
+          "id": "T003.3",
+          "title": "T003.3 Contract parity tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A003-01",
+        "A003-02",
+        "A003-03"
+      ]
+    },
+    {
+      "id": "P004",
+      "title": "Firefox sandbox dynamic-controller capability spike",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P002"
+      ],
+      "mergeWave": 2,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T004.1",
+          "title": "T004.1 Sandbox runtime probe"
+        },
+        {
+          "id": "T004.2",
+          "title": "T004.2 Authenticated bounded RPC"
+        },
+        {
+          "id": "T004.3",
+          "title": "T004.3 Lifecycle/isolation acceptance"
+        }
+      ],
+      "acceptanceIds": [
+        "A004-01",
+        "A004-02",
+        "A004-03"
+      ]
+    },
+    {
+      "id": "P005",
+      "title": "PCMS IndexedDB storage broker + migrations",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P002"
+      ],
+      "mergeWave": 2,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T005.1",
+          "title": "T005.1 DB/migration authority"
+        },
+        {
+          "id": "T005.2",
+          "title": "T005.2 Namespaced storage/CAS"
+        },
+        {
+          "id": "T005.3",
+          "title": "T005.3 restart/failure tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A005-01",
+        "A005-02",
+        "A005-03"
+      ]
+    },
+    {
+      "id": "P006",
+      "title": "PCMS SecretStore host + SecretRef abstraction",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P002"
+      ],
+      "mergeWave": 2,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T006.1",
+          "title": "T006.1 SecretRef contract"
+        },
+        {
+          "id": "T006.2",
+          "title": "T006.2 narrow native host/backend"
+        },
+        {
+          "id": "T006.3",
+          "title": "T006.3 redaction/failure tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A006-01",
+        "A006-02",
+        "A006-03"
+      ]
+    },
+    {
+      "id": "P007",
+      "title": "Minimal Audit Journal",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P005"
+      ],
+      "mergeWave": 3,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T007.1",
+          "title": "T007.1 Event schema/atomic append"
+        },
+        {
+          "id": "T007.2",
+          "title": "T007.2 read/projection API"
+        },
+        {
+          "id": "T007.3",
+          "title": "T007.3 replay tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A007-01",
+        "A007-02",
+        "A007-03"
+      ]
+    },
+    {
+      "id": "P008",
+      "title": "Module archive/package/authority model",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P004",
+        "P005"
+      ],
+      "mergeWave": 3,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T008.1",
+          "title": "T008.1 bounded parser/hash identity"
+        },
+        {
+          "id": "T008.2",
+          "title": "T008.2 authority envelope/delta"
+        },
+        {
+          "id": "T008.3",
+          "title": "T008.3 immutable candidate lifecycle"
+        }
+      ],
+      "acceptanceIds": [
+        "A008-01",
+        "A008-02",
+        "A008-03"
+      ]
+    },
+    {
+      "id": "P009",
+      "title": "Persona Broker implementation",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P003"
+      ],
+      "mergeWave": 3,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T009.1",
+          "title": "T009.1 Integration-semantic facade"
+        },
+        {
+          "id": "T009.2",
+          "title": "T009.2 capability/lease/execution mapping"
+        },
+        {
+          "id": "T009.3",
+          "title": "T009.3 parity/failure tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A009-01",
+        "A009-02",
+        "A009-03"
+      ]
+    },
+    {
+      "id": "P010",
+      "title": "RemoteOps + ProviderGate + recovery hold",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P005",
+        "P009"
+      ],
+      "mergeWave": 4,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T010.1",
+          "title": "T010.1 durable RemoteOps"
+        },
+        {
+          "id": "T010.2",
+          "title": "T010.2 ProviderGate"
+        },
+        {
+          "id": "T010.3",
+          "title": "T010.3 uncertain/recovery tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A010-01",
+        "A010-02",
+        "A010-03"
+      ]
+    },
+    {
+      "id": "P011",
+      "title": "Module runtime / capability RPC / generation fencing",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P008",
+        "P010"
+      ],
+      "mergeWave": 4,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T011.1",
+          "title": "T011.1 runtime broker/mailboxes"
+        },
+        {
+          "id": "T011.2",
+          "title": "T011.2 capability RPC"
+        },
+        {
+          "id": "T011.3",
+          "title": "T011.3 draining/update/recovery"
+        }
+      ],
+      "acceptanceIds": [
+        "A011-01",
+        "A011-02",
+        "A011-03"
+      ]
+    },
+    {
+      "id": "P012",
+      "title": "HumanTask/Attention + timers/services",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P007",
+        "P011"
+      ],
+      "mergeWave": 4,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T012.1",
+          "title": "T012.1 HumanTask/Attention"
+        },
+        {
+          "id": "T012.2",
+          "title": "T012.2 timers"
+        },
+        {
+          "id": "T012.3",
+          "title": "T012.3 service registry/restart tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A012-01",
+        "A012-02",
+        "A012-03"
+      ]
+    },
+    {
+      "id": "P013",
+      "title": "Perchance provider adapter + emulator",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P009",
+        "P010"
+      ],
+      "mergeWave": 4,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T013.1",
+          "title": "T013.1 compatibility probe"
+        },
+        {
+          "id": "T013.2",
+          "title": "T013.2 deterministic emulator"
+        },
+        {
+          "id": "T013.3",
+          "title": "T013.3 fail-closed adapter tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A013-01",
+        "A013-02",
+        "A013-03"
+      ]
+    },
+    {
+      "id": "P014",
+      "title": "Accounts module + Account↔personaUid binding",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P011",
+        "P013"
+      ],
+      "mergeWave": 5,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p014/**",
+          "tests/**/p014/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T014.1",
+          "title": "T014.1 account model"
+        },
+        {
+          "id": "T014.2",
+          "title": "T014.2 Persona binding/rebind"
+        },
+        {
+          "id": "T014.3",
+          "title": "T014.3 rotation continuity"
+        }
+      ],
+      "acceptanceIds": [
+        "A014-01",
+        "A014-02",
+        "A014-03"
+      ]
+    },
+    {
+      "id": "P015",
+      "title": "Deployer module",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P014",
+        "P013"
+      ],
+      "mergeWave": 5,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p015/**",
+          "tests/**/p015/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T015.1",
+          "title": "T015.1 desired/observed model"
+        },
+        {
+          "id": "T015.2",
+          "title": "T015.2 stable target mutation"
+        },
+        {
+          "id": "T015.3",
+          "title": "T015.3 reconciliation/UI"
+        }
+      ],
+      "acceptanceIds": [
+        "A015-01",
+        "A015-02",
+        "A015-03"
+      ]
+    },
+    {
+      "id": "P016",
+      "title": "Explorer module",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P014",
+        "P013"
+      ],
+      "mergeWave": 5,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p016/**",
+          "tests/**/p016/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T016.1",
+          "title": "T016.1 discovery/candidates"
+        },
+        {
+          "id": "T016.2",
+          "title": "T016.2 durable claim/reconciliation"
+        },
+        {
+          "id": "T016.3",
+          "title": "T016.3 module UI/integration"
+        }
+      ],
+      "acceptanceIds": [
+        "A016-01",
+        "A016-02",
+        "A016-03"
+      ]
+    },
+    {
+      "id": "P017",
+      "title": "Refresher module",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P014",
+        "P013"
+      ],
+      "mergeWave": 5,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p017/**",
+          "tests/**/p017/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T017.1",
+          "title": "T017.1 cohort/eligibility"
+        },
+        {
+          "id": "T017.2",
+          "title": "T017.2 schedules/budgets"
+        },
+        {
+          "id": "T017.3",
+          "title": "T017.3 isolation/confirmed-effect tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A017-01",
+        "A017-02",
+        "A017-03"
+      ]
+    },
+    {
+      "id": "P018",
+      "title": "Statistics module",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P007",
+        "P011"
+      ],
+      "mergeWave": 5,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p018/**",
+          "tests/**/p018/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T018.1",
+          "title": "T018.1 metric projection model"
+        },
+        {
+          "id": "T018.2",
+          "title": "T018.2 replay/late-event handling"
+        },
+        {
+          "id": "T018.3",
+          "title": "T018.3 UI/export"
+        }
+      ],
+      "acceptanceIds": [
+        "A018-01",
+        "A018-02",
+        "A018-03"
+      ]
+    },
+    {
+      "id": "P019",
+      "title": "Account Provisioning module",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P006",
+        "P012",
+        "P014",
+        "P013"
+      ],
+      "mergeWave": 5,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p019/**",
+          "tests/**/p019/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T019.1",
+          "title": "T019.1 provisioning state machine"
+        },
+        {
+          "id": "T019.2",
+          "title": "T019.2 HumanTask/session guard"
+        },
+        {
+          "id": "T019.3",
+          "title": "T019.3 uncertain/CAPTCHA-safe tests"
+        }
+      ],
+      "acceptanceIds": [
+        "A019-01",
+        "A019-02",
+        "A019-03"
+      ]
+    },
+    {
+      "id": "P020",
+      "title": "Backup/restore + retention",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P007",
+        "P010",
+        "P011"
+      ],
+      "mergeWave": 6,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T020.1",
+          "title": "T020.1 snapshot/backup"
+        },
+        {
+          "id": "T020.2",
+          "title": "T020.2 staged restore"
+        },
+        {
+          "id": "T020.3",
+          "title": "T020.3 RECOVERY_HOLD reconciliation"
+        }
+      ],
+      "acceptanceIds": [
+        "A020-01",
+        "A020-02",
+        "A020-03"
+      ]
+    },
+    {
+      "id": "P021",
+      "title": "PCMS UI shell / notifications / search",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P012",
+        "P014"
+      ],
+      "mergeWave": 6,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T021.1",
+          "title": "T021.1 navigation/attention shell"
+        },
+        {
+          "id": "T021.2",
+          "title": "T021.2 search/projections"
+        },
+        {
+          "id": "T021.3",
+          "title": "T021.3 deep-link safety"
+        }
+      ],
+      "acceptanceIds": [
+        "A021-01",
+        "A021-02",
+        "A021-03"
+      ]
+    },
+    {
+      "id": "P022",
+      "title": "Module lifecycle end-to-end",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P011",
+        "P020"
+      ],
+      "mergeWave": 6,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T022.1",
+          "title": "T022.1 install/update"
+        },
+        {
+          "id": "T022.2",
+          "title": "T022.2 disable/remove/purge"
+        },
+        {
+          "id": "T022.3",
+          "title": "T022.3 rollback/retention acceptance"
+        }
+      ],
+      "acceptanceIds": [
+        "A022-01",
+        "A022-02",
+        "A022-03"
+      ]
+    },
+    {
+      "id": "P023",
+      "title": "Full module integration wave",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P015",
+        "P016",
+        "P017",
+        "P018",
+        "P019",
+        "P020",
+        "P021",
+        "P022"
+      ],
+      "mergeWave": 7,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T023.1",
+          "title": "T023.1 cross-module contracts"
+        },
+        {
+          "id": "T023.2",
+          "title": "T023.2 integration-wave CI"
+        },
+        {
+          "id": "T023.3",
+          "title": "T023.3 combined recovery acceptance"
+        }
+      ],
+      "acceptanceIds": [
+        "A023-01",
+        "A023-02",
+        "A023-03"
+      ]
+    },
+    {
+      "id": "P024",
+      "title": "Adversarial/security/fault/release-candidate hardening",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P023"
+      ],
+      "mergeWave": 8,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T024.1",
+          "title": "T024.1 fault/security matrix"
+        },
+        {
+          "id": "T024.2",
+          "title": "T024.2 reproducible package"
+        },
+        {
+          "id": "T024.3",
+          "title": "T024.3 clean install/update/restart"
+        }
+      ],
+      "acceptanceIds": [
+        "A024-01",
+        "A024-02",
+        "A024-03"
+      ]
+    },
+    {
+      "id": "P025",
+      "title": "Live acceptance 1 — installed FDE + PersonaMonkey/Mullvad/Perchance",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P024"
+      ],
+      "mergeWave": 9,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T025.1",
+          "title": "T025.1 clean live install"
+        },
+        {
+          "id": "T025.2",
+          "title": "T025.2 protected routing/Persona continuity"
+        },
+        {
+          "id": "T025.3",
+          "title": "T025.3 provider/session compatibility"
+        }
+      ],
+      "acceptanceIds": [
+        "A025-01",
+        "A025-02",
+        "A025-03"
+      ]
+    },
+    {
+      "id": "P026",
+      "title": "Live acceptance 2 — representative mutations + recovery + final acceptance",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P025"
+      ],
+      "mergeWave": 10,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "tests/pcms/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T026.1",
+          "title": "T026.1 representative feature mutations"
+        },
+        {
+          "id": "T026.2",
+          "title": "T026.2 restore/update/recovery"
+        },
+        {
+          "id": "T026.3",
+          "title": "T026.3 final human acceptance"
+        }
+      ],
+      "acceptanceIds": [
+        "A026-01",
+        "A026-02",
+        "A026-03"
+      ]
+    }
+  ]
+}

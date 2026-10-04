@@ -1,0 +1,16 @@
+{
+  "name": "persona-monkey-pcms",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "generate:views": "node tools/generate-views.mjs",
+    "verify:views": "node tools/generate-views.mjs --check",
+    "verify:claims": "node tools/verify-claims.mjs",
+    "verify:repo": "node tools/verify-repo.mjs",
+    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims"
+  }
+}

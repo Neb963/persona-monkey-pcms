@@ -1,0 +1,794 @@
+{
+  "schemaVersion": 1,
+  "gates": [
+    {
+      "id": "A000-01",
+      "phaseId": "P000",
+      "requirement": "Repository bootstrap / architecture freeze: acceptance slice 1",
+      "evidence": [
+        "C"
+      ]
+    },
+    {
+      "id": "A000-02",
+      "phaseId": "P000",
+      "requirement": "Repository bootstrap / architecture freeze: acceptance slice 2",
+      "evidence": [
+        "C"
+      ]
+    },
+    {
+      "id": "A000-03",
+      "phaseId": "P000",
+      "requirement": "Repository bootstrap / architecture freeze: acceptance slice 3",
+      "evidence": [
+        "C"
+      ]
+    },
+    {
+      "id": "A001-01",
+      "phaseId": "P001",
+      "requirement": "Hosted CI + pinned Firefox Developer Edition harness: acceptance slice 1",
+      "evidence": [
+        "C",
+        "FDE"
+      ]
+    },
+    {
+      "id": "A001-02",
+      "phaseId": "P001",
+      "requirement": "Hosted CI + pinned Firefox Developer Edition harness: acceptance slice 2",
+      "evidence": [
+        "C",
+        "FDE"
+      ]
+    },
+    {
+      "id": "A001-03",
+      "phaseId": "P001",
+      "requirement": "Hosted CI + pinned Firefox Developer Edition harness: acceptance slice 3",
+      "evidence": [
+        "C",
+        "FDE"
+      ]
+    },
+    {
+      "id": "A002-01",
+      "phaseId": "P002",
+      "requirement": "Import and preserve PersonaMonkey baseline: acceptance slice 1",
+      "evidence": [
+        "C",
+        "I",
+        "PKG"
+      ]
+    },
+    {
+      "id": "A002-02",
+      "phaseId": "P002",
+      "requirement": "Import and preserve PersonaMonkey baseline: acceptance slice 2",
+      "evidence": [
+        "C",
+        "I",
+        "PKG"
+      ]
+    },
+    {
+      "id": "A002-03",
+      "phaseId": "P002",
+      "requirement": "Import and preserve PersonaMonkey baseline: acceptance slice 3",
+      "evidence": [
+        "C",
+        "I",
+        "PKG"
+      ]
+    },
+    {
+      "id": "A003-01",
+      "phaseId": "P003",
+      "requirement": "PCMS namespace/UI entry + internal Persona Broker contract: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A003-02",
+      "phaseId": "P003",
+      "requirement": "PCMS namespace/UI entry + internal Persona Broker contract: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A003-03",
+      "phaseId": "P003",
+      "requirement": "PCMS namespace/UI entry + internal Persona Broker contract: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A004-01",
+      "phaseId": "P004",
+      "requirement": "Firefox sandbox dynamic-controller capability spike: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A004-02",
+      "phaseId": "P004",
+      "requirement": "Firefox sandbox dynamic-controller capability spike: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A004-03",
+      "phaseId": "P004",
+      "requirement": "Firefox sandbox dynamic-controller capability spike: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A005-01",
+      "phaseId": "P005",
+      "requirement": "PCMS IndexedDB storage broker + migrations: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A005-02",
+      "phaseId": "P005",
+      "requirement": "PCMS IndexedDB storage broker + migrations: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A005-03",
+      "phaseId": "P005",
+      "requirement": "PCMS IndexedDB storage broker + migrations: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A006-01",
+      "phaseId": "P006",
+      "requirement": "PCMS SecretStore host + SecretRef abstraction: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A006-02",
+      "phaseId": "P006",
+      "requirement": "PCMS SecretStore host + SecretRef abstraction: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A006-03",
+      "phaseId": "P006",
+      "requirement": "PCMS SecretStore host + SecretRef abstraction: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A007-01",
+      "phaseId": "P007",
+      "requirement": "Minimal Audit Journal: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A007-02",
+      "phaseId": "P007",
+      "requirement": "Minimal Audit Journal: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A007-03",
+      "phaseId": "P007",
+      "requirement": "Minimal Audit Journal: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A008-01",
+      "phaseId": "P008",
+      "requirement": "Module archive/package/authority model: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A008-02",
+      "phaseId": "P008",
+      "requirement": "Module archive/package/authority model: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A008-03",
+      "phaseId": "P008",
+      "requirement": "Module archive/package/authority model: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A009-01",
+      "phaseId": "P009",
+      "requirement": "Persona Broker implementation: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A009-02",
+      "phaseId": "P009",
+      "requirement": "Persona Broker implementation: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A009-03",
+      "phaseId": "P009",
+      "requirement": "Persona Broker implementation: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A010-01",
+      "phaseId": "P010",
+      "requirement": "RemoteOps + ProviderGate + recovery hold: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A010-02",
+      "phaseId": "P010",
+      "requirement": "RemoteOps + ProviderGate + recovery hold: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A010-03",
+      "phaseId": "P010",
+      "requirement": "RemoteOps + ProviderGate + recovery hold: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A011-01",
+      "phaseId": "P011",
+      "requirement": "Module runtime / capability RPC / generation fencing: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A011-02",
+      "phaseId": "P011",
+      "requirement": "Module runtime / capability RPC / generation fencing: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A011-03",
+      "phaseId": "P011",
+      "requirement": "Module runtime / capability RPC / generation fencing: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A012-01",
+      "phaseId": "P012",
+      "requirement": "HumanTask/Attention + timers/services: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A012-02",
+      "phaseId": "P012",
+      "requirement": "HumanTask/Attention + timers/services: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A012-03",
+      "phaseId": "P012",
+      "requirement": "HumanTask/Attention + timers/services: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A013-01",
+      "phaseId": "P013",
+      "requirement": "Perchance provider adapter + emulator: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A013-02",
+      "phaseId": "P013",
+      "requirement": "Perchance provider adapter + emulator: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A013-03",
+      "phaseId": "P013",
+      "requirement": "Perchance provider adapter + emulator: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A014-01",
+      "phaseId": "P014",
+      "requirement": "Accounts module + Account↔personaUid binding: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A014-02",
+      "phaseId": "P014",
+      "requirement": "Accounts module + Account↔personaUid binding: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A014-03",
+      "phaseId": "P014",
+      "requirement": "Accounts module + Account↔personaUid binding: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A015-01",
+      "phaseId": "P015",
+      "requirement": "Deployer module: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A015-02",
+      "phaseId": "P015",
+      "requirement": "Deployer module: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A015-03",
+      "phaseId": "P015",
+      "requirement": "Deployer module: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A016-01",
+      "phaseId": "P016",
+      "requirement": "Explorer module: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A016-02",
+      "phaseId": "P016",
+      "requirement": "Explorer module: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A016-03",
+      "phaseId": "P016",
+      "requirement": "Explorer module: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A017-01",
+      "phaseId": "P017",
+      "requirement": "Refresher module: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A017-02",
+      "phaseId": "P017",
+      "requirement": "Refresher module: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A017-03",
+      "phaseId": "P017",
+      "requirement": "Refresher module: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A018-01",
+      "phaseId": "P018",
+      "requirement": "Statistics module: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A018-02",
+      "phaseId": "P018",
+      "requirement": "Statistics module: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A018-03",
+      "phaseId": "P018",
+      "requirement": "Statistics module: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A019-01",
+      "phaseId": "P019",
+      "requirement": "Account Provisioning module: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A019-02",
+      "phaseId": "P019",
+      "requirement": "Account Provisioning module: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A019-03",
+      "phaseId": "P019",
+      "requirement": "Account Provisioning module: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A020-01",
+      "phaseId": "P020",
+      "requirement": "Backup/restore + retention: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A020-02",
+      "phaseId": "P020",
+      "requirement": "Backup/restore + retention: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A020-03",
+      "phaseId": "P020",
+      "requirement": "Backup/restore + retention: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A021-01",
+      "phaseId": "P021",
+      "requirement": "PCMS UI shell / notifications / search: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A021-02",
+      "phaseId": "P021",
+      "requirement": "PCMS UI shell / notifications / search: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A021-03",
+      "phaseId": "P021",
+      "requirement": "PCMS UI shell / notifications / search: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A022-01",
+      "phaseId": "P022",
+      "requirement": "Module lifecycle end-to-end: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A022-02",
+      "phaseId": "P022",
+      "requirement": "Module lifecycle end-to-end: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A022-03",
+      "phaseId": "P022",
+      "requirement": "Module lifecycle end-to-end: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A023-01",
+      "phaseId": "P023",
+      "requirement": "Full module integration wave: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A023-02",
+      "phaseId": "P023",
+      "requirement": "Full module integration wave: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A023-03",
+      "phaseId": "P023",
+      "requirement": "Full module integration wave: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A024-01",
+      "phaseId": "P024",
+      "requirement": "Adversarial/security/fault/release-candidate hardening: acceptance slice 1",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A024-02",
+      "phaseId": "P024",
+      "requirement": "Adversarial/security/fault/release-candidate hardening: acceptance slice 2",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A024-03",
+      "phaseId": "P024",
+      "requirement": "Adversarial/security/fault/release-candidate hardening: acceptance slice 3",
+      "evidence": [
+        "U",
+        "I",
+        "C"
+      ]
+    },
+    {
+      "id": "A025-01",
+      "phaseId": "P025",
+      "requirement": "Live acceptance 1: acceptance slice 1",
+      "evidence": [
+        "LIVE"
+      ]
+    },
+    {
+      "id": "A025-02",
+      "phaseId": "P025",
+      "requirement": "Live acceptance 1: acceptance slice 2",
+      "evidence": [
+        "LIVE"
+      ]
+    },
+    {
+      "id": "A025-03",
+      "phaseId": "P025",
+      "requirement": "Live acceptance 1: acceptance slice 3",
+      "evidence": [
+        "LIVE"
+      ]
+    },
+    {
+      "id": "A026-01",
+      "phaseId": "P026",
+      "requirement": "Live acceptance 2: acceptance slice 1",
+      "evidence": [
+        "LIVE"
+      ]
+    },
+    {
+      "id": "A026-02",
+      "phaseId": "P026",
+      "requirement": "Live acceptance 2: acceptance slice 2",
+      "evidence": [
+        "LIVE"
+      ]
+    },
+    {
+      "id": "A026-03",
+      "phaseId": "P026",
+      "requirement": "Live acceptance 2: acceptance slice 3",
+      "evidence": [
+        "LIVE"
+      ]
+    }
+  ]
+}
