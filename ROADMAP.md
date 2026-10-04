@@ -1,6 +1,6 @@
 # ROADMAP
 
-> Generated from `docs/implementation/v1/plan.json`. Do not hand-edit.
+> Generated from docs/implementation/v1/plan.json. Do not hand-edit.
 
 ## P000 — Repository bootstrap / architecture freeze
 Status: **ACCEPTED**  
