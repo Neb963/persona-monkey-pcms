@@ -57,7 +57,7 @@ Merge wave: 2
 - [x] T005.3 — T005.3 restart/failure tests
 
 ## P006 — PCMS SecretStore host + SecretRef abstraction
-Status: **READY**  
+Status: **CLAIMED**  
 Depends on: P002  
 Merge wave: 2
 
