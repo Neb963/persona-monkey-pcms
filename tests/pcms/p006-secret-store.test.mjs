@@ -181,6 +181,28 @@ test("A006-03 backend exceptions and hostile error payloads never echo secret ma
   );
 });
 
+test("A006-03 ambiguous secret mutations return a reconcilable opaque ref without secret material", async () => {
+  const secret="UNCERTAIN-SECRET-VALUE";
+  const backend=createNativeSecretBackend({
+    sendNativeMessage:async () => { throw new Error("disconnect after dispatch "+secret); },
+    randomUUID:()=>UUIDS[1],
+    timeoutMs:500
+  });
+  const store=createSecretStore({backend,randomUUID:()=>UUIDS[0]});
+
+  await assert.rejects(
+    store.create(secret),
+    (error) => {
+      assert.equal(error.code,SECRET_ERROR_CODES.UNCERTAIN);
+      assert.equal(error.secretRef,SECRET_REF_PREFIX+UUIDS[0]);
+      assert.equal(error.operation,"create");
+      assert.equal(error.message.includes(secret),false);
+      assert.equal(JSON.stringify(error).includes(secret),false);
+      return true;
+    }
+  );
+});
+
 test("A006-03 malformed/cross-request native responses fail closed", async () => {
   const ref=createSecretRef({randomUUID:()=>UUIDS[0]});
   const backend=createNativeSecretBackend({
