@@ -7,6 +7,20 @@ import {
 import { SECRET_ERROR_CODES, normalizeSecretError, secretError } from "./errors.js";
 import { assertSecretRef } from "./secret-ref.js";
 
+export function createFirefoxNativeSecretTransport(runtime) {
+  if (!runtime || typeof runtime.sendNativeMessage !== "function") {
+    throw secretError(SECRET_ERROR_CODES.UNAVAILABLE);
+  }
+  return Object.freeze(async function sendDedicatedSecretMessage(hostName, request) {
+    if (hostName !== SECRET_HOST_NAME) throw secretError(SECRET_ERROR_CODES.PROTOCOL);
+    try {
+      return await runtime.sendNativeMessage(SECRET_HOST_NAME, request);
+    } catch {
+      throw secretError(SECRET_ERROR_CODES.UNAVAILABLE);
+    }
+  });
+}
+
 function timeoutPromise(timeoutMs) {
   let timer = null;
   const promise = new Promise((_, reject) => {
