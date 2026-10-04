@@ -9,7 +9,7 @@ import {
 } from "./schema.js";
 
 function asProjectionError(error) {
-  if (error instanceof PcmsAuditError) return error;
+  if (error instanceof PcmsAuditError && error.code === AUDIT_ERROR_CODES.PROJECTION_FAILED) return error;
   return auditError(AUDIT_ERROR_CODES.PROJECTION_FAILED, "Audit projection failed", { cause: error });
 }
 
