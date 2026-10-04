@@ -9,6 +9,12 @@ export const PERSONA_BROKER_CONTRACT_VERSION = 1;
 export const PERSONA_BROKER_IDENTITY_FIELD = "personaUid";
 export const PERSONA_BROKER_REQUEST_ID_MAX_LENGTH = 256;
 
+/**
+ * @typedef {object} PersonaBroker
+ * @property {(request: object) => Promise<object>} request
+ * @property {(listener: (event: object) => void) => {disconnect: () => void}} subscribe
+ */
+
 const SNAPSHOT = {
   "system.describe": {
     "capability": "system",
@@ -684,6 +690,7 @@ export function createPersonaBrokerRequest({
   }
 
   const request={
+    version:PERSONA_BROKER_CONTRACT_VERSION,
     command,
     params:Object.freeze({ ...params }),
     requestId
@@ -691,6 +698,56 @@ export function createPersonaBrokerRequest({
   if (operationId !== undefined && operationId !== null) request.operationId=operationId;
   if (normalizedPrecondition) request.precondition=normalizedPrecondition;
   return Object.freeze(request);
+}
+
+export function validatePersonaBrokerResponse(response, request) {
+  if (response === null || typeof response !== "object" || Array.isArray(response)) {
+    throw new TypeError("Persona Broker response must be an object");
+  }
+  if (!request || response.version !== PERSONA_BROKER_CONTRACT_VERSION || response.requestId !== request.requestId) {
+    throw new TypeError("Persona Broker response correlation is invalid");
+  }
+  const expectedOperationId=request.operationId ?? null;
+  if ((response.operationId ?? null) !== expectedOperationId) {
+    throw new TypeError("Persona Broker operation correlation is invalid");
+  }
+  assertBoundedId(response.bootId, "response.bootId");
+  if (!Number.isInteger(response.revision) || response.revision < 0 || typeof response.ok !== "boolean") {
+    throw new TypeError("Persona Broker response state metadata is invalid");
+  }
+  if (response.ok) {
+    if (!hasOwn(response, "result")) throw new TypeError("Successful Persona Broker response must contain result");
+    return response;
+  }
+  const error=response.error;
+  if (error === null || typeof error !== "object" || Array.isArray(error)
+      || !isPersonaBrokerErrorCode(error.code) || typeof error.message !== "string"
+      || typeof error.retryable !== "boolean") {
+    throw new TypeError("Persona Broker error response is invalid");
+  }
+  return response;
+}
+
+export function validatePersonaBrokerEvent(event) {
+  if (event === null || typeof event !== "object" || Array.isArray(event)
+      || event.version !== PERSONA_BROKER_CONTRACT_VERSION) {
+    throw new TypeError("Persona Broker event must be a version-1 object");
+  }
+  assertBoundedId(event.bootId, "event.bootId");
+  if (!Number.isInteger(event.sequence) || event.sequence < 1
+      || !Number.isInteger(event.revision) || event.revision < 0
+      || typeof event.type !== "string" || event.type.length < 1) {
+    throw new TypeError("Persona Broker event metadata is invalid");
+  }
+  return event;
+}
+
+export function assertPersonaBroker(broker) {
+  if (broker === null || typeof broker !== "object" || Array.isArray(broker)
+      || typeof broker.request !== "function" || typeof broker.subscribe !== "function") {
+    throw new TypeError("Persona Broker must expose request() and subscribe()");
+  }
+  return broker;
 }
 
 export function isPersonaBrokerErrorCode(code) {

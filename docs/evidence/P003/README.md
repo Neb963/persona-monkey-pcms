@@ -15,7 +15,10 @@ The contract preserves the authoritative PersonaMonkey Integration API v1 semant
 - durable Persona identity: **`personaUid`**;
 - command catalog: **55 commands**;
 - stable error vocabulary: **43 codes**;
+- callable broker shape: `request(request) -> Promise<response>` plus `subscribe(listener) -> { disconnect() }`;
+- versioned request/response/event envelopes with request/operation correlation and boot/revision metadata;
 - mutation/side-effect fencing: operation ID plus exact boot/revision precondition;
+- fail-closed response/error/event validation at the PCMS boundary;
 - Direct, destructive, External Automation and executable-install authority metadata retained per command;
 - retry semantics retained per command;
 - prototype-inherited command names are rejected.
@@ -59,6 +62,8 @@ A direct verification harness executed the committed P003 source at
 - **55/55** command semantic parity checks;
 - **43/43** error-code parity checks;
 - side-effect request fencing;
+- request/response/event correlation and fail-closed validation;
+- callable broker interface validation;
 - namespace/bootstrap invariants;
 - raw-authority boundary checks;
 - P002 frozen-upstream separation;

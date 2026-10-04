@@ -12,9 +12,12 @@ import {
   PERSONA_BROKER_CONTRACT_VERSION,
   PERSONA_BROKER_ERROR_CODES,
   PERSONA_BROKER_IDENTITY_FIELD,
+  assertPersonaBroker,
   createPersonaBrokerRequest,
   getPersonaBrokerCommand,
-  isPersonaBrokerErrorCode
+  isPersonaBrokerErrorCode,
+  validatePersonaBrokerEvent,
+  validatePersonaBrokerResponse
 } from "../../extension/pcms/core/persona-broker-contract.js";
 
 const SEMANTIC_KEYS=[
@@ -77,6 +80,7 @@ test("A003-01 broker request envelope fences side effects and prototype names", 
     requestId:"read-2",
     params:{ personaUid:"11111111-1111-4111-8111-111111111111" }
   });
+  assert.equal(read.version, 1);
   assert.equal(read.command, "persona.get");
   assert.equal(Object.isFrozen(read), true);
   assert.equal(Object.isFrozen(read.params), true);
@@ -109,4 +113,52 @@ test("A003-01 broker request envelope fences side effects and prototype names", 
     }),
     /do not accept precondition/
   );
+});
+
+test("A003-01 broker response/event contracts preserve correlation and fail closed", () => {
+  const request=createPersonaBrokerRequest({
+    command:"persona.get",
+    requestId:"read-response",
+    params:{ personaUid:"11111111-1111-4111-8111-111111111111" }
+  });
+  const response={
+    version:1,
+    requestId:"read-response",
+    operationId:null,
+    ok:true,
+    bootId:"boot-2",
+    revision:9,
+    result:{ personaUid:"11111111-1111-4111-8111-111111111111" }
+  };
+  assert.equal(validatePersonaBrokerResponse(response, request), response);
+  assert.throws(
+    () => validatePersonaBrokerResponse({ ...response, requestId:"other" }, request),
+    /correlation/
+  );
+  assert.throws(
+    () => validatePersonaBrokerResponse({
+      ...response,
+      ok:false,
+      result:undefined,
+      error:{ code:"PCMS_FAKE_ERROR", message:"no", retryable:false }
+    }, request),
+    /error response/
+  );
+
+  const event={
+    version:1,
+    bootId:"boot-2",
+    sequence:1,
+    revision:10,
+    type:"persona.changed",
+    entity:"persona",
+    entityId:"11111111-1111-4111-8111-111111111111",
+    data:{}
+  };
+  assert.equal(validatePersonaBrokerEvent(event), event);
+  assert.throws(() => validatePersonaBrokerEvent({ ...event, sequence:0 }), /event metadata/);
+
+  const broker={ request:async () => response, subscribe:() => ({ disconnect() {} }) };
+  assert.equal(assertPersonaBroker(broker), broker);
+  assert.throws(() => assertPersonaBroker({ request() {} }), /request\(\) and subscribe\(\)/);
 });
