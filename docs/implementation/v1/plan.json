@@ -154,7 +154,7 @@
     {
       "id": "P003",
       "title": "PCMS namespace/UI entry + internal Persona Broker contract",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P002"
       ],
@@ -389,7 +389,7 @@
     {
       "id": "P009",
       "title": "Persona Broker implementation",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P003"
       ],

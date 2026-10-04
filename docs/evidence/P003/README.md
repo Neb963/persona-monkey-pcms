@@ -1,6 +1,6 @@
 # P003 — PCMS namespace/UI entry + internal Persona Broker contract
 
-Status: **MERGED / integration verified**
+Status: **ACCEPTED**
 
 Implementation checkpoint: `7da922a84e8393d303ddd40a3570f7d6be55a23e`.
 
@@ -111,3 +111,14 @@ The exact merged `main` commit passed:
 - Firefox smoke artifact **11314774985**, digest `sha256:7cc3a3fc42eb9ba041675465b8adbe827f06cf96a6ca31fd16c25aec528728a1`.
 
 This establishes integration evidence for the exact merged source. P003 is not marked ACCEPTED until this MERGED governance checkpoint itself is repository-verified.
+
+## Acceptance decision
+
+The durable MERGED governance checkpoint `834fa2d48e0d3080eab75a409ff09a0700076493` passed:
+- repository verification run **37235419785**;
+- pinned Firefox Developer Edition run **37235419806**;
+- Firefox smoke artifact **11315715373**, digest `sha256:f5c03a8240bb9b27e55ba75e26cd14c5c5e02e97673a8dd073b74f7e0e1504e4`.
+
+Together with the direct P003 contract/bootstrap/boundary verification recorded above, this satisfies A003-01, A003-02 and A003-03. P003 is ACCEPTED.
+
+P009 becomes READY by dependency resolution only. No P009 implementation is started in this session.

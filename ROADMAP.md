@@ -30,13 +30,13 @@ Merge wave: 1
 - [x] T002.3 — T002.3 Prove inherited release baseline
 
 ## P003 — PCMS namespace/UI entry + internal Persona Broker contract
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P002  
 Merge wave: 2
 
-- [ ] T003.1 — T003.1 Define broker contract
-- [ ] T003.2 — T003.2 Add PCMS namespace/bootstrap
-- [ ] T003.3 — T003.3 Contract parity tests
+- [x] T003.1 — T003.1 Define broker contract
+- [x] T003.2 — T003.2 Add PCMS namespace/bootstrap
+- [x] T003.3 — T003.3 Contract parity tests
 
 ## P004 — Firefox sandbox dynamic-controller capability spike
 Status: **READY**  
@@ -84,7 +84,7 @@ Merge wave: 3
 - [ ] T008.3 — T008.3 immutable candidate lifecycle
 
 ## P009 — Persona Broker implementation
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P003  
 Merge wave: 3
 
