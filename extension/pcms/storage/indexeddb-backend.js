@@ -79,7 +79,7 @@ function recordId(namespace, key) {
   return namespace + "\u0000" + key;
 }
 
-export function createIndexedDbStorageBackend(options = {}) {
+export function createIndexedDbStorageBackend({ openDatabase = openPcmsDatabase, ...openOptions } = {}) {
   let db = null;
   let stale = false;
   let opening = null;
@@ -87,7 +87,7 @@ export function createIndexedDbStorageBackend(options = {}) {
   async function open() {
     if (db && !stale) return;
     if (opening) return opening;
-    opening = openPcmsDatabase(options).then((opened) => {
+    opening = openDatabase(openOptions).then((opened) => {
       db = opened;
       stale = false;
       db.onversionchange = () => {
