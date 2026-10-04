@@ -48,7 +48,7 @@ export function createSecretStore({
     async probe() {
       return safe(async () => {
         const result = await backend.probe();
-        return Object.freeze({ ready: result?.ready === true, backend: backend.kind || "secret-backend" });
+        return Object.freeze({ ready: result?.ready === true });
       });
     },
 
