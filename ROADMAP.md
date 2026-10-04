@@ -48,7 +48,7 @@ Merge wave: 2
 - [x] T004.3 — T004.3 Lifecycle/isolation acceptance
 
 ## P005 — PCMS IndexedDB storage broker + migrations
-Status: **READY**  
+Status: **CLAIMED**  
 Depends on: P002  
 Merge wave: 2
 
