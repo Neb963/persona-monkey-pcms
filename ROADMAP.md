@@ -57,13 +57,13 @@ Merge wave: 2
 - [x] T005.3 — T005.3 restart/failure tests
 
 ## P006 — PCMS SecretStore host + SecretRef abstraction
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P002  
 Merge wave: 2
 
-- [ ] T006.1 — T006.1 SecretRef contract
-- [ ] T006.2 — T006.2 narrow native host/backend
-- [ ] T006.3 — T006.3 redaction/failure tests
+- [x] T006.1 — T006.1 SecretRef contract
+- [x] T006.2 — T006.2 narrow native host/backend
+- [x] T006.3 — T006.3 redaction/failure tests
 
 ## P007 — Minimal Audit Journal
 Status: **READY**  
