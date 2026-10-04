@@ -12,7 +12,7 @@ Merge wave: 0
 - [x] T000.3 — T000.3 Verify generated views
 
 ## P001 — Hosted CI + pinned Firefox Developer Edition harness
-Status: **READY**  
+Status: **CLAIMED**  
 Depends on: P000  
 Merge wave: 1
 
