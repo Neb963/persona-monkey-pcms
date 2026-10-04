@@ -1,6 +1,6 @@
 # P004 — Firefox sandbox dynamic-controller capability spike
 
-Status: **MERGED / integration verified**
+Status: **ACCEPTED**
 
 Implementation checkpoint: `5898be93e2304433bc3d57ae5e6b16e9e08a4161`.
 
@@ -168,3 +168,16 @@ The exact merged `main` commit passed:
 - Firefox smoke artifact **11316323424**, digest `sha256:b066a526d0bb80ffd5e3a2776c7202e47bbf517efc7f4a777f3413661b922da1`.
 
 This establishes integration evidence for the exact merged source. P004 is not marked ACCEPTED until this MERGED governance checkpoint itself passes repository verification.
+
+## Acceptance decision
+
+The durable MERGED governance checkpoint `432532cb25122b7df308876fa5857db7a75cf424` passed:
+
+- repository verification run **37238577144**;
+- pinned Firefox Developer Edition run **37238577170**;
+- Firefox smoke artifact **11315699258**, digest `sha256:84c1a026b0e9660ecd0d7750a2d84bcd4578e628e287a27b5729c34c8bed5801`.
+
+Together with the direct P004 protocol/runtime/boundary suite and the platform-contract evidence recorded above,
+this satisfies **A004-01**, **A004-02**, and **A004-03**. P004 is ACCEPTED.
+
+No successor phase is claimed or implemented by this session.

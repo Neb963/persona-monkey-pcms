@@ -39,13 +39,13 @@ Merge wave: 2
 - [x] T003.3 — T003.3 Contract parity tests
 
 ## P004 — Firefox sandbox dynamic-controller capability spike
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P002  
 Merge wave: 2
 
-- [ ] T004.1 — T004.1 Sandbox runtime probe
-- [ ] T004.2 — T004.2 Authenticated bounded RPC
-- [ ] T004.3 — T004.3 Lifecycle/isolation acceptance
+- [x] T004.1 — T004.1 Sandbox runtime probe
+- [x] T004.2 — T004.2 Authenticated bounded RPC
+- [x] T004.3 — T004.3 Lifecycle/isolation acceptance
 
 ## P005 — PCMS IndexedDB storage broker + migrations
 Status: **READY**  

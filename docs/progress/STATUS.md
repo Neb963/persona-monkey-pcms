@@ -3,7 +3,7 @@
 > Generated from docs/implementation/v1/plan.json. Do not hand-edit.
 
 - Baseline: **v1**
-- Accepted: **P000, P001, P002, P003**
+- Accepted: **P000, P001, P002, P003, P004**
 - Ready: **P005, P006, P009**
 - Claimed/In progress: **none**
 - Final live phases: **P025, P026**
