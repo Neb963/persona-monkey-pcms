@@ -271,7 +271,7 @@
     {
       "id": "P006",
       "title": "PCMS SecretStore host + SecretRef abstraction",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P002"
       ],
