@@ -1,6 +1,6 @@
 {
   "name": "persona-monkey-pcms",
-  "version": "0.0.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,6 +14,9 @@
     "test:firefox": "node --test tests/firefox/*.test.mjs",
     "firefox:install": "node tools/firefox/install-pinned.mjs",
     "firefox:smoke": "node tools/firefox/smoke.mjs",
-    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims && npm run test:firefox"
+    "test:upstream-integrity": "node --test tests/upstream/import-integrity.test.mjs",
+    "test:upstream-baseline": "node tests/upstream/run-baseline.mjs",
+    "verify:upstream": "npm run test:upstream-integrity && npm run test:upstream-baseline",
+    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims && npm run test:firefox && npm run verify:upstream"
   }
 }
