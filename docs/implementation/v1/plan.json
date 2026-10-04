@@ -110,7 +110,7 @@
     {
       "id": "P002",
       "title": "Import and preserve PersonaMonkey baseline",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P001"
       ],
