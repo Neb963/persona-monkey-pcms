@@ -6,13 +6,15 @@ export function createSecretStore({
   backend,
   randomUUID = () => globalThis.crypto?.randomUUID?.()
 } = {}) {
-  if (!backend
-      || typeof backend.put !== "function"
-      || typeof backend.get !== "function"
-      || typeof backend.delete !== "function"
-      || typeof backend.probe !== "function") {
-    throw secretError(SECRET_ERROR_CODES.UNAVAILABLE);
-  }
+  let backendValid = false;
+  try {
+    backendValid = Boolean(backend)
+      && typeof backend.put === "function"
+      && typeof backend.get === "function"
+      && typeof backend.delete === "function"
+      && typeof backend.probe === "function";
+  } catch {}
+  if (!backendValid) throw secretError(SECRET_ERROR_CODES.UNAVAILABLE);
 
   let closed = false;
 
@@ -88,7 +90,7 @@ export function createSecretStore({
     close() {
       if (closed) return;
       closed = true;
-      backend.close?.();
+      try { backend.close?.(); } catch {}
     }
   });
 }
