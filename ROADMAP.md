@@ -21,16 +21,16 @@ Merge wave: 1
 - [x] T001.3 — T001.3 Prove browser CI evidence
 
 ## P002 — Import and preserve PersonaMonkey baseline
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P001  
 Merge wave: 1
 
-- [ ] T002.1 — T002.1 Import exact upstream tree
-- [ ] T002.2 — T002.2 Reconcile public-repo provenance
-- [ ] T002.3 — T002.3 Prove inherited release baseline
+- [x] T002.1 — T002.1 Import exact upstream tree
+- [x] T002.2 — T002.2 Reconcile public-repo provenance
+- [x] T002.3 — T002.3 Prove inherited release baseline
 
 ## P003 — PCMS namespace/UI entry + internal Persona Broker contract
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P002  
 Merge wave: 2
 
@@ -39,7 +39,7 @@ Merge wave: 2
 - [ ] T003.3 — T003.3 Contract parity tests
 
 ## P004 — Firefox sandbox dynamic-controller capability spike
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P002  
 Merge wave: 2
 
@@ -48,7 +48,7 @@ Merge wave: 2
 - [ ] T004.3 — T004.3 Lifecycle/isolation acceptance
 
 ## P005 — PCMS IndexedDB storage broker + migrations
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P002  
 Merge wave: 2
 
@@ -57,7 +57,7 @@ Merge wave: 2
 - [ ] T005.3 — T005.3 restart/failure tests
 
 ## P006 — PCMS SecretStore host + SecretRef abstraction
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P002  
 Merge wave: 2
 

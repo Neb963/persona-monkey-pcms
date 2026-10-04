@@ -110,7 +110,7 @@
     {
       "id": "P002",
       "title": "Import and preserve PersonaMonkey baseline",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P001"
       ],
@@ -154,7 +154,7 @@
     {
       "id": "P003",
       "title": "PCMS namespace/UI entry + internal Persona Broker contract",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P002"
       ],
@@ -193,7 +193,7 @@
     {
       "id": "P004",
       "title": "Firefox sandbox dynamic-controller capability spike",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P002"
       ],
@@ -232,7 +232,7 @@
     {
       "id": "P005",
       "title": "PCMS IndexedDB storage broker + migrations",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P002"
       ],
@@ -271,7 +271,7 @@
     {
       "id": "P006",
       "title": "PCMS SecretStore host + SecretRef abstraction",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P002"
       ],

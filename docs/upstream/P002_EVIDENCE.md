@@ -1,6 +1,6 @@
 # P002 — Import and preserve PersonaMonkey baseline
 
-Status: **MERGED / integration verified**
+Status: **ACCEPTED**
 
 Implementation checkpoint: `6387a376d66dfba790f1c86040823cba09a10f92`.
 
@@ -81,3 +81,16 @@ The exact merged `main` commit passed:
 - Firefox smoke artifact `11314273381`, digest `sha256:a70d24c377fabeb7533fd4d629c0e0bda4c65e2e6d68ec44e62ee0e2e6872c85`.
 
 This establishes integration evidence for the exact merged source. P002 is not marked ACCEPTED until this MERGED governance checkpoint itself is repository-verified.
+
+## Acceptance decision
+
+The durable MERGED governance checkpoint `fc89e8a03115bf383fc1f155f92b3850cbab0ce2` passed:
+- repository/P002 verification run `37232825265`;
+- pinned Firefox Developer Edition run `37232825300`;
+- Firefox smoke artifact `11314333651`, digest `sha256:3f96da40ebf7befe4e82ad55bd1e3de3e0c4288770e264588d0798e88524937d`.
+
+The repository verification reconstructed the exact frozen upstream tree again, ran the inherited non-browser release gates, and rebuilt XPI SHA-256
+`928b94a871d70455e42c2a8269a7adec27c59b3c5937e7618f80da218fb126e1`.
+
+A002-01, A002-02 and A002-03 are therefore accepted. P002 is ACCEPTED.
+P003, P004, P005 and P006 become READY by dependency resolution only; none is implemented in this session.
