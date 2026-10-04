@@ -17,6 +17,7 @@ const OBJECT_GET_OWN_PROPERTY_SYMBOLS = Object.getOwnPropertySymbols;
 const OBJECT_HAS_OWN = Object.hasOwn;
 const OBJECT_ENTRIES = Object.entries;
 const OBJECT_FREEZE = Object.freeze;
+const OBJECT_PROTOTYPE = Object.prototype;
 const ARRAY_IS_ARRAY = Array.isArray;
 const TEXT_ENCODER = new TextEncoder();
 const TEXT_ENCODE = TEXT_ENCODER.encode.bind(TEXT_ENCODER);
@@ -35,7 +36,7 @@ function validateController(controller) {
     throw protocolError(SANDBOX_ERROR_CODES.CONTROLLER_INVALID);
   }
   const prototype = OBJECT_GET_PROTOTYPE_OF(controller);
-  if (prototype !== Object.prototype && prototype !== null) {
+  if (prototype !== OBJECT_PROTOTYPE && prototype !== null) {
     throw protocolError(SANDBOX_ERROR_CODES.CONTROLLER_INVALID);
   }
   if (OBJECT_GET_OWN_PROPERTY_SYMBOLS(controller).length) {
@@ -79,13 +80,18 @@ export function installSandboxControllerRuntime({
   let disposed = false;
   let capabilitySequence = 0;
   const pendingCapabilities = new Map();
+  const pendingGet = pendingCapabilities.get.bind(pendingCapabilities);
+  const pendingSet = pendingCapabilities.set.bind(pendingCapabilities);
+  const pendingDelete = pendingCapabilities.delete.bind(pendingCapabilities);
+  const pendingValues = pendingCapabilities.values.bind(pendingCapabilities);
+  const pendingClear = pendingCapabilities.clear.bind(pendingCapabilities);
 
   function rejectPending(code) {
-    for (const pending of pendingCapabilities.values()) {
+    for (const pending of pendingValues()) {
       clearTimer(pending.timer);
       pending.reject(protocolError(code));
     }
-    pendingCapabilities.clear();
+    pendingClear();
   }
 
   function shutdown(code = SANDBOX_ERROR_CODES.DISPOSED) {
@@ -118,10 +124,10 @@ export function installSandboxControllerRuntime({
       const callId = "cap-" + (++capabilitySequence);
       return new NativePromise((resolve, reject) => {
         const timer = setTimer(() => {
-          pendingCapabilities.delete(callId);
+          pendingDelete(callId);
           reject(protocolError(SANDBOX_ERROR_CODES.TIMEOUT));
         }, capabilityTimeoutMs);
-        pendingCapabilities.set(callId, { resolve, reject, timer });
+        pendingSet(callId, { resolve, reject, timer });
         post({
           version: SANDBOX_PROTOCOL_VERSION,
           sessionId,
@@ -165,7 +171,7 @@ export function installSandboxControllerRuntime({
 
     try {
       const candidate = await factory(api);
-      controller = validateController(candidate);
+      controller = OBJECT_FREEZE(validateController(candidate));
       const startResult = typeof controller.start === "function"
         ? await controller.start(cloneSandboxJson(safeParams.initial ?? null, { maxBytes: SANDBOX_MAX_MESSAGE_BYTES }))
         : null;
@@ -217,12 +223,12 @@ export function installSandboxControllerRuntime({
     }
 
     if (message.type === "capability.result") {
-      const pending = pendingCapabilities.get(message.callId);
+      const pending = pendingGet(message.callId);
       if (!pending) {
         shutdown(SANDBOX_ERROR_CODES.PROTOCOL);
         return;
       }
-      pendingCapabilities.delete(message.callId);
+      pendingDelete(message.callId);
       clearTimer(pending.timer);
       if (message.ok) pending.resolve(jsonResult(message.result));
       else pending.reject(protocolError(message.error.code));
