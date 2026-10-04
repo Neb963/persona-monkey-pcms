@@ -193,7 +193,7 @@
     {
       "id": "P004",
       "title": "Firefox sandbox dynamic-controller capability spike",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P002"
       ],
