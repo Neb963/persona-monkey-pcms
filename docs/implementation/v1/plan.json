@@ -68,7 +68,7 @@
     {
       "id": "P001",
       "title": "Hosted CI + pinned Firefox Developer Edition harness",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P000"
       ],
