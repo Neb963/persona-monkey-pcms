@@ -2,7 +2,7 @@
 
 Status: **CI_VERIFIED on implementation checkpoint**
 
-Implementation checkpoint: `cac005555b374ad303a07f85f04567c8b24cc5ac`.
+Implementation checkpoint: `7da922a84e8393d303ddd40a3570f7d6be55a23e`.
 
 ## A003-01 — Persona Broker contract
 
@@ -57,7 +57,7 @@ Added:
 The committed tests cover Integration-v1 semantic parity, request fencing, stable error codes, immutable namespace/bootstrap behavior, fail-closed namespace collision handling, authority-boundary restrictions, and separation from the frozen P002 upstream blob set.
 
 A direct verification harness executed the committed P003 source at
-`cac005555b374ad303a07f85f04567c8b24cc5ac` and passed:
+`7da922a84e8393d303ddd40a3570f7d6be55a23e` and passed:
 
 - **55/55** command semantic parity checks;
 - **43/43** error-code parity checks;
@@ -75,8 +75,12 @@ The current repository workflows do not discover `tests/pcms/**`; therefore this
 
 The exact implementation checkpoint passed the repository's existing independent workflows:
 
-- `verify` push run **37234561189** — **success**;
-- pinned Firefox Developer Edition push run **37234561175** — **success**.
+- `verify` push run **37235034885** — **success**;
+- pinned Firefox Developer Edition push run **37235034855** — **success**.
+
+The same code checkpoint also passed pull-request runs:
+- `verify` PR run **37235038610** — **success**;
+- pinned Firefox Developer Edition PR run **37235038607** — **success**.
 
 These workflows independently verify repository governance, frozen PersonaMonkey baseline integrity, and pinned Firefox regression. They are recorded separately from the direct P003 phase verification above.
 
@@ -84,11 +88,11 @@ These workflows independently verify repository governance, frozen PersonaMonkey
 
 Diff from the durable P003 claim checkpoint
 `7a7e877862485d2d5b3fa607da645f58d33b6877` to implementation checkpoint
-`cac005555b374ad303a07f85f04567c8b24cc5ac`:
+`7da922a84e8393d303ddd40a3570f7d6be55a23e`:
 
-- **8 files changed**;
-- all paths are within `extension/pcms/**` or `tests/pcms/**`;
+- **8** product/test files under `extension/pcms/**` and `tests/pcms/**`;
+- required P003 evidence plus plan/claim/generated-roadmap governance records;
 - **0** frozen PersonaMonkey blobs modified;
-- **0** paths outside P003 product ownership.
+- **0** product/test paths outside P003 ownership.
 
 No live provider, Mullvad, Perchance, or Firefox DevTools MCP testing is claimed for P003.
