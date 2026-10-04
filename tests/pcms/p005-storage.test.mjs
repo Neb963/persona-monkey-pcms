@@ -8,7 +8,7 @@ import {
   PCMS_RECORD_STORE,
   applyPcmsMigrations
 } from "../../extension/pcms/storage/migrations.js";
-import { openPcmsDatabase } from "../../extension/pcms/storage/indexeddb-backend.js";
+import { createIndexedDbStorageBackend, openPcmsDatabase } from "../../extension/pcms/storage/indexeddb-backend.js";
 import { createPcmsStorageBroker } from "../../extension/pcms/storage/storage-broker.js";
 
 function makeMigrationDb() {
@@ -60,6 +60,71 @@ function makeOpenIndexedDb({ db, oldVersion=0, newVersion=PCMS_DB_VERSION } = {}
       return request;
     }
   };
+}
+
+function makeTransactionalDb() {
+  const records=new Map();
+  const db={
+    records,
+    closed:false,
+    onversionchange:null,
+    close() { this.closed=true; },
+    transaction(storeName) {
+      assert.equal(storeName,PCMS_RECORD_STORE);
+      let pending=0;
+      let completionQueued=false;
+      const tx={
+        error:null,
+        aborted:false,
+        oncomplete:null,
+        onabort:null,
+        onerror:null,
+        abort() {
+          if (this.aborted) return;
+          this.aborted=true;
+          queueMicrotask(() => this.onabort?.());
+        }
+      };
+      const maybeComplete=() => {
+        if (pending!==0 || tx.aborted || completionQueued) return;
+        completionQueued=true;
+        queueMicrotask(() => {
+          completionQueued=false;
+          if (pending===0 && !tx.aborted) tx.oncomplete?.();
+        });
+      };
+      const request=(operation) => {
+        pending += 1;
+        const req={result:undefined,error:null,onsuccess:null,onerror:null};
+        queueMicrotask(() => {
+          if (tx.aborted) { pending -= 1; return; }
+          try {
+            req.result=operation();
+            req.onsuccess?.();
+          } catch (error) {
+            req.error=error;
+            tx.error=error;
+            req.onerror?.();
+          } finally {
+            pending -= 1;
+            maybeComplete();
+          }
+        });
+        return req;
+      };
+      const store={
+        get(id) { return request(() => records.get(id) ? structuredClone(records.get(id)) : undefined); },
+        put(record) { return request(() => { records.set(record.id,structuredClone(record)); return record.id; }); },
+        delete(id) { return request(() => { records.delete(id); return undefined; }); },
+        index() {
+          throw new Error("cursor path not used by this adapter test");
+        }
+      };
+      tx.objectStore=() => store;
+      return tx;
+    }
+  };
+  return db;
 }
 
 function makeMemoryBackend(shared = { records:new Map(), opens:0, failNextWrite:false }) {
@@ -188,6 +253,39 @@ test("A005-02 namespaces are isolated and every mutation is revision-fenced", as
   await assert.rejects(
     alpha.compareAndSwap("unsafe",{expectedRevision:0,value:{get token(){ return "no"; }}}),
     (error) => error?.code===STORAGE_ERROR_CODES.INVALID_VALUE
+  );
+});
+
+test("A005-02 IndexedDB adapter performs atomic revision CAS on its record store", async () => {
+  const db=makeTransactionalDb();
+  const backend=createIndexedDbStorageBackend({openDatabase:async () => db});
+  await backend.open();
+
+  const created=await backend.compareAndSwap(
+    "module.alpha","settings",0,{enabled:true},"2026-10-05T00:00:00Z"
+  );
+  assert.equal(created.revision,1);
+  assert.equal((await backend.get("module.alpha","settings")).revision,1);
+
+  await assert.rejects(
+    backend.compareAndSwap(
+      "module.alpha","settings",0,{enabled:false},"2026-10-05T00:00:01Z"
+    ),
+    (error) => error?.code===STORAGE_ERROR_CODES.CAS_MISMATCH && error.currentRevision===1
+  );
+  assert.equal((await backend.get("module.alpha","settings")).value.enabled,true);
+
+  assert.deepEqual(
+    await backend.deleteCompareAndSwap("module.alpha","settings",1),
+    {deleted:true,revision:1}
+  );
+  assert.equal(await backend.get("module.alpha","settings"),null);
+
+  db.onversionchange();
+  assert.equal(db.closed,true);
+  assert.throws(
+    () => backend.get("module.alpha","settings"),
+    (error) => error?.code===STORAGE_ERROR_CODES.STALE_CONNECTION
   );
 });
 
