@@ -10,7 +10,7 @@ import {
   auditEventKey,
   createAuditEvent
 } from "../../extension/pcms/audit/schema.js";
-import { PCMS_RECORD_STORE } from "../../extension/pcms/storage/migrations.js";
+import { PCMS_NAMESPACE_INDEX, PCMS_RECORD_STORE } from "../../extension/pcms/storage/migrations.js";
 
 function id(namespace, key) {
   return namespace + "\u0000" + key;
@@ -28,7 +28,7 @@ function makeTransactionalDb(shared = { records: new Map(), failNextEventAdd: fa
     close() { this.closed = true; },
     transaction(storeName, mode) {
       assert.equal(storeName, PCMS_RECORD_STORE);
-      assert.equal(mode, "readwrite");
+      assert.ok(mode === "readwrite" || mode === "readonly");
       let pending = 0;
       let completed = false;
       let aborted = false;
@@ -55,8 +55,10 @@ function makeTransactionalDb(shared = { records: new Map(), failNextEventAdd: fa
           completionQueued = false;
           if (aborted || completed || pending !== 0) return;
           completed = true;
-          shared.records.clear();
-          for (const [key, value] of staged) shared.records.set(key, clone(value));
+          if (mode === "readwrite") {
+            shared.records.clear();
+            for (const [key, value] of staged) shared.records.set(key, clone(value));
+          }
           transaction.oncomplete?.();
         });
       }
@@ -83,6 +85,38 @@ function makeTransactionalDb(shared = { records: new Map(), failNextEventAdd: fa
         return request;
       }
 
+      function openCursor() {
+        pending += 1;
+        const values = [...staged.values()]
+          .sort((a, b) => a.id.localeCompare(b.id))
+          .map(clone);
+        let index = 0;
+        const request = { result: undefined, error: null, onsuccess: null, onerror: null };
+
+        function emit() {
+          queueMicrotask(() => {
+            if (aborted) {
+              pending -= 1;
+              return;
+            }
+            if (index >= values.length) {
+              request.result = null;
+              request.onsuccess?.();
+              pending -= 1;
+              maybeComplete();
+              return;
+            }
+            request.result = {
+              value: clone(values[index++]),
+              continue: emit
+            };
+            request.onsuccess?.();
+          });
+        }
+        emit();
+        return request;
+      }
+
       const store = {
         get(key) {
           return makeRequest((request) => {
@@ -90,12 +124,14 @@ function makeTransactionalDb(shared = { records: new Map(), failNextEventAdd: fa
           });
         },
         put(record) {
+          assert.equal(mode, "readwrite");
           return makeRequest((request) => {
             staged.set(record.id, clone(record));
             request.result = record.id;
           });
         },
         add(record) {
+          assert.equal(mode, "readwrite");
           return makeRequest((request) => {
             if (shared.failNextEventAdd && record.namespace === AUDIT_NAMESPACE) {
               shared.failNextEventAdd = false;
@@ -105,6 +141,10 @@ function makeTransactionalDb(shared = { records: new Map(), failNextEventAdd: fa
             staged.set(record.id, clone(record));
             request.result = record.id;
           });
+        },
+        index(indexName) {
+          assert.equal(indexName, PCMS_NAMESPACE_INDEX);
+          return { openCursor };
         }
       };
 
@@ -224,6 +264,21 @@ test("A007-01 authoritative state transition and audit append commit atomically 
   assert.equal(committed.state.revision, 1);
   assert.equal(committed.event.sequence, 2);
 
+  const persistedPage = await journal.read({ afterSequence: 0, limit: 10 });
+  assert.deepEqual(persistedPage.events.map((event) => event.sequence), [1, 2]);
+  assert.equal(persistedPage.lastSequence, 2);
+  assert.equal(persistedPage.hasMore, false);
+
+  const persistedProjection = await journal.project({
+    initialState: { count: 0 },
+    reducer(state) {
+      state.count += 1;
+      return state;
+    }
+  });
+  assert.equal(persistedProjection.sequence, 2);
+  assert.equal(persistedProjection.state.count, 2);
+
   const stateBeforeFailure = clone(shared.records.get(id("core.accounts", "acct-1")));
   const metaBeforeFailure = clone(shared.records.get(id(AUDIT_NAMESPACE, AUDIT_META_KEY)));
   assert.equal(metaBeforeFailure.value.lastSequence, 2);
@@ -251,6 +306,12 @@ test("A007-01 authoritative state transition and audit append commit atomically 
   assert.deepEqual(shared.records.get(id("core.accounts", "acct-1")), stateBeforeFailure);
   assert.deepEqual(shared.records.get(id(AUDIT_NAMESPACE, AUDIT_META_KEY)), metaBeforeFailure);
   assert.equal(shared.records.has(id(AUDIT_NAMESPACE, auditEventKey(3))), false);
+
+  shared.records.delete(id(AUDIT_NAMESPACE, auditEventKey(2)));
+  await assert.rejects(
+    journal.read({ afterSequence: 0, limit: 10 }),
+    (error) => error?.code === AUDIT_ERROR_CODES.CORRUPT && error.lastSequence === 2
+  );
 });
 
 test("A007-01 stale state revision aborts without consuming an audit sequence", async () => {
