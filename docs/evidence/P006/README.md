@@ -1,6 +1,6 @@
 # P006 — PCMS SecretStore host + SecretRef abstraction
 
-Status: **CI_VERIFIED / implementation complete**
+Status: **MERGED / integration verified**
 
 Initial implementation checkpoint: `a0d8dc0662fcdadda22b99c1e3bf25bb434c5a76`.
 
@@ -108,3 +108,21 @@ Compared with durable claim checkpoint `fceac82370df0a35223c65e39cd0c23cc13b9403
 - two files under `tests/pcms/**`.
 
 All product/test paths are within the active P006 claim. No successor phase is implemented.
+
+## Final PR and merged-source integration verification
+
+Final PR head `6133998e47505988693f161262115cd108065b2f` passed:
+
+- repository verification push run **37242066829** — success;
+- pinned Firefox Developer Edition push run **37242066825** — success;
+- repository verification PR run **37242069361** — success;
+- pinned Firefox Developer Edition PR run **37242069357** — success.
+
+PR #6 merged as `976eaef41a06b1ddd4abeb6021f46fa9161a870a`. The exact merged source passed:
+
+- repository verification run **37242212905** — success;
+- pinned Firefox Developer Edition run **37242212890** — success.
+
+A fresh exact-blob focused reconstruction of hardened checkpoint `3bcf614e50b03cb212c16f6e56c124becb60e1a9` also passed **11 tests, 0 failed**, with all seven Git blob hashes matching the evidence above.
+
+P006 remains MERGED until this governance checkpoint itself passes repository verification.

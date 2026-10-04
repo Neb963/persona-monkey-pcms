@@ -271,7 +271,7 @@
     {
       "id": "P006",
       "title": "PCMS SecretStore host + SecretRef abstraction",
-      "status": "PR_OPEN",
+      "status": "MERGED",
       "dependsOn": [
         "P002"
       ],
