@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { SECRET_ERROR_CODES } from "../../extension/pcms/secrets/errors.js";
-import { createNativeSecretBackend } from "../../extension/pcms/secrets/native-secret-backend.js";
+import { createFirefoxNativeSecretTransport, createNativeSecretBackend } from "../../extension/pcms/secrets/native-secret-backend.js";
 import {
   MAX_SECRET_BYTES,
   SECRET_HOST_NAME,
@@ -79,6 +79,34 @@ test("A006-01 SecretRef is opaque, versioned and value-free", () => {
   );
   assert.throws(
     () => createSecretRef({randomUUID:()=> "not-a-uuid"}),
+    (error) => error?.code===SECRET_ERROR_CODES.UNAVAILABLE
+  );
+});
+
+test("A006-02 Firefox transport can address only the dedicated PCMS secret host", async () => {
+  const calls=[];
+  const runtime={
+    async sendNativeMessage(hostName, request) {
+      calls.push({hostName,request});
+      return {ok:true};
+    }
+  };
+  const transport=createFirefoxNativeSecretTransport(runtime);
+  const request={version:1,id:UUIDS[0],op:"probe"};
+
+  assert.deepEqual(await transport(SECRET_HOST_NAME,request),{ok:true});
+  assert.deepEqual(calls,[{hostName:SECRET_HOST_NAME,request}]);
+  await assert.rejects(
+    transport("com.persona.mullvad_router",request),
+    (error) => error?.code===SECRET_ERROR_CODES.PROTOCOL
+  );
+  assert.equal(calls.length,1);
+
+  const failing=createFirefoxNativeSecretTransport({
+    async sendNativeMessage() { throw new Error("raw native failure"); }
+  });
+  await assert.rejects(
+    failing(SECRET_HOST_NAME,request),
     (error) => error?.code===SECRET_ERROR_CODES.UNAVAILABLE
   );
 });
