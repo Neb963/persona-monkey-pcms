@@ -154,7 +154,7 @@
     {
       "id": "P003",
       "title": "PCMS namespace/UI entry + internal Persona Broker contract",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P002"
       ],
