@@ -232,7 +232,7 @@
     {
       "id": "P005",
       "title": "PCMS IndexedDB storage broker + migrations",
-      "status": "PR_OPEN",
+      "status": "MERGED",
       "dependsOn": [
         "P002"
       ],

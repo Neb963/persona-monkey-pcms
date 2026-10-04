@@ -1,6 +1,6 @@
 # P005 — PCMS IndexedDB storage broker + migrations
 
-Status: **CI_VERIFIED / implementation complete**
+Status: **MERGED / integration verified**
 
 Initial implementation checkpoint: `41ee6a0891298a37ab37470f2ffefec140723bc3`.
 
@@ -106,3 +106,14 @@ Compared with the durable P005 claim checkpoint `aa66f30469073dddf90ef413e4009ee
 - P005 plan/roadmap/claim state records required by repository governance.
 
 All product/test implementation paths are inside P005's claimed write paths. No successor phase is implemented by this branch.
+
+## Merged-source integration verification
+
+PR #5 merged as `6ccba578912493e2012f82bae1ad73126c473ae2`.
+
+The exact merged `main` commit passed:
+
+- repository verification run **37240355942** — success;
+- pinned Firefox Developer Edition run **37240355885** — success.
+
+This establishes integration evidence for the exact merged source. P005 is not marked ACCEPTED until this MERGED governance checkpoint itself passes repository verification.
