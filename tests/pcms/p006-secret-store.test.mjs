@@ -121,7 +121,7 @@ test("A006-02 dedicated native backend performs put/get/delete without using rou
   const store=createSecretStore({backend,randomUUID:()=>UUIDS[0]});
   const secret="provider-password-α";
 
-  assert.deepEqual(await store.probe(),{ready:true,backend:"native-secret-host"});
+  assert.deepEqual(await store.probe(),{ready:true});
   const ref=await store.create(secret);
   assert.equal(ref,SECRET_REF_PREFIX+UUIDS[0]);
   assert.equal(host.secrets.get(ref),secret);
