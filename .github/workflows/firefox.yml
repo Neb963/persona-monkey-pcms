@@ -1,0 +1,53 @@
+name: firefox-developer-edition
+
+on:
+  push:
+    branches: ["main", "agent/**"]
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+
+jobs:
+  pinned-firefox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      FIREFOX_INSTALL_ROOT: ${{ runner.temp }}/pcms-firefox
+      FIREFOX_SMOKE_REPORT: ${{ runner.temp }}/firefox-smoke-report.json
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Install Firefox runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libdbus-glib-1-2 libasound2t64 libx11-xcb1 libxt6
+
+      - name: Verify Firefox harness contracts
+        run: npm run test:firefox
+
+      - name: Install exact pinned Firefox Developer Edition
+        id: install
+        run: npm run firefox:install
+
+      - name: Smoke pinned Firefox with disposable profile
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+        run: npm run firefox:smoke
+
+      - name: Upload deterministic smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-developer-edition-smoke
+          path: ${{ runner.temp }}/firefox-smoke-report.json
+          if-no-files-found: warn
+          retention-days: 7

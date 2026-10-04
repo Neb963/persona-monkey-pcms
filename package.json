@@ -11,6 +11,9 @@
     "verify:views": "node tools/generate-views.mjs --check",
     "verify:claims": "node tools/verify-claims.mjs",
     "verify:repo": "node tools/verify-repo.mjs",
-    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims"
+    "test:firefox": "node --test tests/firefox/*.test.mjs",
+    "firefox:install": "node tools/firefox/install-pinned.mjs",
+    "firefox:smoke": "node tools/firefox/smoke.mjs",
+    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims && npm run test:firefox"
   }
 }
