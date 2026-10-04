@@ -254,6 +254,21 @@ test("A005-02 namespaces are isolated and every mutation is revision-fenced", as
     alpha.compareAndSwap("unsafe",{expectedRevision:0,value:{get token(){ return "no"; }}}),
     (error) => error?.code===STORAGE_ERROR_CODES.INVALID_VALUE
   );
+
+  const symbolValue={safe:true};
+  symbolValue[Symbol("hidden")]="must-not-be-dropped";
+  await assert.rejects(
+    alpha.compareAndSwap("symbol",{expectedRevision:0,value:symbolValue}),
+    (error) => error?.code===STORAGE_ERROR_CODES.INVALID_VALUE
+  );
+
+  const accessorArray=[];
+  Object.defineProperty(accessorArray,"0",{get(){ return "must-not-run"; },enumerable:true});
+  accessorArray.length=1;
+  await assert.rejects(
+    alpha.compareAndSwap("array-accessor",{expectedRevision:0,value:accessorArray}),
+    (error) => error?.code===STORAGE_ERROR_CODES.INVALID_VALUE
+  );
 });
 
 test("A005-02 IndexedDB adapter performs atomic revision CAS on its record store", async () => {
