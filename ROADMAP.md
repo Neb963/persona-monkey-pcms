@@ -39,7 +39,7 @@ Merge wave: 2
 - [x] T003.3 — T003.3 Contract parity tests
 
 ## P004 — Firefox sandbox dynamic-controller capability spike
-Status: **PR_OPEN**  
+Status: **MERGED**  
 Depends on: P002  
 Merge wave: 2
 

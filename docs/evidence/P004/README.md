@@ -1,6 +1,6 @@
 # P004 — Firefox sandbox dynamic-controller capability spike
 
-Status: **IMPLEMENTED / VERIFICATION IN PROGRESS**
+Status: **MERGED / integration verified**
 
 Implementation checkpoint: `5898be93e2304433bc3d57ae5e6b16e9e08a4161`.
 
@@ -151,3 +151,20 @@ No PersonaMonkey-owned frozen blob, root manifest, package script, workflow, nat
 or browser-automation authority was modified.
 
 No Firefox DevTools MCP, Perchance live provider, Mullvad live route, or P025/P026 live acceptance is claimed.
+
+## Pull request and merged-main verification
+
+Pull request #4 final head `ba6a18164aed8d8cd1e79db288ede1613d9d41b2` passed:
+
+- PR repository verification run **37238358744**;
+- PR pinned Firefox Developer Edition run **37238358712**.
+
+PR #4 merged as `3abfe06f61829eaa7485224508daaf35dd751521`.
+
+The exact merged `main` commit passed:
+
+- repository verification run **37238440353**;
+- pinned Firefox Developer Edition run **37238440377**;
+- Firefox smoke artifact **11316323424**, digest `sha256:b066a526d0bb80ffd5e3a2776c7202e47bbf517efc7f4a777f3413661b922da1`.
+
+This establishes integration evidence for the exact merged source. P004 is not marked ACCEPTED until this MERGED governance checkpoint itself passes repository verification.
