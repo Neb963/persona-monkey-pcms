@@ -17,9 +17,6 @@ jobs:
   pinned-firefox:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    env:
-      FIREFOX_INSTALL_ROOT: ${{ runner.temp }}/pcms-firefox
-      FIREFOX_SMOKE_REPORT: ${{ runner.temp }}/firefox-smoke-report.json
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -36,11 +33,14 @@ jobs:
 
       - name: Install exact pinned Firefox Developer Edition
         id: install
+        env:
+          FIREFOX_INSTALL_ROOT: ${{ runner.temp }}/pcms-firefox
         run: npm run firefox:install
 
       - name: Smoke pinned Firefox with disposable profile
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_SMOKE_REPORT: ${{ runner.temp }}/firefox-smoke-report.json
         run: npm run firefox:smoke
 
       - name: Upload deterministic smoke report
