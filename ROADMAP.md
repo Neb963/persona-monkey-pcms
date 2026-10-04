@@ -30,7 +30,7 @@ Merge wave: 1
 - [x] T002.3 — T002.3 Prove inherited release baseline
 
 ## P003 — PCMS namespace/UI entry + internal Persona Broker contract
-Status: **PR_OPEN**  
+Status: **MERGED**  
 Depends on: P002  
 Merge wave: 2
 
