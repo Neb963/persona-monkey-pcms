@@ -40,15 +40,35 @@ function clonePlainValue(input) {
     }
     seen.add(value);
     try {
-      if (Array.isArray(value)) return value.map((item) => clone(item, depth + 1));
+      if (Array.isArray(value)) {
+        if (value.length > MAX_NODES) {
+          throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage array exceeds structural limits");
+        }
+        const descriptors = Object.getOwnPropertyDescriptors(value);
+        const output = new Array(value.length);
+        for (const key of Reflect.ownKeys(descriptors)) {
+          if (key === "length") continue;
+          if (typeof key !== "string" || !/^(0|[1-9][0-9]*)$/.test(key)) {
+            throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage array contains an unsafe property");
+          }
+          const index = Number(key);
+          const descriptor = descriptors[key];
+          if (!Number.isSafeInteger(index) || index < 0 || index >= value.length || !("value" in descriptor)) {
+            throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage array contains an unsafe property");
+          }
+          output[index] = clone(descriptor.value, depth + 1);
+        }
+        return output;
+      }
       const proto = Object.getPrototypeOf(value);
       if (proto !== Object.prototype && proto !== null) {
         throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage value must use plain objects");
       }
       const descriptors = Object.getOwnPropertyDescriptors(value);
       const output = Object.create(null);
-      for (const [key, descriptor] of Object.entries(descriptors)) {
-        if (FORBIDDEN_KEYS.has(key) || !("value" in descriptor)) {
+      for (const key of Reflect.ownKeys(descriptors)) {
+        const descriptor = descriptors[key];
+        if (typeof key !== "string" || FORBIDDEN_KEYS.has(key) || !("value" in descriptor)) {
           throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage value contains an unsafe property");
         }
         output[key] = clone(descriptor.value, depth + 1);
