@@ -310,7 +310,7 @@
     {
       "id": "P007",
       "title": "Minimal Audit Journal",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P005"
       ],
