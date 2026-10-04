@@ -222,6 +222,29 @@ test("A006-03 malformed/cross-request native responses fail closed", async () =>
   );
 });
 
+test("A006-03 synchronous backend traps are contained without leaking backend text", () => {
+  const secret="SYNC-SECRET-TEXT";
+  assert.throws(
+    () => createSecretStore({
+      backend:{
+        get put() { throw new Error(secret); }
+      }
+    }),
+    (error) => error?.code===SECRET_ERROR_CODES.UNAVAILABLE && !error.message.includes(secret)
+  );
+
+  const store=createSecretStore({
+    backend:{
+      async probe(){ return {ready:true}; },
+      async put(){ return {stored:true}; },
+      async get(){ return "value"; },
+      async delete(){ return {deleted:true}; },
+      close(){ throw new Error(secret); }
+    }
+  });
+  assert.doesNotThrow(() => store.close());
+});
+
 test("A006-03 timeout, close and size bounds fail with fixed safe errors", async () => {
   const ref=createSecretRef({randomUUID:()=>UUIDS[0]});
   const timeoutBackend=createNativeSecretBackend({
