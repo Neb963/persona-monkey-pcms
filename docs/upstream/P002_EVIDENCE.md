@@ -1,6 +1,6 @@
 # P002 — Import and preserve PersonaMonkey baseline
 
-Status: **CI_VERIFIED on implementation checkpoint**
+Status: **MERGED / integration verified**
 
 Implementation checkpoint: `6387a376d66dfba790f1c86040823cba09a10f92`.
 
@@ -66,3 +66,18 @@ Implementation checkpoint `6387a376d66dfba790f1c86040823cba09a10f92`:
 - final diff against claimed `main`: **227 files**, **0 paths outside P002 ownership**.
 
 No live provider, Mullvad, Perchance, or Firefox DevTools MCP testing is claimed for P002.
+
+## Pull request and merged-main verification
+
+Pull request #2 final head `2059b3c6fccb16c61344d1138cbecb17f826692d` passed:
+- PR repository/P002 verification run `37232596230`;
+- PR pinned Firefox Developer Edition run `37232596185`.
+
+PR #2 merged as `765f9bcfc74d7ade6f70986318ef6eef17f76140`.
+
+The exact merged `main` commit passed:
+- repository/P002 verification run `37232707025`;
+- pinned Firefox Developer Edition run `37232707046`;
+- Firefox smoke artifact `11314273381`, digest `sha256:a70d24c377fabeb7533fd4d629c0e0bda4c65e2e6d68ec44e62ee0e2e6872c85`.
+
+This establishes integration evidence for the exact merged source. P002 is not marked ACCEPTED until this MERGED governance checkpoint itself is repository-verified.
