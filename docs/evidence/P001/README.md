@@ -1,6 +1,6 @@
 # P001 — Hosted CI + pinned Firefox Developer Edition harness
 
-Status: **CI_VERIFIED on implementation checkpoint**
+Status: **MERGED / integration verified**
 
 Implementation checkpoint: `f4a6c7e3b897d0fa869bbdec7742b61be5464af3`.
 
@@ -42,3 +42,18 @@ The hosted runner logs a Firefox user-namespace sandbox diagnostic (`CanCreateUs
 
 Firefox workflow run `37227715979` failed at workflow validation because `runner.temp` was initially referenced from job-level `env`. No acceptance evidence was taken from that run. Commit `f4a6c7e3b897d0fa869bbdec7742b61be5464af3` moved runner-dependent paths to step-level environments, after which both required workflows passed.
 
+
+## Pull request and merged-main verification
+
+Pull request #1 merged commit `142331c016856fae8a5446eaac9cb57e2491b9ef`.
+
+PR head `4c6a00e20c90b11276f138f38b54189f425de914` passed:
+- repository verification run `37227973825`;
+- Firefox Developer Edition run `37227973854`.
+
+Merged `main` commit `142331c016856fae8a5446eaac9cb57e2491b9ef` passed:
+- repository verification run `37228028903`;
+- Firefox Developer Edition run `37228028943`;
+- smoke artifact ID `11312546519`, digest `sha256:441e0628a0a3bae246af0dc01889e16f2b2814a5e282bc2cdb3e7f3b8fe013db`.
+
+These runs establish integration evidence for the exact merged implementation. P001 is not marked ACCEPTED until this merged-state record itself is repository-verified.

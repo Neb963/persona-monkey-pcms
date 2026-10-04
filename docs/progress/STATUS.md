@@ -5,7 +5,7 @@
 - Baseline: **v1**
 - Accepted: **P000**
 - Ready: **none**
-- Claimed/In progress: **P001**
+- Claimed/In progress: **none**
 - Final live phases: **P025, P026**
 - PersonaMonkey import baseline: `9995f6eadfa54be6cc0001f4e04f2a2d9b9401bf`
 
