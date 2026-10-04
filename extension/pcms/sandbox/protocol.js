@@ -80,7 +80,9 @@ function setHas(set, value) {
 function assertExactKeys(value, expected) {
   const actual = OBJECT_KEYS(value);
   if (actual.length !== expected.length) fail();
-  for (const key of expected) if (!OBJECT_HAS_OWN(value, key)) fail();
+  for (let index = 0; index < expected.length; index += 1) {
+    if (!OBJECT_HAS_OWN(value, expected[index])) fail();
+  }
 }
 
 export function sandboxSerializedBytes(value) {
