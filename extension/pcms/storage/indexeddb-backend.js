@@ -220,6 +220,65 @@ export function createIndexedDbStorageBackend({ openDatabase = openPcmsDatabase,
     });
   }
 
+
+  function listAllRecords() {
+    const active = currentDb();
+    return new Promise((resolve, reject) => {
+      const results = [];
+      const transaction = active.transaction(PCMS_RECORD_STORE, "readonly");
+      const store = transaction.objectStore(PCMS_RECORD_STORE);
+      const request = store.openCursor();
+
+      request.onerror = () => reject(requestFailure(request, "PCMS storage full snapshot scan failed"));
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) return;
+        results.push(cursor.value);
+        cursor.continue();
+      };
+      transaction.oncomplete = () => {
+        results.sort((a, b) => a.namespace.localeCompare(b.namespace) || a.key.localeCompare(b.key));
+        resolve(results);
+      };
+      transaction.onabort = () => reject(transactionFailure(transaction, "PCMS storage full snapshot scan aborted"));
+      transaction.onerror = () => {};
+    });
+  }
+
+  function replaceAllRecords(records) {
+    const active = currentDb();
+    return new Promise((resolve, reject) => {
+      let operationError = null;
+      const transaction = active.transaction(PCMS_RECORD_STORE, "readwrite");
+      const store = transaction.objectStore(PCMS_RECORD_STORE);
+      const clearRequest = store.clear();
+
+      clearRequest.onerror = () => {
+        operationError = requestFailure(clearRequest, "PCMS storage restore clear failed");
+        try { transaction.abort(); } catch {}
+      };
+      clearRequest.onsuccess = () => {
+        for (const record of records) {
+          const putRequest = store.put({
+            id: recordId(record.namespace, record.key),
+            namespace: record.namespace,
+            key: record.key,
+            revision: record.revision,
+            value: record.value,
+            updatedAt: record.updatedAt
+          });
+          putRequest.onerror = () => {
+            if (!operationError) operationError = requestFailure(putRequest, "PCMS storage restore write failed");
+            try { transaction.abort(); } catch {}
+          };
+        }
+      };
+      transaction.oncomplete = () => resolve(Object.freeze({ replaced:records.length }));
+      transaction.onabort = () => reject(transactionFailure(transaction, "PCMS storage restore transaction aborted", operationError));
+      transaction.onerror = () => {};
+    });
+  }
+
   return Object.freeze({
     async open() { await open(); },
     close() {
@@ -236,6 +295,8 @@ export function createIndexedDbStorageBackend({ openDatabase = openPcmsDatabase,
     deleteCompareAndSwap(namespace, key, expectedRevision) {
       return runCas({ namespace, key, expectedRevision, deleted: true, updatedAt: null });
     },
-    listNamespace
+    listNamespace,
+    listAllRecords,
+    replaceAllRecords
   });
 }
