@@ -183,7 +183,7 @@ Merge wave: 5
 - [x] T019.3 — T019.3 uncertain/CAPTCHA-safe tests
 
 ## P020 — Backup/restore + retention
-Status: **PR_OPEN**  
+Status: **MERGED**  
 Depends on: P007, P010, P011  
 Merge wave: 6
 

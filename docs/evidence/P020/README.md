@@ -1,6 +1,6 @@
 # P020 — Backup/restore + retention evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -70,3 +70,21 @@ Independent branch checkpoint `612c47b9a6ec055e89aee0d2416b9fe89acfa6cc` passed:
 The repository root `npm run verify` does not auto-discover `tests/pcms/p020/*.test.mjs`; root Actions are independent repository/claim/upstream/Firefox evidence rather than the focused P020 behavior run.
 
 No P025/P026 LIVE evidence is claimed.
+
+## Pull request / merged integration
+
+Final PR head `7d1a10266c97b199fa5299df75fc7cbf8cd3b567` passed:
+
+- push repository `verify`, run **559** / run id **37302743116** — **success**;
+- push pinned Firefox Developer Edition, run **554** / run id **37302742995** — **success**;
+- pull-request repository `verify`, run **560** / run id **37302776794** — **success**;
+- pull-request pinned Firefox Developer Edition, run **555** / run id **37302776791** — **success**.
+
+Pull request #20 merged as `446219e8b09c726b1c732a7e2326ec03045b1167`.
+
+The exact merged main commit passed:
+
+- repository `verify`, run **561** / run id **37302921674** — **success**;
+- pinned Firefox Developer Edition, run **556** / run id **37302921719** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
