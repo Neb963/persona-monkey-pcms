@@ -783,7 +783,7 @@
     {
       "id": "P019",
       "title": "Account Provisioning module",
-      "status": "PR_OPEN",
+      "status": "MERGED",
       "dependsOn": [
         "P006",
         "P012",

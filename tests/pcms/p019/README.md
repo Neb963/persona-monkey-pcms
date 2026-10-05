@@ -1,6 +1,6 @@
 # P019 — Account Provisioning module evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -67,4 +67,20 @@ The P019 harness emulates the accepted behavioral surfaces for Accounts, HumanTa
 
 Repository Actions `npm run verify` does not auto-discover `tests/pcms/p019/*.test.mjs`; its green result is therefore independent repository/claim/upstream/Firefox harness evidence, not the focused P019 behavioral test run.
 
-GitHub Actions / PR / merged evidence will be appended after the exact committed P019 checkpoint is published and independently verified.
+## Pull request / merged integration
+
+Final PR head `aaf5c9e7cb7387120665f4796cb437e44f181441` passed:
+
+- push `verify`, run **546** / run id **37300078087** — **success**;
+- push `firefox-developer-edition`, run **541** / run id **37300078064** — **success**;
+- pull-request `verify`, run **547** / run id **37300084144** — **success**;
+- pull-request `firefox-developer-edition`, run **542** / run id **37300084318** — **success**.
+
+Pull request #19 merged as `627113f3456b5ea90746e6b8f6792feb86f6c437`.
+
+The exact merged main commit passed:
+
+- `verify`, run **548** / run id **37300207231** — **success**;
+- `firefox-developer-edition`, run **543** / run id **37300207217** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
