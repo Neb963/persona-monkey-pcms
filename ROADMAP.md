@@ -138,13 +138,13 @@ Merge wave: 5
 - [x] T014.3 — T014.3 rotation continuity
 
 ## P015 — Deployer module
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P014, P013  
 Merge wave: 5
 
-- [ ] T015.1 — T015.1 desired/observed model
-- [ ] T015.2 — T015.2 stable target mutation
-- [ ] T015.3 — T015.3 reconciliation/UI
+- [x] T015.1 — T015.1 desired/observed model
+- [x] T015.2 — T015.2 stable target mutation
+- [x] T015.3 — T015.3 reconciliation/UI
 
 ## P016 — Explorer module
 Status: **READY**  
@@ -244,4 +244,3 @@ Merge wave: 10
 - [ ] T026.1 — T026.1 representative feature mutations
 - [ ] T026.2 — T026.2 restore/update/recovery
 - [ ] T026.3 — T026.3 final human acceptance
-
