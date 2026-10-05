@@ -72,6 +72,8 @@ test("A012-03 service registration tokens are single-use fencing values", () => 
   registry.register("core.one",{ping(){return null;}},{ownerId:"core",generation:0});
   assert.throws(()=>registry.register("core.two",{ping(){return null;}},{ownerId:"core",generation:0}),error=>error?.code===CORE_SERVICE_ERROR_CODES.INVALID_ARGUMENT);
   assert.throws(()=>registry.register("core.bad",{constructor(){return null;}},{ownerId:"core",generation:0}),error=>error?.code===CORE_SERVICE_ERROR_CODES.INVALID_ARGUMENT);
+  const hidden={ping(){return null;}}; hidden[Symbol("hidden")]=()=>null;
+  assert.throws(()=>registry.register("core.hidden",hidden,{ownerId:"core",generation:0}),error=>error?.code===CORE_SERVICE_ERROR_CODES.INVALID_ARGUMENT);
 });
 
 test("A012-02 timer delivery is one-shot, durable, generation-fenced, and audited", async () => {
