@@ -705,7 +705,7 @@
     {
       "id": "P017",
       "title": "Refresher module",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P014",
         "P013"
