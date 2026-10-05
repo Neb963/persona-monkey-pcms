@@ -865,7 +865,7 @@
     {
       "id": "P021",
       "title": "PCMS UI shell / notifications / search",
-      "status": "IN_PROGRESS",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P012",
         "P014"

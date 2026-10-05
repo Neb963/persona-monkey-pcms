@@ -192,7 +192,7 @@ Merge wave: 6
 - [x] T020.3 — T020.3 RECOVERY_HOLD reconciliation
 
 ## P021 — PCMS UI shell / notifications / search
-Status: **IN_PROGRESS**  
+Status: **PR_OPEN**  
 Depends on: P012, P014  
 Merge wave: 6
 
