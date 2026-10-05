@@ -183,13 +183,13 @@ Merge wave: 5
 - [x] T019.3 — T019.3 uncertain/CAPTCHA-safe tests
 
 ## P020 — Backup/restore + retention
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P007, P010, P011  
 Merge wave: 6
 
-- [ ] T020.1 — T020.1 snapshot/backup
-- [ ] T020.2 — T020.2 staged restore
-- [ ] T020.3 — T020.3 RECOVERY_HOLD reconciliation
+- [x] T020.1 — T020.1 snapshot/backup
+- [x] T020.2 — T020.2 staged restore
+- [x] T020.3 — T020.3 RECOVERY_HOLD reconciliation
 
 ## P021 — PCMS UI shell / notifications / search
 Status: **READY**  
@@ -201,7 +201,7 @@ Merge wave: 6
 - [ ] T021.3 — T021.3 deep-link safety
 
 ## P022 — Module lifecycle end-to-end
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P011, P020  
 Merge wave: 6
 

@@ -824,7 +824,7 @@
     {
       "id": "P020",
       "title": "Backup/restore + retention",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P007",
         "P010",
@@ -905,7 +905,7 @@
     {
       "id": "P022",
       "title": "Module lifecycle end-to-end",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P011",
         "P020"

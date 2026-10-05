@@ -1,6 +1,6 @@
 # P020 — Backup/restore + retention evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -87,4 +87,11 @@ The exact merged main commit passed:
 - repository `verify`, run **561** / run id **37302921674** — **success**;
 - pinned Firefox Developer Edition, run **556** / run id **37302921719** — **success**.
 
-Acceptance still requires the MERGED governance checkpoint to pass.
+## Acceptance decision
+
+The MERGED governance checkpoint `9fc176b4338903530cc2969f149e7eb381627f51` passed:
+
+- repository `verify`, run **562** / run id **37303121927** — **success**;
+- pinned Firefox Developer Edition, run **557** / run id **37303121953** — **success**.
+
+Together with the 14 exact-source focused U/I/C checks, accepted P007/P010/P011 dependencies, final PR-head CI, and exact merged-main CI, this satisfies **A020-01**, **A020-02**, and **A020-03**. P020 is **ACCEPTED**.
