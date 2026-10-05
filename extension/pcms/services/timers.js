@@ -57,7 +57,8 @@ export function createTimerService({ storageBroker, auditJournal, serviceRegistr
   async function markMissed(current,reason,now){return write(current.value.timerId,current.revision,{...current.value,state:TIMER_STATES.MISSED,completedAt:now},"timer.missed",{reason});}
   async function dispatch(current,now){
     const v=current.value;const reg=serviceRegistry.describe(v.serviceName);
-    if(!reg||reg.ownerId!==v.ownerId||reg.generation!==v.generation)return null;
+    if(!reg)return null;
+    if(reg.ownerId!==v.ownerId||reg.generation!==v.generation)return markMissed(current,"stale-service",now);
     let claimed=await write(v.timerId,current.revision,{...v,state:TIMER_STATES.DISPATCHING},"timer.dispatching",{serviceName:v.serviceName});
     try{
       await serviceRegistry.call(v.serviceName,"onTimer",{timerId:v.timerId,dueAt:v.dueAt},{ownerId:v.ownerId,generation:v.generation});
