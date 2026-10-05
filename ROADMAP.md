@@ -138,7 +138,7 @@ Merge wave: 5
 - [x] T014.3 — T014.3 rotation continuity
 
 ## P015 — Deployer module
-Status: **IN_PROGRESS**  
+Status: **PR_OPEN**  
 Depends on: P014, P013  
 Merge wave: 5
 
