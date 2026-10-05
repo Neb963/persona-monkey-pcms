@@ -389,7 +389,7 @@
     {
       "id": "P009",
       "title": "Persona Broker implementation",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P003"
       ],
