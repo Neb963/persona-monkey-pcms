@@ -120,16 +120,16 @@ Merge wave: 4
 - [x] T012.3 — T012.3 service registry/restart tests
 
 ## P013 — Perchance provider adapter + emulator
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P009, P010  
 Merge wave: 4
 
-- [ ] T013.1 — T013.1 compatibility probe
-- [ ] T013.2 — T013.2 deterministic emulator
-- [ ] T013.3 — T013.3 fail-closed adapter tests
+- [x] T013.1 — T013.1 compatibility probe
+- [x] T013.2 — T013.2 deterministic emulator
+- [x] T013.3 — T013.3 fail-closed adapter tests
 
 ## P014 — Accounts module + Account↔personaUid binding
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P011, P013  
 Merge wave: 5
 
