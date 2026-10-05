@@ -548,7 +548,7 @@
     {
       "id": "P013",
       "title": "Perchance provider adapter + emulator",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P009",
         "P010"
@@ -588,7 +588,7 @@
     {
       "id": "P014",
       "title": "Accounts module + Account↔personaUid binding",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P011",
         "P013"
