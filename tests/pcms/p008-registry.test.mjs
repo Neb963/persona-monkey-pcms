@@ -119,3 +119,16 @@ test("A008-03 stored package corruption fails closed before admission", async ()
     (e)=>e?.code===MODULE_ERROR_CODES.IDENTITY_CONFLICT
   );
 });
+
+test("A008-03 corrupt persisted module candidate metadata fails closed on read", async () => {
+  const storage=makeStorage();
+  const registry=createModulePackageRegistry({storageBroker:storage,clock:()=>"2026-10-05T05:00:00Z"});
+  await registry.stageCandidate(archive("1.0.0",["storage.read"]),{expectedModuleRevision:0});
+  const row=storage.shared.rows.get("module:demo.module");
+  row.value.candidate.authorityDelta.requiresApproval=false;
+
+  await assert.rejects(
+    registry.getModule("demo.module"),
+    (e)=>e?.code===MODULE_ERROR_CODES.CORRUPT_STATE
+  );
+});
