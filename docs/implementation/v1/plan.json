@@ -428,7 +428,7 @@
     {
       "id": "P010",
       "title": "RemoteOps + ProviderGate + recovery hold",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P005",
         "P009"
