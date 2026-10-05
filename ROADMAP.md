@@ -174,13 +174,13 @@ Merge wave: 5
 - [x] T018.3 — T018.3 UI/export
 
 ## P019 — Account Provisioning module
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P006, P012, P014, P013  
 Merge wave: 5
 
-- [ ] T019.1 — T019.1 provisioning state machine
-- [ ] T019.2 — T019.2 HumanTask/session guard
-- [ ] T019.3 — T019.3 uncertain/CAPTCHA-safe tests
+- [x] T019.1 — T019.1 provisioning state machine
+- [x] T019.2 — T019.2 HumanTask/session guard
+- [x] T019.3 — T019.3 uncertain/CAPTCHA-safe tests
 
 ## P020 — Backup/restore + retention
 Status: **READY**  

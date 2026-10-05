@@ -1,6 +1,6 @@
 # P019 — Account Provisioning module evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -83,4 +83,11 @@ The exact merged main commit passed:
 - `verify`, run **548** / run id **37300207231** — **success**;
 - `firefox-developer-edition`, run **543** / run id **37300207217** — **success**.
 
-Acceptance still requires the MERGED governance checkpoint to pass.
+## Acceptance decision
+
+The MERGED governance checkpoint `6f3745b9be069c835e4d7eaa23edf5a0d1756a6b` passed:
+
+- repository `verify`, run **549** / run id **37300387707** — **success**;
+- pinned Firefox Developer Edition, run **544** / run id **37300387696** — **success**.
+
+Together with the 18 exact-product-source focused U/I/C checks, accepted P006/P012/P013/P014 dependencies, final PR-head CI, and exact merged-main CI, this satisfies **A019-01**, **A019-02**, and **A019-03**. P019 is **ACCEPTED**.
