@@ -991,7 +991,7 @@
     {
       "id": "P024",
       "title": "Adversarial/security/fault/release-candidate hardening",
-      "status": "CLAIMED",
+      "status": "IN_PROGRESS",
       "dependsOn": [
         "P023"
       ],
