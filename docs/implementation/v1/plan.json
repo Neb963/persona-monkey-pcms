@@ -945,7 +945,7 @@
     {
       "id": "P023",
       "title": "Full module integration wave",
-      "status": "CLAIMED",
+      "status": "IN_PROGRESS",
       "dependsOn": [
         "P015",
         "P016",
