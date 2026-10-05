@@ -219,16 +219,16 @@ Merge wave: 7
 - [x] T023.3 — T023.3 combined recovery acceptance
 
 ## P024 — Adversarial/security/fault/release-candidate hardening
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P023  
 Merge wave: 8
 
-- [ ] T024.1 — T024.1 fault/security matrix
-- [ ] T024.2 — T024.2 reproducible package
-- [ ] T024.3 — T024.3 clean install/update/restart
+- [x] T024.1 — T024.1 fault/security matrix
+- [x] T024.2 — T024.2 reproducible package
+- [x] T024.3 — T024.3 clean install/update/restart
 
 ## P025 — Live acceptance 1 — installed FDE + PersonaMonkey/Mullvad/Perchance
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P024  
 Merge wave: 9
 

@@ -991,7 +991,7 @@
     {
       "id": "P024",
       "title": "Adversarial/security/fault/release-candidate hardening",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P023"
       ],
@@ -1030,7 +1030,7 @@
     {
       "id": "P025",
       "title": "Live acceptance 1 — installed FDE + PersonaMonkey/Mullvad/Perchance",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P024"
       ],

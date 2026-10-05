@@ -1,6 +1,6 @@
 # P024 — Adversarial/security/fault/release-candidate hardening evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -80,4 +80,11 @@ The exact merged main commit passed:
 - repository `verify`, run **623** / run id **37357728002** — **success**;
 - pinned Firefox Developer Edition, run **618** / run id **37357727595** — **success**.
 
-Acceptance still requires the MERGED governance checkpoint to pass.
+## Acceptance decision
+
+The MERGED governance checkpoint `8ffbd5ffc1f900911808bfe029514ce6042dbbf7` passed:
+
+- repository `verify`, run **624** / run id **37358069776** — **success**;
+- pinned Firefox Developer Edition, run **619** / run id **37358069828** — **success**.
+
+Together with the **27/27** exact-source focused fault/redaction/restart checks, the committed deterministic P024 suite, immutable release-builder provenance and regular-file archive-input proof, final PR-head CI, exact merged-main CI, and accepted P006/P008/P010/P011/P020/P022 dependencies, this satisfies **A024-01**, **A024-02**, and **A024-03**. P024 is **ACCEPTED**.
