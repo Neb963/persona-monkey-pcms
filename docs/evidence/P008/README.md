@@ -1,6 +1,6 @@
 # P008 — Module archive/package/authority model
 
-Status: **IMPLEMENTED**
+Status: **MERGED**
 
 Source/test checkpoint: `6b3027e8ccbdcf3afb8b8d42f4f03e5f7d8403bb`.
 
@@ -90,4 +90,18 @@ No Firefox DevTools MCP, Perchance live provider, Mullvad live route, or P025/P0
 
 ## CI / integration
 
-Independent branch/PR/merged-main workflow evidence is recorded here after GitHub Actions completes on the corresponding exact checkpoints.
+Final PR head `60f1f7f12d140a2f41c254435e11a7ea5e65fbb0` passed both push and pull-request workflows:
+
+- push repository verification run **37248537992** — success;
+- push pinned Firefox Developer Edition run **37248538062** — success;
+- PR repository verification run **37248549790** — success;
+- PR pinned Firefox Developer Edition run **37248549779** — success.
+
+Pull request #8 merged as `71ddfe52f63207f692db38965ce88ba35ac74b38`.
+
+The exact merged source passed:
+
+- repository verification run **37248649885** — success;
+- pinned Firefox Developer Edition run **37248649904** — success.
+
+These root workflows are repository regression checks. They do not replace the focused 11-test P008 U/I/C suite recorded above.
