@@ -293,16 +293,6 @@ export function createModuleRuntimeBroker({
       activePackageHash: packageHash
     });
 
-    const targetFrame = frame || await frameFactory?.({ moduleId:id, generation, packageHash });
-    if (!targetFrame) {
-      await compareAndSwap(id, active.revision, {
-        ...defaultValue(id),
-        generation: generation + 1,
-        state: MODULE_RUNTIME_STATES.IDLE
-      });
-      throw new TypeError("Module runtime activation requires a sandbox frame");
-    }
-
     const runtime = {
       moduleId:id,
       generation,
@@ -316,6 +306,8 @@ export function createModuleRuntimeBroker({
     };
 
     try {
+      const targetFrame = frame || await frameFactory?.({ moduleId:id, generation, packageHash });
+      if (!targetFrame) throw new TypeError("Module runtime activation requires a sandbox frame");
       const host = sandboxHostFactory({
         frame:targetFrame,
         capabilities:capabilitySetFor(pkg, runtime)
