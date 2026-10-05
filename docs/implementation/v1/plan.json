@@ -508,7 +508,7 @@
     {
       "id": "P012",
       "title": "HumanTask/Attention + timers/services",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P007",
         "P011"
