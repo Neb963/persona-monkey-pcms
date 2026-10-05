@@ -31,4 +31,36 @@ Covers account-scoped ProviderGate execution, accepted Perchance `generator.upda
 
 Covers post-apply and pre-apply ambiguity, reconcile-before-retry, restart recovery, blocked desired changes while outcome is unresolved, and deterministic UI-ready status/action projection.
 
+## Focused verification actually run
+
+Node: **v22.16.0**.
+
+Commands executed against a reconstructed local slice:
+
+```text
+node --check pcms-modules/p015/errors.js
+node --check pcms-modules/p015/schema.js
+node --check pcms-modules/p015/deployer.js
+node --test focused.test.mjs
+```
+
+Result: **9 tests passed, 0 failed, exit 0**.
+
+The three product-source files in that local slice were byte-checked with `git hash-object` against the GitHub blobs at implementation checkpoint `32bd01420f22bfc19710aaab4cef1b175929f386`:
+
+- `pcms-modules/p015/errors.js` — `ef045beba5ebd6340fc9b1b009098f6884ac5167`;
+- `pcms-modules/p015/schema.js` — `b2f1b1bd3231f8358bf879c2e3ac85f8980455fa`;
+- `pcms-modules/p015/deployer.js` — `8b534f6d3769c014d9527c483b3a71bb4565065e`.
+
+The local container could not resolve GitHub hosts, so a repository clone was unavailable. The focused harness therefore supplied deterministic accepted-contract test doubles for P010/P013 dependencies while executing the exact P015 product blobs. It covered desired/observed state, target fencing, source mismatch before mutation identity, successful stable-target application, fresh operation identity after direct NOT_APPLIED, pre/post-apply ambiguity, reconcile-before-retry, restart-style ACTIVE recovery, UI projection, and static privileged-authority exclusions. The committed `tests/pcms/p015/deployer.test.mjs` separately binds the same scenarios to the real accepted P010 RemoteOps/ProviderGate and P013 adapter/emulator imports for repository execution/review.
+
+## Independent branch CI
+
+Implementation/test checkpoint `32bd01420f22bfc19710aaab4cef1b175929f386` passed:
+
+- GitHub Actions `verify`, run **446** / run id **37265066464** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **441** / run id **37265066400** — **success**.
+
+The root workflows are independent repository/FDE regressions; they do not substitute for the focused P015 behavior slice described above.
+
 No live provider, Firefox DevTools MCP, raw browser/native API, guessed Perchance selector, or successor-phase behavior is included.
