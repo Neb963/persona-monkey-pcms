@@ -90,6 +90,35 @@ test("A022-01 update fences runtime generation and retains the previous package 
   assert.equal(applied.generation,runtime.value.generation);
 });
 
+test("A022-01 disabled update stays disabled and is not promoted known-good until enable succeeds",async()=>{
+  const f=fixture();
+  const first=await install(f,"1.0.0");
+  let module=await f.registry.getModule("demo.module");
+  let runtime=await f.runtime.api.getState("demo.module");
+  const disabled=await f.service.disable("demo.module",{expectedRuntimeRevision:runtime.revision});
+
+  const staged=await f.service.stageInstall(archive("2.0.0"),{expectedModuleRevision:module.revision});
+  const applied=await f.service.applyCandidate("demo.module",staged.value.candidate.packageHash,{
+    expectedModuleRevision:staged.revision,
+    expectedRuntimeRevision:disabled.revision,
+    approveAuthority:false
+  });
+  assert.equal(applied.activated,false);
+
+  module=await f.registry.getModule("demo.module");
+  runtime=await f.runtime.api.getState("demo.module");
+  assert.equal(runtime.value.state,MODULE_RUNTIME_STATES.DISABLED);
+  assert.equal(module.value.activePackageHash,staged.value.candidate.packageHash);
+  assert.equal(module.value.lastKnownGoodPackageHash,first.staged.value.candidate.packageHash);
+
+  await f.service.enable("demo.module",{expectedRuntimeRevision:runtime.revision});
+  module=await f.registry.getModule("demo.module");
+  runtime=await f.runtime.api.getState("demo.module");
+  assert.equal(runtime.value.state,MODULE_RUNTIME_STATES.ACTIVE);
+  assert.equal(runtime.value.activePackageHash,staged.value.candidate.packageHash);
+  assert.equal(module.value.lastKnownGoodPackageHash,staged.value.candidate.packageHash);
+});
+
 test("A022-01 failed update activation rolls registry/runtime back to last-known-good",async()=>{
   const f=fixture();
   const first=await install(f,"1.0.0");
