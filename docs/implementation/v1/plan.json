@@ -508,7 +508,7 @@
     {
       "id": "P012",
       "title": "HumanTask/Attention + timers/services",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P007",
         "P011"
