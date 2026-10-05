@@ -666,7 +666,7 @@
     {
       "id": "P016",
       "title": "Explorer module",
-      "status": "IN_PROGRESS",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P014",
         "P013"
