@@ -230,6 +230,7 @@ export function createModuleRuntimeBroker({
       const handler = capabilityHandlers.get(name);
       if (!handler) fail(MODULE_RUNTIME_ERROR_CODES.CAPABILITY_UNAVAILABLE);
       exposed[name] = async (args) => {
+        if (!runtime.accepting) fail(MODULE_RUNTIME_ERROR_CODES.STALE_GENERATION);
         let task;
         task = (async () => {
           await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash, { allowDraining:true });
