@@ -588,7 +588,7 @@
     {
       "id": "P014",
       "title": "Accounts module + Account↔personaUid binding",
-      "status": "IN_PROGRESS",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P011",
         "P013"
