@@ -210,16 +210,16 @@ Merge wave: 6
 - [x] T022.3 — T022.3 rollback/retention acceptance
 
 ## P023 — Full module integration wave
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P015, P016, P017, P018, P019, P020, P021, P022  
 Merge wave: 7
 
-- [ ] T023.1 — T023.1 cross-module contracts
-- [ ] T023.2 — T023.2 integration-wave CI
-- [ ] T023.3 — T023.3 combined recovery acceptance
+- [x] T023.1 — T023.1 cross-module contracts
+- [x] T023.2 — T023.2 integration-wave CI
+- [x] T023.3 — T023.3 combined recovery acceptance
 
 ## P024 — Adversarial/security/fault/release-candidate hardening
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P023  
 Merge wave: 8
 

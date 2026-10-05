@@ -945,7 +945,7 @@
     {
       "id": "P023",
       "title": "Full module integration wave",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P015",
         "P016",
@@ -991,7 +991,7 @@
     {
       "id": "P024",
       "title": "Adversarial/security/fault/release-candidate hardening",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P023"
       ],

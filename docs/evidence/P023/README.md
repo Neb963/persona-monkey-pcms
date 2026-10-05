@@ -1,6 +1,6 @@
 # P023 — Full module integration wave evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -95,6 +95,13 @@ The exact merged main commit passed:
 - repository `verify`, run **602** / run id **37352319276** — **success**;
 - pinned Firefox Developer Edition, run **597** / run id **37352319423** — **success**.
 
-Acceptance still requires the MERGED governance checkpoint to pass.
+## Acceptance decision
+
+The MERGED governance checkpoint `cb7254402fba6ade5c26c0c72b2a3eb0bf7ffe1b` passed:
+
+- repository `verify`, run **603** / run id **37352617133** — **success**;
+- pinned Firefox Developer Edition, run **598** / run id **37352617102** — **success**.
+
+Together with the **14/14** exact-source focused integration checks, the committed real-factory P014–P019 integration/recovery suite, final PR-head CI, exact merged-main CI, and accepted P005/P007/P009/P010/P011/P012/P014–P022 dependencies, this satisfies **A023-01**, **A023-02**, and **A023-03**. P023 is **ACCEPTED**.
 
 No P025/P026 LIVE evidence is claimed.
