@@ -428,7 +428,7 @@
     {
       "id": "P010",
       "title": "RemoteOps + ProviderGate + recovery hold",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P005",
         "P009"
@@ -468,7 +468,7 @@
     {
       "id": "P011",
       "title": "Module runtime / capability RPC / generation fencing",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P008",
         "P010"
@@ -548,7 +548,7 @@
     {
       "id": "P013",
       "title": "Perchance provider adapter + emulator",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P009",
         "P010"
