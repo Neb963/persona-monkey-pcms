@@ -1,6 +1,6 @@
 # P009 — Persona Broker implementation
 
-Status: **MERGED**
+Status: **ACCEPTED**
 
 Source/test checkpoint: `88591963b3366f9572c2cf615074f9c8ee440aeb`.
 
@@ -137,3 +137,12 @@ The exact merged source passed:
 - pinned Firefox Developer Edition run **37250127926** — success.
 
 The root workflows are repository regression/FDE smoke checks. The focused U/I/C suite remains the direct P009 behavior evidence.
+
+## Acceptance decision
+
+The MERGED governance checkpoint `268e76c76e7573d93695f8c6080e532f682af40d` passed:
+
+- repository verification run **37250248257** — success;
+- pinned Firefox Developer Edition run **37250248255** — success.
+
+Together with the exact-source focused suite, Integration-v1 parity checks, PR-head CI, and merged-source CI, this satisfies **A009-01**, **A009-02**, and **A009-03**. P009 is **ACCEPTED**.
