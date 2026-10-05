@@ -330,9 +330,10 @@ export function createModulePackageRegistry({
     }
   }
 
-  async function admitCandidate(moduleId, packageHash, { expectedModuleRevision } = {}) {
+  async function admitCandidate(moduleId, packageHash, { expectedModuleRevision, preserveLastKnownGood = false } = {}) {
     assertModulePackageHash(packageHash);
     const expectedRevision = validateExpectedRevision(expectedModuleRevision);
+    if (typeof preserveLastKnownGood !== "boolean") fail(MODULE_ERROR_CODES.INVALID_TRANSITION);
     const key = moduleKey(moduleId);
     const currentRecord = await store.get(key);
     const current = normalizeModuleState(currentRecord, moduleId);
@@ -354,12 +355,167 @@ export function createModulePackageRegistry({
     const next = {
       ...current.value,
       activePackageHash: packageHash,
-      lastKnownGoodPackageHash: packageHash,
+      lastKnownGoodPackageHash: preserveLastKnownGood
+        ? current.value.lastKnownGoodPackageHash
+        : packageHash,
       candidate: null
     };
     try {
       return publicModuleRecord(await store.compareAndSwap(key, { expectedRevision, value: next }));
     } catch (error) {
+      mapRevisionConflict(error);
+    }
+  }
+
+  async function stageStoredCandidate(moduleId, packageHash, { expectedModuleRevision } = {}) {
+    const id=assertModuleId(moduleId);
+    const hash=assertModulePackageHash(packageHash);
+    const expectedRevision=validateExpectedRevision(expectedModuleRevision);
+    const pkg=await readPackage(hash);
+    if(pkg.manifest.moduleId!==id) fail(MODULE_ERROR_CODES.IDENTITY_CONFLICT);
+
+    const key=moduleKey(id);
+    const currentRecord=await store.get(key);
+    const current=normalizeModuleState(currentRecord,id);
+    if(current.revision!==expectedRevision) fail(MODULE_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
+    if(current.value.activePackageHash===hash) fail(MODULE_ERROR_CODES.INVALID_TRANSITION);
+    if(current.value.candidate){
+      if(current.value.candidate.packageHash===hash) return publicModuleRecord(currentRecord);
+      fail(MODULE_ERROR_CODES.CANDIDATE_EXISTS);
+    }
+
+    const delta=diffModuleAuthority(await activeAuthority(current),pkg.manifest.authority);
+    const next={...current.value,candidate:candidateForPackage(pkg,delta,clock())};
+    try {
+      return publicModuleRecord(await store.compareAndSwap(key,{expectedRevision,value:next}));
+    } catch(error) {
+      mapRevisionConflict(error);
+    }
+  }
+
+  async function markActivePackageKnownGood(moduleId, packageHash, { expectedModuleRevision } = {}) {
+    const id=assertModuleId(moduleId);
+    const hash=assertModulePackageHash(packageHash);
+    const expectedRevision=validateExpectedRevision(expectedModuleRevision);
+    const key=moduleKey(id);
+    const currentRecord=await store.get(key);
+    const current=normalizeModuleState(currentRecord,id);
+    if(current.revision!==expectedRevision) fail(MODULE_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
+    if(current.value.activePackageHash!==hash || current.value.candidate!==null) fail(MODULE_ERROR_CODES.INVALID_TRANSITION);
+    await readPackage(hash);
+    if(current.value.lastKnownGoodPackageHash===hash) return publicModuleRecord(currentRecord);
+    const next={...current.value,lastKnownGoodPackageHash:hash};
+    try {
+      return publicModuleRecord(await store.compareAndSwap(key,{expectedRevision,value:next}));
+    } catch(error) {
+      mapRevisionConflict(error);
+    }
+  }
+
+  async function rollbackAdmission(moduleId, failedPackageHash, { expectedModuleRevision } = {}) {
+    const id=assertModuleId(moduleId);
+    const hash=assertModulePackageHash(failedPackageHash);
+    const expectedRevision=validateExpectedRevision(expectedModuleRevision);
+    const key=moduleKey(id);
+    const currentRecord=await store.get(key);
+    const current=normalizeModuleState(currentRecord,id);
+    if(current.revision!==expectedRevision) fail(MODULE_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
+    if(current.value.activePackageHash!==hash || current.value.candidate!==null) fail(MODULE_ERROR_CODES.INVALID_TRANSITION);
+    if(current.value.lastKnownGoodPackageHash) await readPackage(current.value.lastKnownGoodPackageHash);
+    const next={
+      ...current.value,
+      activePackageHash:current.value.lastKnownGoodPackageHash,
+      candidate:null
+    };
+    try {
+      return publicModuleRecord(await store.compareAndSwap(key,{expectedRevision,value:next}));
+    } catch(error) {
+      mapRevisionConflict(error);
+    }
+  }
+
+  async function deactivateModule(moduleId, { expectedModuleRevision } = {}) {
+    const id=assertModuleId(moduleId);
+    const expectedRevision=validateExpectedRevision(expectedModuleRevision);
+    const key=moduleKey(id);
+    const currentRecord=await store.get(key);
+    const current=normalizeModuleState(currentRecord,id);
+    if(current.revision!==expectedRevision) fail(MODULE_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
+    if(current.value.candidate) fail(MODULE_ERROR_CODES.INVALID_TRANSITION);
+    if(current.value.activePackageHash===null) return publicModuleRecord(currentRecord);
+    const next={
+      ...current.value,
+      activePackageHash:null,
+      lastKnownGoodPackageHash:current.value.activePackageHash || current.value.lastKnownGoodPackageHash,
+      candidate:null
+    };
+    try {
+      return publicModuleRecord(await store.compareAndSwap(key,{expectedRevision,value:next}));
+    } catch(error) {
+      mapRevisionConflict(error);
+    }
+  }
+
+  async function listPackagesForModule(moduleId) {
+    const id=assertModuleId(moduleId);
+    const rows=await store.list();
+    const packages=[];
+    for(const row of rows) {
+      if(typeof row.key!=="string") fail(MODULE_ERROR_CODES.CORRUPT_STATE);
+      if(!row.key.startsWith("package:")) continue;
+      const hash=row.key.slice("package:".length);
+      const value=normalizeStoredPackageRecord(row,hash);
+      const pkg=await verifyPackage(value);
+      if(pkg.packageHash!==hash) fail(MODULE_ERROR_CODES.IDENTITY_CONFLICT);
+      if(pkg.manifest.moduleId===id) packages.push(pkg);
+    }
+    packages.sort((a,b)=>a.packageHash.localeCompare(b.packageHash));
+    return Object.freeze(packages);
+  }
+
+  async function deletePackage(packageHash) {
+    const hash=assertModulePackageHash(packageHash);
+    const rows=await store.list();
+    let packageRecord=null;
+    for(const row of rows) {
+      if(typeof row.key!=="string") fail(MODULE_ERROR_CODES.CORRUPT_STATE);
+      if(row.key===packageKey(hash)) packageRecord=row;
+      if(!row.key.startsWith("module:")) continue;
+      const id=assertModuleId(row.key.slice("module:".length));
+      const current=normalizeModuleState(row,id);
+      const refs=[
+        current.value.activePackageHash,
+        current.value.lastKnownGoodPackageHash,
+        current.value.candidate?.packageHash || null
+      ];
+      if(refs.includes(hash)) fail(MODULE_ERROR_CODES.PACKAGE_REFERENCED);
+    }
+    if(!packageRecord) return Object.freeze({deleted:false});
+    normalizeStoredPackageRecord(packageRecord,hash);
+    try {
+      const result=await store.deleteCompareAndSwap(packageKey(hash),{expectedRevision:packageRecord.revision});
+      return Object.freeze({deleted:result.deleted===true});
+    } catch(error) {
+      mapRevisionConflict(error);
+    }
+  }
+
+  async function deleteModule(moduleId, { expectedModuleRevision } = {}) {
+    const id=assertModuleId(moduleId);
+    const expectedRevision=validateExpectedRevision(expectedModuleRevision);
+    const key=moduleKey(id);
+    const currentRecord=await store.get(key);
+    if(!currentRecord) {
+      if(expectedRevision!==0) fail(MODULE_ERROR_CODES.REVISION_CONFLICT,{currentRevision:0});
+      return Object.freeze({deleted:false});
+    }
+    const current=normalizeModuleState(currentRecord,id);
+    if(current.revision!==expectedRevision) fail(MODULE_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
+    if(current.value.activePackageHash!==null || current.value.candidate!==null) fail(MODULE_ERROR_CODES.INVALID_TRANSITION);
+    try {
+      const result=await store.deleteCompareAndSwap(key,{expectedRevision});
+      return Object.freeze({deleted:result.deleted===true});
+    } catch(error) {
       mapRevisionConflict(error);
     }
   }
@@ -385,8 +541,15 @@ export function createModulePackageRegistry({
     getModule,
     getPackage: readPackage,
     stageCandidate,
+    stageStoredCandidate,
     approveCandidate,
     admitCandidate,
+    markActivePackageKnownGood,
+    rollbackAdmission,
+    deactivateModule,
+    listPackagesForModule,
+    deletePackage,
+    deleteModule,
     rejectCandidate
   });
 }
