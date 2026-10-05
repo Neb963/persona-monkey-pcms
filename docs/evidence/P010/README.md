@@ -1,6 +1,6 @@
 # P010 — RemoteOps + ProviderGate + recovery hold
 
-Status: **IMPLEMENTED**
+Status: **MERGED**
 
 Source/test checkpoint: `a3212a009a495114b9c63ff5bac1586d8ee97cc4`.
 
@@ -147,4 +147,18 @@ No Firefox DevTools MCP or P025/P026 live acceptance is claimed.
 
 ## Pull request / merged integration
 
-PR-head, merged-source, governance, and acceptance evidence is recorded after the corresponding exact GitHub Actions checkpoints pass.
+Final PR head `9b8c6662c04f2a880fdd249bd018051101c9e4f1` passed:
+
+- push repository verification run **37251888710** — success;
+- push pinned Firefox Developer Edition run **37251888709** — success;
+- PR repository verification run **37251902738** — success;
+- PR pinned Firefox Developer Edition run **37251902744** — success.
+
+Pull request #10 merged as `0737b3105dca25783d77256cf753234b4af66990`.
+
+The exact merged source passed:
+
+- repository verification run **37251970911** — success;
+- pinned Firefox Developer Edition run **37251970921** — success.
+
+The root workflows are repository regression/FDE smoke checks. The focused 16-test P010 suite remains the direct U/I/C behavior evidence.
