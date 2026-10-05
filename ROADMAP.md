@@ -201,7 +201,7 @@ Merge wave: 6
 - [x] T021.3 — T021.3 deep-link safety
 
 ## P022 — Module lifecycle end-to-end
-Status: **PR_OPEN**  
+Status: **MERGED**  
 Depends on: P011, P020  
 Merge wave: 6
 

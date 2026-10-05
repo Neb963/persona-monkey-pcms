@@ -1,6 +1,6 @@
 # P022 — Module lifecycle end-to-end evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -71,3 +71,21 @@ Independent branch checkpoint `193a530c05b2f1244f8043d511aed0d716f8d3b4` passed:
 The repository root `npm run verify` does not auto-discover `tests/pcms/p022/*.test.mjs`; root Actions are independent repository/claim/upstream/Firefox evidence rather than the focused P022 lifecycle run.
 
 No P025/P026 LIVE evidence is claimed.
+
+## Pull request / merged integration
+
+Final PR head `0f18960a7fb972cd08506b6cf492fefd29eb0ac5` passed:
+
+- push repository `verify`, run **586** / run id **37309621663** — **success**;
+- push pinned Firefox Developer Edition, run **581** / run id **37309621713** — **success**;
+- pull-request repository `verify`, run **587** / run id **37309696447** — **success**;
+- pull-request pinned Firefox Developer Edition, run **582** / run id **37309696490** — **success**.
+
+Pull request #22 merged as `d84f164c0428c537df1578def862a78b4adf27b3`.
+
+The exact merged main commit passed:
+
+- repository `verify`, run **588** / run id **37309904110** — **success**;
+- pinned Firefox Developer Edition, run **583** / run id **37309904085** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
