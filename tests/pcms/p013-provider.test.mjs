@@ -79,6 +79,17 @@ test("A013-01 driver and compatibility boundaries reject accessors without invok
   assert.equal(invoked,0);
 });
 
+test("A013-01 admitted driver method surface cannot be replaced after adapter construction",async()=>{
+  const driver={
+    probe:async()=>({contractId:"pcms.perchance.driver",contractVersion:1,providerId:"perchance",operations:["generator.update"]}),
+    updateGenerator:async()=>({status:"APPLIED"}),
+    reconcileGeneratorUpdate:async()=>({status:"UNKNOWN"})
+  };
+  const adapter=createPerchanceProviderAdapter({driver});
+  driver.probe=async()=>({contractId:"pcms.perchance.driver",contractVersion:999,providerId:"perchance",operations:["generator.update"]});
+  assert.equal((await adapter.probeCompatibility()).contractVersion,1);
+});
+
 test("A013-02 deterministic emulator applies generator.update through ProviderGate",async()=>{
   const h=setup();
   h.emulator.seedGenerator({generatorId:"gen-123",sourceHash:OLD_HASH,source:OLD_SOURCE});
