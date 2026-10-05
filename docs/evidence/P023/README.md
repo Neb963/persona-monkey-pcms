@@ -1,6 +1,6 @@
 # P023 — Full module integration wave evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -78,5 +78,23 @@ Independent branch checkpoint `0076a5feabf9c43d95a3e058f1edc29fe1cff112` passed:
 - pinned Firefox Developer Edition, run **590** / run id **37349672700** — **success**.
 
 The root `npm run verify` workflow does not auto-discover `tests/pcms/p023/*.test.mjs`; root Actions remain independent repository/claim/upstream/Firefox evidence.
+
+## Pull request / merged integration
+
+Final PR head `c9679653fb4b58cbd1b6df27f86ced811ecb7f6b` passed:
+
+- push repository `verify`, run **600** / run id **37350869411** — **success**;
+- push pinned Firefox Developer Edition, run **595** / run id **37350869446** — **success**;
+- pull-request repository `verify`, run **601** / run id **37350939424** — **success**;
+- pull-request pinned Firefox Developer Edition, run **596** / run id **37350939400** — **success**.
+
+Pull request #23 merged as `25e6a8c01973341d97b1dcbedc0f75e668b1755f`.
+
+The exact merged main commit passed:
+
+- repository `verify`, run **602** / run id **37352319276** — **success**;
+- pinned Firefox Developer Edition, run **597** / run id **37352319423** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
 
 No P025/P026 LIVE evidence is claimed.

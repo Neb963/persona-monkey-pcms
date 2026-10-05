@@ -4,7 +4,7 @@
   "phaseId": "P023",
   "taskId": "T023.1",
   "claimEpoch": 1,
-  "state": "PR_OPEN",
+  "state": "MERGED",
   "owner": {
     "agentId": "gpt-5-6-sol"
   },
@@ -24,5 +24,5 @@
     "A023-02",
     "A023-03"
   ],
-  "lastCheckpointSha": "158662da724e6cddf52e18acabe7fb3874cbda5f"
+  "lastCheckpointSha": "25e6a8c01973341d97b1dcbedc0f75e668b1755f"
 }
