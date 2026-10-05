@@ -4,7 +4,7 @@
   "phaseId": "P021",
   "taskId": "T021.1",
   "claimEpoch": 1,
-  "state": "MERGED",
+  "state": "ACCEPTED",
   "owner": {
     "agentId": "gpt-5-6-sol"
   },

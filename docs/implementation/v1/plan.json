@@ -865,7 +865,7 @@
     {
       "id": "P021",
       "title": "PCMS UI shell / notifications / search",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P012",
         "P014"

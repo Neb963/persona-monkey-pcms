@@ -192,13 +192,13 @@ Merge wave: 6
 - [x] T020.3 — T020.3 RECOVERY_HOLD reconciliation
 
 ## P021 — PCMS UI shell / notifications / search
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P012, P014  
 Merge wave: 6
 
-- [ ] T021.1 — T021.1 navigation/attention shell
-- [ ] T021.2 — T021.2 search/projections
-- [ ] T021.3 — T021.3 deep-link safety
+- [x] T021.1 — T021.1 navigation/attention shell
+- [x] T021.2 — T021.2 search/projections
+- [x] T021.3 — T021.3 deep-link safety
 
 ## P022 — Module lifecycle end-to-end
 Status: **READY**  

@@ -1,6 +1,6 @@
 # P021 — PCMS UI shell / notifications / search evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -88,4 +88,11 @@ The exact merged main commit passed:
 - repository `verify`, run **574** / run id **37305872795** — **success**;
 - pinned Firefox Developer Edition, run **569** / run id **37305872831** — **success**.
 
-Acceptance still requires the MERGED governance checkpoint to pass.
+## Acceptance decision
+
+The MERGED governance checkpoint `582c3ae1a593629f1824e5c5e7c89a1b3f81e851` passed:
+
+- repository `verify`, run **575** / run id **37306103789** — **success**;
+- pinned Firefox Developer Edition, run **570** / run id **37306103812** — **success**.
+
+Together with the 12 exact-source focused U/I/C checks, accepted P012/P014 dependencies, final PR-head CI, and exact merged-main CI, this satisfies **A021-01**, **A021-02**, and **A021-03**. P021 is **ACCEPTED**.
