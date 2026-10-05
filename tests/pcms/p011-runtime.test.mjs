@@ -16,7 +16,7 @@ import {
   moduleArchive
 } from "./p011-harness.mjs";
 
-test("A011-01 admitted controller runs through a bounded FIFO runtime mailbox", async () => {
+test("A011-01 admitted controller runs through a bounded FIFO runtime mailbox", async (t) => {
   const storage = makeStorage();
   const registry = makeRegistry(storage);
   await admit(registry, moduleArchive({
@@ -36,6 +36,7 @@ test("A011-01 admitted controller runs through a bounded FIFO runtime mailbox", 
   const firstStarted = new Promise((resolve) => { markFirstStarted = resolve; });
   const firstGate = new Promise((resolve) => { releaseFirst = resolve; });
   const factories = makeSandboxFactories();
+  t.after(() => factories.dispose());
 
   const broker = createModuleRuntimeBroker({
     storageBroker:storage,
@@ -77,7 +78,7 @@ test("A011-01 admitted controller runs through a bounded FIFO runtime mailbox", 
   assert.equal(storage.shared.namespaces.has(MODULE_RUNTIME_NAMESPACE), true);
 });
 
-test("A011-02 sandbox receives only admitted capabilities with generation-fenced core context", async () => {
+test("A011-02 sandbox receives only admitted capabilities with generation-fenced core context", async (t) => {
   const storage = makeStorage();
   const registry = makeRegistry(storage);
   await admit(registry, moduleArchive({
@@ -92,6 +93,7 @@ test("A011-02 sandbox receives only admitted capabilities with generation-fenced
 
   let capturedContext;
   const factories = makeSandboxFactories();
+  t.after(() => factories.dispose());
   const broker = createModuleRuntimeBroker({
     storageBroker:storage,
     moduleRegistry:registry,
@@ -125,7 +127,7 @@ test("A011-02 sandbox receives only admitted capabilities with generation-fenced
   );
 });
 
-test("A011-03 update drains privileged work, advances generation before replacement activation, and fences stale context", async () => {
+test("A011-03 update drains privileged work, advances generation before replacement activation, and fences stale context", async (t) => {
   const storage = makeStorage();
   const registry = makeRegistry(storage);
   await admit(registry, moduleArchive({
@@ -145,6 +147,7 @@ test("A011-03 update drains privileged work, advances generation before replacem
   const entered = new Promise((resolve) => { enteredResolve = resolve; });
   const gate = new Promise((resolve) => { release = resolve; });
   const factories = makeSandboxFactories();
+  t.after(() => factories.dispose());
   const broker = createModuleRuntimeBroker({
     storageBroker:storage,
     moduleRegistry:registry,
@@ -202,7 +205,7 @@ test("A011-03 update drains privileged work, advances generation before replacem
   assert.equal(await broker.invoke("demo.module", "version"), "v2");
 });
 
-test("A011-03 restart recovery fences persisted active generations and recovery hold blocks replay", async () => {
+test("A011-03 restart recovery fences persisted active generations and recovery hold blocks replay", async (t) => {
   const shared = { namespaces:new Map() };
   const storage1 = makeStorage(shared);
   const registry1 = makeRegistry(storage1);
@@ -215,6 +218,7 @@ test("A011-03 restart recovery fences persisted active generations and recovery 
   }));
 
   const factories1 = makeSandboxFactories();
+  t.after(() => factories1.dispose());
   const broker1 = createModuleRuntimeBroker({
     storageBroker:storage1,
     moduleRegistry:registry1,
@@ -228,6 +232,7 @@ test("A011-03 restart recovery fences persisted active generations and recovery 
   const storage2 = makeStorage(shared);
   const registry2 = makeRegistry(storage2);
   const factories2 = makeSandboxFactories();
+  t.after(() => factories2.dispose());
   const broker2 = createModuleRuntimeBroker({
     storageBroker:storage2,
     moduleRegistry:registry2,
