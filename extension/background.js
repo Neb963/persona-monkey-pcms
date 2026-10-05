@@ -70,6 +70,8 @@ import { normalizeIntegrationPolicy } from "./lib/management-integration-protoco
 import { installRoutingHandlers } from "./lib/routing-gate.js";
 
 const extensionBaseUrl = browser.runtime.getURL("");
+const PCMS_PERSONA_BROKER_REQUEST_TYPE = "PCMS_PERSONA_BROKER_REQUEST";
+const PCMS_PERSONA_BROKER_EVENTS_PORT = "PCMS_PERSONA_BROKER_EVENTS";
 let initPromise = null;
 let lastRoutingFailureEventAt = 0;
 const securityState = {
@@ -186,6 +188,11 @@ async function fetchJsonThroughRouteTest(profileId, effectiveRoute, url, timeout
 function isTrustedExtensionPageSender(sender) {
   const senderUrl = String(sender?.url || "");
   return sender?.id === browser.runtime.id && senderUrl.startsWith(extensionBaseUrl);
+}
+function isPcmsExtensionPageSender(sender) {
+  if (!isTrustedExtensionPageSender(sender)) return false;
+  try { return new URL(sender.url).pathname.startsWith("/pcms/"); }
+  catch { return false; }
 }
 function isSecurityReviewSender(sender) {
   if (!isTrustedExtensionPageSender(sender)) return false;
@@ -1034,6 +1041,14 @@ browser.contextualIdentities.onUpdated.addListener((change) => { void personaMan
 browser.runtime.onConnect?.addListener((port) => {
   if (port?.name === PCMS_EVENTS_PORT && isTrustedExtensionPageSender(port.sender)) {
     pcmsEvents.attachPort(port);
+    return;
+  }
+  if (port?.name === PCMS_PERSONA_BROKER_EVENTS_PORT && isPcmsExtensionPageSender(port.sender)) {
+    void initialize()
+      .then(() => managementIntegration.attachInternalPort(port))
+      .catch(() => {
+        try { port?.disconnect?.(); } catch {}
+      });
   }
 });
 
@@ -1081,6 +1096,11 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
   if (message?.type === "AUTOMATION_PAGE_SIGNAL") {
     if (sender?.id !== browser.runtime.id || !sender?.tab?.id) return false;
     return handlePageAutomationSignal(sender, message);
+  }
+
+  if (message?.type === PCMS_PERSONA_BROKER_REQUEST_TYPE) {
+    if (!isPcmsExtensionPageSender(sender)) throw new Error("PCMS Persona Broker request rejected");
+    return managementIntegration.handleInternalRequest(message.request);
   }
 
   if (!isTrustedExtensionPageSender(sender)) {
