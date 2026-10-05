@@ -468,7 +468,7 @@
     {
       "id": "P011",
       "title": "Module runtime / capability RPC / generation fencing",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P008",
         "P010"
@@ -508,7 +508,7 @@
     {
       "id": "P012",
       "title": "HumanTask/Attention + timers/services",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P007",
         "P011"
@@ -744,7 +744,7 @@
     {
       "id": "P018",
       "title": "Statistics module",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P007",
         "P011"
@@ -824,7 +824,7 @@
     {
       "id": "P020",
       "title": "Backup/restore + retention",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P007",
         "P010",
