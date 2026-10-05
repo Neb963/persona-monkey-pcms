@@ -1,6 +1,6 @@
 # P012 — HumanTask/Attention + timers/services
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -66,4 +66,14 @@ The integration run used the exact accepted P007 `audit/journal.js` (`7127cfc720
 
 Implementation checkpoint before this evidence: `df94831549856348bf8885516ebe6a294121137c`.
 
-Independent GitHub Actions on the final reconciled PR head are still required before merge.
+Final reconciled PR head `474e29292aee38ba5aba6300fb3e1e6e99a9eef4` passed:
+
+- GitHub Actions `verify`, run **349** / run id **37259110931** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **344** / run id **37259110922** — **success**.
+
+Merged main commit `11466b760a0f9b1eb27beef87a6d478651d91a30` passed:
+
+- GitHub Actions `verify`, run **350** / run id **37259235479** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **345** / run id **37259235483** — **success**.
+
+PR #12 is merged. Acceptance still requires the MERGED governance checkpoint to pass.
