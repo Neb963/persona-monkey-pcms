@@ -151,9 +151,11 @@ export function createModuleRuntimeBroker({
     }
   }
 
-  async function assertGeneration(moduleId, generation, packageHash) {
+  async function assertGeneration(moduleId, generation, packageHash, { allowDraining = false } = {}) {
     const current = await read(moduleId);
-    if (current.value.state !== MODULE_RUNTIME_STATES.ACTIVE
+    const validState = current.value.state === MODULE_RUNTIME_STATES.ACTIVE
+      || (allowDraining && current.value.state === MODULE_RUNTIME_STATES.DRAINING);
+    if (!validState
         || current.value.generation !== generation
         || current.value.activePackageHash !== packageHash) {
       fail(MODULE_RUNTIME_ERROR_CODES.STALE_GENERATION, {
@@ -192,9 +194,9 @@ export function createModuleRuntimeBroker({
     runtime.processing = true;
     void (async () => {
       try {
-        await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash);
+        await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash, { allowDraining:true });
         const result = await runtime.host.invoke(item.method, item.args);
-        await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash);
+        await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash, { allowDraining:true });
         item.resolve(result);
       } catch (error) {
         item.reject(error);
@@ -228,18 +230,17 @@ export function createModuleRuntimeBroker({
       const handler = capabilityHandlers.get(name);
       if (!handler) fail(MODULE_RUNTIME_ERROR_CODES.CAPABILITY_UNAVAILABLE);
       exposed[name] = async (args) => {
-        if (!runtime.accepting) fail(MODULE_RUNTIME_ERROR_CODES.STALE_GENERATION);
         let task;
         task = (async () => {
-          await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash);
+          await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash, { allowDraining:true });
           const context = freezeContext(
             runtime.moduleId,
             runtime.generation,
             runtime.packageHash,
-            () => assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash)
+            () => assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash, { allowDraining:true })
           );
           const result = await handler(args, context);
-          await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash);
+          await assertGeneration(runtime.moduleId, runtime.generation, runtime.packageHash, { allowDraining:true });
           return result;
         })();
         runtime.capabilityCalls.add(task);
@@ -385,10 +386,16 @@ export function createModuleRuntimeBroker({
       });
     }
     runtime.accepting = false;
-    const draining = await compareAndSwap(id, current.revision, {
-      ...current.value,
-      state:MODULE_RUNTIME_STATES.DRAINING
-    });
+    let draining;
+    try {
+      draining = await compareAndSwap(id, current.revision, {
+        ...current.value,
+        state:MODULE_RUNTIME_STATES.DRAINING
+      });
+    } catch (error) {
+      runtime.accepting = true;
+      throw error;
+    }
     return finishDrain(id, draining, targetState);
   }
 
