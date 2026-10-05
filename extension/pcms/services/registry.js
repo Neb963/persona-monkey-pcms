@@ -28,6 +28,7 @@ function normalizeMethods(service) {
   if (!service || typeof service !== "object" || Array.isArray(service)) fail(CORE_SERVICE_ERROR_CODES.INVALID_ARGUMENT);
   const prototype = Object.getPrototypeOf(service);
   if (prototype !== Object.prototype && prototype !== null) fail(CORE_SERVICE_ERROR_CODES.INVALID_ARGUMENT);
+  if (Object.getOwnPropertySymbols(service).length) fail(CORE_SERVICE_ERROR_CODES.INVALID_ARGUMENT);
   const methods = new Map();
   for (const [name, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(service))) {
     if (!METHOD_PATTERN.test(name)
