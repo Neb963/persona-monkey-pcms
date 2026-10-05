@@ -51,9 +51,22 @@ Covers runtime disable without uninstall, enable/reactivation, remove as disable
 
 Covers bounded rollback history, rejection of versions outside retention, re-staging retained immutable packages through normal authority admission, successful rollback history rotation, and registry-level refusal to delete any active/last-known-good/candidate package reference.
 
-## Verification status
+## Focused verification actually run
 
-Focused exact-source execution and independent Actions evidence will be recorded after the committed test checkpoint is published.
+The available execution environment does not provide a local repository checkout, so no local Node command is claimed.
+
+The exact P022 product and committed test sources from checkpoint `193a530c05b2f1244f8043d511aed0d716f8d3b4` were fetched through the GitHub connector and executed in its JavaScript isolate:
+
+- **9/9** committed lifecycle/registry behavior test bodies passed;
+- **3/3** committed authority/fencing boundary assertions passed against the exact product sources;
+- combined focused U/I/C result: **12 checks passed, 0 failed**.
+
+The isolate does not provide Node's `TextEncoder`, `TextDecoder`, `structuredClone`, or Web Crypto. Deterministic test-only ASCII codec, clone, and 32-byte digest shims were supplied to execute the committed package/lifecycle test bodies. Product code was not modified; production package identity still uses Web Crypto SHA-256.
+
+Independent branch checkpoint `193a530c05b2f1244f8043d511aed0d716f8d3b4` passed:
+
+- repository `verify`, run **581** / run id **37309013745** — **success**;
+- pinned Firefox Developer Edition, run **576** / run id **37309013656** — **success**.
 
 The repository root `npm run verify` does not auto-discover `tests/pcms/p022/*.test.mjs`; root Actions are independent repository/claim/upstream/Firefox evidence rather than the focused P022 lifecycle run.
 
