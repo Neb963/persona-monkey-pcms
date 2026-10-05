@@ -1,0 +1,31 @@
+name: build-p025-xpi
+on:
+  push:
+    branches:
+      - artifact/p025-xpi-e465668
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build exact extension package
+        run: |
+          node scripts/test-build-reproducibility.mjs
+          node scripts/build-extension.mjs
+          sha256sum dist/persona-route-manager-v1.2.0.xpi
+          cat dist/persona-route-manager-v1.2.0.xpi.sha256
+          unzip -t dist/persona-route-manager-v1.2.0.xpi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p025-acceptance-xpi-e465668
+          path: |
+            dist/persona-route-manager-v1.2.0.xpi
+            dist/persona-route-manager-v1.2.0.xpi.sha256
+          if-no-files-found: error
