@@ -42,11 +42,19 @@ export function createStatisticsService({ journal, definitions, pageSize: rawPag
       }
       const before = state.cursor;
       state = applyStatisticsEvents(state, page.events, metrics);
-      if (page.events.length > 0 && state.cursor !== page.lastSequence) {
-        fail(STATISTICS_ERROR_CODES.JOURNAL_UNAVAILABLE, "Statistics Audit Journal cursor metadata is inconsistent");
+      if (page.lastSequence < state.cursor) {
+        fail(STATISTICS_ERROR_CODES.JOURNAL_UNAVAILABLE, "Statistics Audit Journal tail is behind the projection");
+      }
+      if (page.hasMore && state.cursor >= page.lastSequence) {
+        fail(STATISTICS_ERROR_CODES.JOURNAL_UNAVAILABLE, "Statistics Audit Journal pagination metadata is inconsistent");
+      }
+      if (!page.hasMore && state.cursor !== page.lastSequence) {
+        fail(STATISTICS_ERROR_CODES.JOURNAL_UNAVAILABLE, "Statistics Audit Journal terminal cursor is inconsistent");
+      }
+      if (page.hasMore && state.cursor === before) {
+        fail(STATISTICS_ERROR_CODES.JOURNAL_UNAVAILABLE, "Statistics Audit Journal cannot advance");
       }
       if (!page.hasMore) return state;
-      if (state.cursor === before) fail(STATISTICS_ERROR_CODES.JOURNAL_UNAVAILABLE, "Statistics Audit Journal cannot advance");
     }
   }
 
