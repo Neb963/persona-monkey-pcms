@@ -588,7 +588,7 @@
     {
       "id": "P014",
       "title": "Accounts module + Account↔personaUid binding",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P011",
         "P013"
