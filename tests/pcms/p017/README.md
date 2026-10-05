@@ -1,6 +1,6 @@
 # P017 — Refresher module evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -61,4 +61,18 @@ The pre-evidence implementation head `6e0d5ade2d9635d4399d3bcc774fb4ecc7e51d23` 
 - GitHub Actions `verify`, run **508** / run id **37285931999** — **success**;
 - GitHub Actions `firefox-developer-edition`, run **503** / run id **37285932035** — **success**.
 
-Final branch/PR/merged-main CI will be recorded after those exact heads exist.
+## Independent final branch / PR / merged-main CI
+
+Final synchronized PR head `7b8e2db379c2f1d80b5c4e49c11d0f3c91c9d3be` passed:
+- push `verify`, run **514** / run id **37286600582** — **success**;
+- push `firefox-developer-edition`, run **509** / run id **37286600584** — **success**;
+- pull-request `verify`, run **515** / run id **37286606938** — **success**;
+- pull-request `firefox-developer-edition`, run **510** / run id **37286607113** — **success**.
+
+Pull request #17 merged as `2fc1b30369ef1625029b41f06fa29366230f68be`.
+
+The exact merged main commit passed:
+- GitHub Actions `verify`, run **516** / run id **37286746054** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **511** / run id **37286745925** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
