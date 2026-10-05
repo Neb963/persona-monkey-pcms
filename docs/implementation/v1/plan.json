@@ -349,7 +349,7 @@
     {
       "id": "P008",
       "title": "Module archive/package/authority model",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P004",
         "P005"
