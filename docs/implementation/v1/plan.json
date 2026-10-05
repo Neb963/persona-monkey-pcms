@@ -389,7 +389,7 @@
     {
       "id": "P009",
       "title": "Persona Broker implementation",
-      "status": "PR_OPEN",
+      "status": "MERGED",
       "dependsOn": [
         "P003"
       ],
