@@ -4,7 +4,7 @@
   "phaseId": "P016",
   "taskId": "T016.1",
   "claimEpoch": 1,
-  "state": "ACTIVE",
+  "state": "PR_OPEN",
   "owner": {
     "agentId": "gpt-5-6-sol"
   },
