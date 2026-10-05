@@ -22,9 +22,20 @@ function nonNegativeInteger(value) {
   return value;
 }
 
+function definitionKey(definition) {
+  return [
+    definition.metricId,
+    definition.eventType,
+    definition.subjectKind ?? "",
+    definition.aggregation,
+    definition.valuePath ? definition.valuePath.join("/") : ""
+  ].join("\u0000");
+}
+
 function publicMetric(metric) {
   return Object.freeze({
     metricId: metric.metricId,
+    definitionKey: metric.definitionKey,
     value: metric.value,
     matchedEvents: metric.matchedEvents,
     lateMatchedEvents: metric.lateMatchedEvents,
@@ -40,6 +51,7 @@ export function createEmptyStatisticsState(definitions) {
     lateEventCount: 0,
     metrics: Object.freeze(definitions.map((definition) => publicMetric({
       metricId: definition.metricId,
+      definitionKey: definitionKey(definition),
       value: 0,
       matchedEvents: 0,
       lateMatchedEvents: 0,
@@ -59,18 +71,24 @@ export function normalizeStatisticsState(raw, definitions) {
   if (d.schemaVersion.value !== STATISTICS_SCHEMA_VERSION) fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics state schema is unsupported");
   const cursor = nonNegativeInteger(d.cursor.value);
   const lateEventCount = nonNegativeInteger(d.lateEventCount.value);
+  if (lateEventCount > cursor) fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics late-event count is invalid");
   const watermarkTimestamp = d.watermarkTimestamp.value;
   if (watermarkTimestamp !== null && (typeof watermarkTimestamp !== "string" || !Number.isFinite(Date.parse(watermarkTimestamp)))) {
     fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics watermark is invalid");
+  }
+  if ((cursor === 0) !== (watermarkTimestamp === null)) {
+    fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics watermark/cursor state is inconsistent");
   }
   if (!Array.isArray(d.metrics.value) || d.metrics.value.length !== definitions.length) fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics metric state is invalid");
   const metrics = d.metrics.value.map((rawMetric, index) => {
     if (!isPlainObject(rawMetric) || Object.getOwnPropertySymbols(rawMetric).length) fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics metric state is invalid");
     const m = Object.getOwnPropertyDescriptors(rawMetric);
-    const keys = ["metricId", "value", "matchedEvents", "lateMatchedEvents", "buckets"];
+    const keys = ["metricId", "definitionKey", "value", "matchedEvents", "lateMatchedEvents", "buckets"];
     if (Object.keys(m).length !== keys.length || keys.some((key) => !Object.hasOwn(m, key))) fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics metric state shape is invalid");
     for (const descriptor of Object.values(m)) if (!descriptor.enumerable || !Object.hasOwn(descriptor, "value")) fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics metric state is unsafe");
-    if (m.metricId.value !== definitions[index].metricId) fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics metric definitions changed");
+    if (m.metricId.value !== definitions[index].metricId || m.definitionKey.value !== definitionKey(definitions[index])) {
+      fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics metric definitions changed");
+    }
     const value = finite(m.value.value);
     const matchedEvents = nonNegativeInteger(m.matchedEvents.value);
     const lateMatchedEvents = nonNegativeInteger(m.lateMatchedEvents.value);
@@ -94,7 +112,16 @@ export function normalizeStatisticsState(raw, definitions) {
       if (bucket.lateMatchedEvents > bucket.matchedEvents) fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics bucket counters are invalid");
       return Object.freeze(bucket);
     });
-    return publicMetric({ metricId: m.metricId.value, value, matchedEvents, lateMatchedEvents, buckets });
+    const bucketValue = buckets.reduce((sum, bucket) => sum + bucket.value, 0);
+    const bucketMatches = buckets.reduce((sum, bucket) => sum + bucket.matchedEvents, 0);
+    const bucketLateMatches = buckets.reduce((sum, bucket) => sum + bucket.lateMatchedEvents, 0);
+    if (bucketValue !== value || bucketMatches !== matchedEvents || bucketLateMatches !== lateMatchedEvents) {
+      fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics metric totals do not match buckets");
+    }
+    if (definitions[index].aggregation === STATISTICS_AGGREGATIONS.COUNT && value !== matchedEvents) {
+      fail(STATISTICS_ERROR_CODES.CORRUPT_STATE, "Statistics COUNT metric total is invalid");
+    }
+    return publicMetric({ metricId: m.metricId.value, definitionKey: m.definitionKey.value, value, matchedEvents, lateMatchedEvents, buckets });
   });
   return Object.freeze({
     schemaVersion: STATISTICS_SCHEMA_VERSION,
@@ -128,6 +155,7 @@ function updateMetric(metric, day, amount, late) {
   }
   return publicMetric({
     metricId: metric.metricId,
+    definitionKey: metric.definitionKey,
     value: metric.value + amount,
     matchedEvents: metric.matchedEvents + 1,
     lateMatchedEvents: metric.lateMatchedEvents + (late ? 1 : 0),
