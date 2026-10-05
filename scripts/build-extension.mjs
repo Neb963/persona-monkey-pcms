@@ -7,6 +7,7 @@ import { spawnSync } from "node:child_process";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const source = resolve(root, "extension");
+const moduleSource = resolve(root, "pcms-modules");
 const dist = resolve(root, "dist");
 const validate = spawnSync(process.execPath, [resolve(root, "scripts/validate-extension.mjs")], { cwd: root, stdio: "inherit" });
 if (validate.status !== 0) process.exit(validate.status || 1);
@@ -58,6 +59,7 @@ function walk(dir) {
 
 try {
   copyTree(source, stage);
+  copyTree(moduleSource, resolve(stage, "pcms-modules"));
   const files = walk(stage).sort(compareArchivePaths);
   for (const file of files) utimesSync(file, epoch, epoch);
   for (const dir of [...new Set(files.map((file) => dirname(file)))].sort((a, b) => b.length - a.length)) {
