@@ -1,6 +1,6 @@
 # P011 — Module runtime / capability RPC / generation fencing
 
-Phase state: **PR_OPEN**. This document records implementation and verification evidence only; it does **not** claim P011 is ACCEPTED.
+Phase state: **PR_OPEN**.
 
 ## Implemented scope
 
@@ -26,35 +26,52 @@ Focused regression files:
 - `tests/pcms/p011-runtime.test.mjs`
 - `tests/pcms/p011-boundary.test.mjs`
 
+The P011 test harness explicitly disposes its sandbox hosts/child runtimes so Node exits cleanly after verification instead of leaving MessagePorts referenced.
+
 ## Acceptance mapping
 
 ### A011-01 — runtime broker / mailbox
 
-The focused suite covers admitted controller activation, durable runtime state, bounded FIFO invocation and serialization.
+Verified admitted controller activation, durable runtime state, bounded FIFO invocation/serialization, and boundary isolation.
 
 ### A011-02 — capability RPC
 
-The focused suite covers exact manifest-authority capability exposure, denied ungranted capabilities, generation-fenced privileged context, and architecture-boundary checks.
+Verified exact manifest-authority capability exposure, denial of ungranted capabilities, generation-fenced privileged context, and the approved sandbox-host boundary.
 
 ### A011-03 — generation fencing / drain / recovery
 
-The focused suite covers graceful drain, rejection of new work during drain, generation advancement, stale-context rejection, replacement activation, restart recovery, and RECOVERY_HOLD activation blocking.
+Verified graceful drain, rejection of new work during drain, generation advancement, stale-context rejection, replacement activation, restart recovery, and RECOVERY_HOLD activation blocking.
 
-## Independent CI actually completed
+## Focused verification actually run
 
-Code/reconciled head `f90d0d10dd15e9a38d802254aa1666bfd26fbfa5`:
+Node: **v22.16.0**
 
-- GitHub Actions `verify`, run **292** / run id **37254589796** — **success**;
-- GitHub Actions `firefox-developer-edition`, run **287** / run id **37254589817** — **success**.
+Command:
 
-These are the repository's existing standard workflows. The Firefox workflow installed the exact pinned Firefox Developer Edition and completed its deterministic disposable-profile smoke.
+`node --test tests/pcms/p011-runtime.test.mjs tests/pcms/p011-boundary.test.mjs`
 
-## Focused verification limitation
+Result: **6 tests passed, 0 failed, exit 0**.
 
-The repository's standard workflows do not discover or execute `tests/pcms/**`. The available execution container was also unable to clone the GitHub branch because DNS/network access to `github.com` was unavailable. Therefore:
+The local verification tree was reconstructed from GitHub and checked by Git blob hash before execution. The hashes matched the P011 branch / accepted dependencies:
 
-- the P011 focused Node suite is **present but not executed** in this session;
-- no A011 acceptance gate is recorded as PASS on the basis of unexecuted tests;
-- the PR remains draft and P011 remains **PR_OPEN**, not MERGED or ACCEPTED.
+- `extension/pcms/modules/errors.js` — `c362dcf4d72a8fa68d54772bc6358b6e78a2e67a`
+- `extension/pcms/modules/authority.js` — `ea5b9dce5c818c6eb9e4c2a2e23c97eccb55074e`
+- `extension/pcms/modules/package.js` — `e4708bcef607d63a23e704bdffa194334c51d453`
+- `extension/pcms/modules/registry.js` — `c188146a65ad597968817b821f3b1e5fb4bd4459`
+- `extension/pcms/sandbox/protocol.js` — `af59387bc18913ec010f9625848751b662f45e55`
+- `extension/pcms/sandbox/controller-runtime.js` — `bc8bc701adcc7e43d64e9c5bc7f9d2e3753c20a7`
+- `extension/pcms/runtime/sandbox-host.js` — `e781d4f1f881415926a461e0415b65069ce2b817`
+- `extension/pcms/runtime/errors.js` — `88fe53b21658106a0a75369872bc65fc049a95bc`
+- `extension/pcms/runtime/module-runtime.js` — `9d8489da268763999cf4435a36a2d99b13a410b5`
+- `tests/pcms/p011-harness.mjs` — `b77ff4964e46b21b63e3ec4374559bf29365fad7`
+- `tests/pcms/p011-runtime.test.mjs` — `3f03809ea63058c57f6b077f239f84acc75c2e77`
+- `tests/pcms/p011-boundary.test.mjs` — `6e7b8111574dd5c1b4957fb33dab2e552de09159`
 
-A later continuation must execute the focused P011 suite (or add an authorized repository-owned CI path in an appropriate phase/claim), then update evidence/state only if that execution passes.
+## Independent GitHub CI
+
+P011 branch checkpoint `3ef7ccc526db3f01301b8d1c73427acdc559ca6f`:
+
+- GitHub Actions `verify`, run **300** / run id **37256090667** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **295** / run id **37256090762** — **success**.
+
+The standard workflows do not discover `tests/pcms/**`; the focused suite above was therefore executed independently against the byte-verified branch tree. Final merge/acceptance still requires CI on the final reconciled PR head and merged main.
