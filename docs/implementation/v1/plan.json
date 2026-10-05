@@ -349,7 +349,7 @@
     {
       "id": "P008",
       "title": "Module archive/package/authority model",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P004",
         "P005"
