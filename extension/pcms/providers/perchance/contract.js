@@ -115,5 +115,5 @@ export function normalizeDriver(driver) {
         && typeof descriptors[name].value === "function")) {
     throw new TypeError("Perchance driver must expose only probe(), updateGenerator(), and reconcileGeneratorUpdate()");
   }
-  return driver;
+  return Object.freeze(Object.fromEntries(names.map((name) => [name, descriptors[name].value])));
 }
