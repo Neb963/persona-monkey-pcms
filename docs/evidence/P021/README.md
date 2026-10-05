@@ -1,6 +1,6 @@
 # P021 — PCMS UI shell / notifications / search evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -71,3 +71,21 @@ Independent branch checkpoint `221678f60cdc7e45859ce835e0c03b893f60a233` passed:
 The repository root `npm run verify` does not auto-discover `tests/pcms/p021/*.test.mjs`; root Actions are independent repository/claim/upstream/Firefox evidence rather than the focused P021 behavior run.
 
 No P025/P026 LIVE evidence is claimed.
+
+## Pull request / merged integration
+
+Final PR head `00ebea6ea3e72956ad728ca0ff3049e5362354a8` passed:
+
+- push repository `verify`, run **572** / run id **37305663034** — **success**;
+- push pinned Firefox Developer Edition, run **567** / run id **37305663072** — **success**;
+- pull-request repository `verify`, run **573** / run id **37305708231** — **success**;
+- pull-request pinned Firefox Developer Edition, run **568** / run id **37305708230** — **success**.
+
+Pull request #21 merged as `8b69f42565ebcbf1a401dd983ffd0efaf8eba13b`.
+
+The exact merged main commit passed:
+
+- repository `verify`, run **574** / run id **37305872795** — **success**;
+- pinned Firefox Developer Edition, run **569** / run id **37305872831** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
