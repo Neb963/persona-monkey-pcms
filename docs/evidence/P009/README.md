@@ -1,6 +1,6 @@
 # P009 — Persona Broker implementation
 
-Status: **IMPLEMENTED**
+Status: **MERGED**
 
 Source/test checkpoint: `88591963b3366f9572c2cf615074f9c8ee440aeb`.
 
@@ -122,4 +122,18 @@ No Firefox DevTools MCP or P025/P026 live acceptance is claimed.
 
 ## Pull request / merged integration
 
-PR-head, merged-source, and final governance evidence is recorded after the corresponding exact GitHub Actions checkpoints pass.
+Final PR head `81b94bcbbb77e758e3de8db2224323bcccee613e` passed:
+
+- push repository verification run **37250011795** — success;
+- push pinned Firefox Developer Edition run **37250011814** — success;
+- PR repository verification run **37250024938** — success;
+- PR pinned Firefox Developer Edition run **37250025041** — success.
+
+Pull request #9 merged as `c03d37a6f2c3d216ae00950ce802994c11b9990e`.
+
+The exact merged source passed:
+
+- repository verification run **37250128021** — success;
+- pinned Firefox Developer Edition run **37250127926** — success.
+
+The root workflows are repository regression/FDE smoke checks. The focused U/I/C suite remains the direct P009 behavior evidence.
