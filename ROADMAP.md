@@ -84,16 +84,16 @@ Merge wave: 3
 - [x] T008.3 — T008.3 immutable candidate lifecycle
 
 ## P009 — Persona Broker implementation
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P003  
 Merge wave: 3
 
-- [ ] T009.1 — T009.1 Integration-semantic facade
-- [ ] T009.2 — T009.2 capability/lease/execution mapping
-- [ ] T009.3 — T009.3 parity/failure tests
+- [x] T009.1 — T009.1 Integration-semantic facade
+- [x] T009.2 — T009.2 capability/lease/execution mapping
+- [x] T009.3 — T009.3 parity/failure tests
 
 ## P010 — RemoteOps + ProviderGate + recovery hold
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P005, P009  
 Merge wave: 4
 
