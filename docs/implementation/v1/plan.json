@@ -666,7 +666,7 @@
     {
       "id": "P016",
       "title": "Explorer module",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P014",
         "P013"
