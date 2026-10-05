@@ -93,16 +93,16 @@ Merge wave: 3
 - [x] T009.3 — T009.3 parity/failure tests
 
 ## P010 — RemoteOps + ProviderGate + recovery hold
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P005, P009  
 Merge wave: 4
 
-- [ ] T010.1 — T010.1 durable RemoteOps
-- [ ] T010.2 — T010.2 ProviderGate
-- [ ] T010.3 — T010.3 uncertain/recovery tests
+- [x] T010.1 — T010.1 durable RemoteOps
+- [x] T010.2 — T010.2 ProviderGate
+- [x] T010.3 — T010.3 uncertain/recovery tests
 
 ## P011 — Module runtime / capability RPC / generation fencing
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P008, P010  
 Merge wave: 4
 
@@ -120,7 +120,7 @@ Merge wave: 4
 - [ ] T012.3 — T012.3 service registry/restart tests
 
 ## P013 — Perchance provider adapter + emulator
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P009, P010  
 Merge wave: 4
 
