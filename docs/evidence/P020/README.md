@@ -50,9 +50,22 @@ Covers integrity verification before mutation, RECOVERY_HOLD before runtime quie
 
 Covers restored DISPATCHING → UNCERTAIN recovery, cancellation of safe PREPARED/RETRYABLE operations instead of replay, ProviderGate reconciliation for UNCERTAIN operations, UNKNOWN remaining held, module-generation reconciliation, Persona-binding/provider-capability gates, and release only after zero unresolved RemoteOperations.
 
-## Verification status
+## Focused verification actually run
 
-Focused exact-source execution and independent Actions evidence will be recorded after the committed test checkpoint is published.
+The available execution environment does not provide a local repository checkout, so no local Node command is claimed.
+
+The exact P020 product and committed test sources from checkpoint `612c47b9a6ec055e89aee0d2416b9fe89acfa6cc` were fetched through the GitHub connector and executed in its JavaScript isolate:
+
+- **11/11** committed backup/restore, retention, and storage-admin test bodies passed;
+- **3/3** static boundary/transaction checks passed against the exact product sources;
+- combined focused U/I/C result: **14 checks passed, 0 failed**.
+
+The isolate does not provide Node's `structuredClone` or `node:crypto`; deterministic test-only clone and 64-hex digest shims were supplied to the committed test bodies. Product code was not modified, and the production default remains Web Crypto SHA-256.
+
+Independent branch checkpoint `612c47b9a6ec055e89aee0d2416b9fe89acfa6cc` passed:
+
+- repository `verify`, run **554** / run id **37302213386** — **success**;
+- pinned Firefox Developer Edition, run **549** / run id **37302213470** — **success**.
 
 The repository root `npm run verify` does not auto-discover `tests/pcms/p020/*.test.mjs`; root Actions are independent repository/claim/upstream/Firefox evidence rather than the focused P020 behavior run.
 
