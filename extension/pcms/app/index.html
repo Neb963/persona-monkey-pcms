@@ -7,23 +7,82 @@
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
-  <main class="shell">
-    <header>
-      <span class="eyebrow">PersonaMonkey-PCMS</span>
-      <h1>Perchance Central Management System</h1>
-      <p>PCMS Core is present. Persona operations remain behind the versioned Persona Broker boundary.</p>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <span class="eyebrow">PersonaMonkey-PCMS</span>
+        <h1>Perchance Central Management System</h1>
+      </div>
+      <p id="notificationStatus" class="notification-status" role="status" aria-live="polite">Loading PCMS projections…</p>
     </header>
-    <section class="status" aria-labelledby="core-status">
-      <h2 id="core-status">Core status</h2>
-      <dl>
-        <div><dt>Namespace</dt><dd id="namespaceVersion">—</dd></div>
-        <div><dt>Persona Broker contract</dt><dd id="brokerVersion">—</dd></div>
-        <div><dt>Broker commands</dt><dd id="commandCount">—</dd></div>
-        <div><dt>Broker implementation</dt><dd id="brokerImplementation">—</dd></div>
-      </dl>
-    </section>
-    <p class="boundary">This entry point does not access raw browser APIs, PersonaMonkey services, storage, routing, or native RPC.</p>
-  </main>
+
+    <nav id="primaryNav" class="primary-nav" aria-label="PCMS"></nav>
+
+    <main class="content">
+      <section id="viewOverview" aria-labelledby="overviewHeading">
+        <div class="section-heading">
+          <span class="eyebrow">Overview</span>
+          <h2 id="overviewHeading">Operations at a glance</h2>
+          <p>Read-only projections surface attention and account state without becoming operational authority.</p>
+        </div>
+        <div class="metric-grid">
+          <article><strong id="overviewAttentionCount">0</strong><span>Open attention</span></article>
+          <article><strong id="overviewCriticalCount">0</strong><span>Critical</span></article>
+          <article><strong id="overviewAccountCount">0</strong><span>Accounts</span></article>
+        </div>
+        <section class="core-status" aria-labelledby="coreStatusHeading">
+          <h3 id="coreStatusHeading">Core boundary</h3>
+          <dl>
+            <div><dt>Namespace</dt><dd id="namespaceVersion">—</dd></div>
+            <div><dt>Persona Broker contract</dt><dd id="brokerVersion">—</dd></div>
+            <div><dt>Broker commands</dt><dd id="commandCount">—</dd></div>
+            <div><dt>Broker implementation</dt><dd id="brokerImplementation">—</dd></div>
+          </dl>
+        </section>
+      </section>
+
+      <section id="viewAttention" hidden aria-labelledby="attentionHeading">
+        <div class="section-heading">
+          <span class="eyebrow">Attention</span>
+          <h2 id="attentionHeading">Operator attention</h2>
+          <p>Open HumanTasks appear here in priority order. The shell does not resolve or mutate tasks.</p>
+        </div>
+        <div id="attentionList" class="item-list"></div>
+        <p id="attentionEmpty" class="empty-state">No open HumanTasks.</p>
+      </section>
+
+      <section id="viewAccounts" hidden aria-labelledby="accountsHeading">
+        <div class="section-heading">
+          <span class="eyebrow">Accounts</span>
+          <h2 id="accountsHeading">Account projection</h2>
+          <p>Durable AccountId and personaUid are shown as read-only identity projections.</p>
+        </div>
+        <div id="accountList" class="item-list"></div>
+        <p id="accountsEmpty" class="empty-state">No accounts are available.</p>
+      </section>
+
+      <section id="viewSearch" hidden aria-labelledby="searchHeading">
+        <div class="section-heading">
+          <span class="eyebrow">Search</span>
+          <h2 id="searchHeading">Search PCMS projections</h2>
+          <p>Search covers bounded non-secret Account and open HumanTask projection fields.</p>
+        </div>
+        <form id="searchForm" class="search-form" role="search">
+          <label for="searchInput">Search</label>
+          <div class="search-row">
+            <input id="searchInput" type="search" maxlength="200" autocomplete="off" spellcheck="false">
+            <button type="submit">Search</button>
+          </div>
+        </form>
+        <div id="searchResults" class="item-list"></div>
+        <p id="searchEmpty" class="empty-state">No matching projections.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>PCMS UI is a projection surface. It does not access raw browser APIs, PersonaMonkey internals, raw IndexedDB, routing, native RPC, or secret values.</p>
+    </footer>
+  </div>
   <script type="module" src="app.js"></script>
 </body>
 </html>
