@@ -1,6 +1,6 @@
 # P008 — Module archive/package/authority model
 
-Status: **MERGED**
+Status: **ACCEPTED**
 
 Source/test checkpoint: `6b3027e8ccbdcf3afb8b8d42f4f03e5f7d8403bb`.
 
@@ -105,3 +105,14 @@ The exact merged source passed:
 - pinned Firefox Developer Edition run **37248649904** — success.
 
 These root workflows are repository regression checks. They do not replace the focused 11-test P008 U/I/C suite recorded above.
+
+## Acceptance decision
+
+The corrected MERGED governance checkpoint `30fb84256631cd6a82c6992e7092dde6797ecac2` passed:
+
+- repository verification run **37248871079** — success;
+- pinned Firefox Developer Edition run **37248871109** — success.
+
+An earlier intermediate post-merge governance commit failed repository verification because a generated JSON file contained a literal escaped newline after the closing object. The malformed serialization was corrected and the generated plan/claim/roadmap/status views were revalidated at the green checkpoint above; no P008 product source changed during that repair.
+
+Together with the exact-source 11-test U/I/C suite, PR-head CI, merged-source CI, and corrected governance CI, this satisfies **A008-01**, **A008-02**, and **A008-03**. P008 is **ACCEPTED**.
