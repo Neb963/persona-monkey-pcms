@@ -627,7 +627,7 @@
     {
       "id": "P015",
       "title": "Deployer module",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P014",
         "P013"
