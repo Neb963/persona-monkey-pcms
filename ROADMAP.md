@@ -156,7 +156,7 @@ Merge wave: 5
 - [x] T016.3 — T016.3 module UI/integration
 
 ## P017 — Refresher module
-Status: **CLAIMED**  
+Status: **IN_PROGRESS**  
 Depends on: P014, P013  
 Merge wave: 5
 
