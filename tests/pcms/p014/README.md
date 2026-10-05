@@ -1,6 +1,6 @@
 # P014 — Accounts module + Account↔personaUid binding evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -75,3 +75,12 @@ The exact merged main commit passed:
 - GitHub Actions `firefox-developer-edition`, run **419** / run id **37263239220** — **success**.
 
 Acceptance still requires the MERGED governance checkpoint to pass.
+
+## Acceptance decision
+
+The MERGED governance checkpoint `453e6ce9a55828bbb22eaeaf739df4d05e7a1b44` passed:
+
+- repository verification run **429** / run id **37263362097** — **success**;
+- pinned Firefox Developer Edition run **424** / run id **37263362141** — **success**.
+
+Together with the exact-source 12-test focused U/I/C suite, final PR-head CI, exact merged-main CI, and accepted P011/P013 dependencies, this satisfies **A014-01**, **A014-02**, and **A014-03**. P014 is **ACCEPTED**.
