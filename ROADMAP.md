@@ -111,7 +111,7 @@ Merge wave: 4
 - [x] T011.3 — T011.3 draining/update/recovery
 
 ## P012 — HumanTask/Attention + timers/services
-Status: **IN_PROGRESS**  
+Status: **PR_OPEN**  
 Depends on: P007, P011  
 Merge wave: 4
 
