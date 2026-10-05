@@ -744,7 +744,7 @@
     {
       "id": "P018",
       "title": "Statistics module",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P007",
         "P011"
