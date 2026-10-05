@@ -1,6 +1,6 @@
 # P007 — Minimal Audit Journal
 
-Status: **MERGED / integration verified**
+Status: **ACCEPTED**
 
 Final implementation checkpoint before evidence: `11a5ebd438c12ba33ff97d4d0feb5dae8cc335c8`.
 
@@ -124,3 +124,15 @@ PR #7 merged as `573bfc5b7322bb9da1954dd31cee6d1609438ce4`. The exact merged sou
 The exact four production-source Git blob identities remained unchanged from the focused Node 22 verification recorded above, which passed **6 tests, 0 failed**.
 
 P007 remains MERGED until this governance checkpoint itself passes repository verification.
+
+
+## Acceptance decision
+
+The MERGED governance checkpoint `151c4072cceaad792cd129adc0cbe6ecdfd7ab14` passed:
+
+- repository verification run **37247007532** — success;
+- pinned Firefox Developer Edition run **37247007543** — success.
+
+A007-01, A007-02 and A007-03 are satisfied by the exact-source focused Node 22 U/I/C verification, final PR-head CI, exact merged-source CI, and the green MERGED governance checkpoint. P007 is therefore **ACCEPTED**.
+
+No successor phase is claimed or started by this session. P008 and P009 remain READY; later P007 consumers remain dependency-blocked where their other prerequisites are not accepted.
