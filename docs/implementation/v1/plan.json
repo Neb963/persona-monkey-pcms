@@ -627,7 +627,7 @@
     {
       "id": "P015",
       "title": "Deployer module",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P014",
         "P013"
