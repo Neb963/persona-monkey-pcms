@@ -1,6 +1,6 @@
 # P010 — RemoteOps + ProviderGate + recovery hold
 
-Status: **MERGED**
+Status: **ACCEPTED**
 
 Source/test checkpoint: `a3212a009a495114b9c63ff5bac1586d8ee97cc4`.
 
@@ -162,3 +162,12 @@ The exact merged source passed:
 - pinned Firefox Developer Edition run **37251970921** — success.
 
 The root workflows are repository regression/FDE smoke checks. The focused 16-test P010 suite remains the direct U/I/C behavior evidence.
+
+## Acceptance decision
+
+The MERGED governance checkpoint `22b40dc6fc5236db122d54d7ec26a30720838045` passed:
+
+- repository verification run **37252090716** — success;
+- pinned Firefox Developer Edition run **37252090847** — success.
+
+Together with the exact-source 16-test U/I/C suite, branch/PR CI, and exact merged-source CI, this satisfies **A010-01**, **A010-02**, and **A010-03**. P010 is **ACCEPTED**.
