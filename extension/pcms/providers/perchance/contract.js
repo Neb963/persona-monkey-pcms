@@ -66,9 +66,8 @@ export function normalizePerchanceOperation(operation) {
   exact(operation, ["schemaVersion","kind","operationId","providerId","action","targetRef","intentFingerprint","state","attempt","createdAt","updatedAt","lastDispatchAt","resolvedAt","resolution"], PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
   if (operation.providerId !== PERCHANCE_PROVIDER_ID || operation.action !== PERCHANCE_GENERATOR_UPDATE_ACTION) fail(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
   boundedId(operation.operationId, PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
-  if (!plain(operation.targetRef)
-      || Object.keys(operation.targetRef).length !== 2
-      || operation.targetRef.kind !== PERCHANCE_GENERATOR_TARGET_KIND) fail(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
+  exact(operation.targetRef, ["kind","id"], PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
+  if (operation.targetRef.kind !== PERCHANCE_GENERATOR_TARGET_KIND) fail(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
   boundedId(operation.targetRef.id, PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
   if (typeof operation.intentFingerprint !== "string" || !operation.intentFingerprint.startsWith("perchance:generator-source:v1:")) {
     fail(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
