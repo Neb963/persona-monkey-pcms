@@ -1,6 +1,6 @@
 # P022 — Module lifecycle end-to-end evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -88,4 +88,11 @@ The exact merged main commit passed:
 - repository `verify`, run **588** / run id **37309904110** — **success**;
 - pinned Firefox Developer Edition, run **583** / run id **37309904085** — **success**.
 
-Acceptance still requires the MERGED governance checkpoint to pass.
+## Acceptance decision
+
+The MERGED governance checkpoint `c691dd4f4746f7d16692acdf79d63a667f3ca3e0` passed:
+
+- repository `verify`, run **589** / run id **37310153413** — **success**;
+- pinned Firefox Developer Edition, run **584** / run id **37310153169** — **success**.
+
+Together with the 12 exact-source focused U/I/C checks, accepted P008/P011/P020 dependencies, final PR-head CI, and exact merged-main CI, this satisfies **A022-01**, **A022-02**, and **A022-03**. P022 is **ACCEPTED**.

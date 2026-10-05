@@ -201,16 +201,16 @@ Merge wave: 6
 - [x] T021.3 — T021.3 deep-link safety
 
 ## P022 — Module lifecycle end-to-end
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P011, P020  
 Merge wave: 6
 
-- [ ] T022.1 — T022.1 install/update
-- [ ] T022.2 — T022.2 disable/remove/purge
-- [ ] T022.3 — T022.3 rollback/retention acceptance
+- [x] T022.1 — T022.1 install/update
+- [x] T022.2 — T022.2 disable/remove/purge
+- [x] T022.3 — T022.3 rollback/retention acceptance
 
 ## P023 — Full module integration wave
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P015, P016, P017, P018, P019, P020, P021, P022  
 Merge wave: 7
 

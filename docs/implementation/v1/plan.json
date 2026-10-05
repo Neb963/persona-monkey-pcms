@@ -905,7 +905,7 @@
     {
       "id": "P022",
       "title": "Module lifecycle end-to-end",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P011",
         "P020"
@@ -945,7 +945,7 @@
     {
       "id": "P023",
       "title": "Full module integration wave",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P015",
         "P016",
