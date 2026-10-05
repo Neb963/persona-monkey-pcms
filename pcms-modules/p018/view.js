@@ -30,13 +30,14 @@ export function buildStatisticsView(rawState, definitions, { metricIds = null, f
     const series = metric.buckets
       .filter((bucket) => (fromDay === null || bucket.day >= fromDay) && (toDay === null || bucket.day <= toDay))
       .map((bucket) => Object.freeze({ ...bucket }));
+    const ranged = fromDay !== null || toDay !== null;
     return [Object.freeze({
       metricId: definition.metricId,
       label: definition.label,
       aggregation: definition.aggregation,
-      value: metric.value,
-      matchedEvents: metric.matchedEvents,
-      lateMatchedEvents: metric.lateMatchedEvents,
+      value: ranged ? series.reduce((sum, bucket) => sum + bucket.value, 0) : metric.value,
+      matchedEvents: ranged ? series.reduce((sum, bucket) => sum + bucket.matchedEvents, 0) : metric.matchedEvents,
+      lateMatchedEvents: ranged ? series.reduce((sum, bucket) => sum + bucket.lateMatchedEvents, 0) : metric.lateMatchedEvents,
       series: Object.freeze(series)
     })];
   });
