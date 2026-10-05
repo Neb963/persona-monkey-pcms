@@ -37,10 +37,6 @@ function isoNow(clock) {
   try { value = new Date(clock()).toISOString(); } catch { fail(PROVISIONING_ERROR_CODES.CORRUPT_STATE); }
   return value;
 }
-function expectedRevision(value) {
-  if (!Number.isSafeInteger(value) || value < 0) fail(PROVISIONING_ERROR_CODES.REVISION_CONFLICT);
-  return value;
-}
 function publicRecord(record, attemptId) {
   if (record === null) return null;
   if (!plain(record) || Object.getOwnPropertySymbols(record).length) fail(PROVISIONING_ERROR_CODES.CORRUPT_STATE);
