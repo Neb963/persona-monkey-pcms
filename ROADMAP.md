@@ -66,7 +66,7 @@ Merge wave: 2
 - [x] T006.3 — T006.3 redaction/failure tests
 
 ## P007 — Minimal Audit Journal
-Status: **PR_OPEN**  
+Status: **MERGED**  
 Depends on: P005  
 Merge wave: 3
 
