@@ -1,6 +1,6 @@
 # P012 — HumanTask/Attention + timers/services
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -77,3 +77,12 @@ Merged main commit `11466b760a0f9b1eb27beef87a6d478651d91a30` passed:
 - GitHub Actions `firefox-developer-edition`, run **345** / run id **37259235483** — **success**.
 
 PR #12 is merged. Acceptance still requires the MERGED governance checkpoint to pass.
+
+## Acceptance decision
+
+The MERGED governance checkpoint `75a7d65b31d4c0702697549579a62f92955a54c8` passed:
+
+- repository verification run **355** / run id **37259329940** — **success**;
+- pinned Firefox Developer Edition run **350** / run id **37259329908** — **success**.
+
+Together with the 11-test focused suite, final PR-head CI, exact merged-main CI, and the accepted P007/P011 dependencies, this satisfies **A012-01**, **A012-02**, and **A012-03**. P012 is **ACCEPTED**.
