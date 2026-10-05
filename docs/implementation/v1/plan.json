@@ -588,7 +588,7 @@
     {
       "id": "P014",
       "title": "Accounts module + Account↔personaUid binding",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P011",
         "P013"
@@ -627,7 +627,7 @@
     {
       "id": "P015",
       "title": "Deployer module",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P014",
         "P013"
@@ -666,7 +666,7 @@
     {
       "id": "P016",
       "title": "Explorer module",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P014",
         "P013"
@@ -705,7 +705,7 @@
     {
       "id": "P017",
       "title": "Refresher module",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P014",
         "P013"
@@ -783,7 +783,7 @@
     {
       "id": "P019",
       "title": "Account Provisioning module",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P006",
         "P012",
@@ -865,7 +865,7 @@
     {
       "id": "P021",
       "title": "PCMS UI shell / notifications / search",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P012",
         "P014"
