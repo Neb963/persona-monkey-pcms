@@ -389,7 +389,7 @@
     {
       "id": "P009",
       "title": "Persona Broker implementation",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P003"
       ],
@@ -428,7 +428,7 @@
     {
       "id": "P010",
       "title": "RemoteOps + ProviderGate + recovery hold",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P005",
         "P009"
