@@ -1,6 +1,6 @@
 # P013 — Perchance provider adapter + emulator
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -72,4 +72,16 @@ The integration harness used the accepted P010 RemoteOps, recovery-hold, Provide
 
 Implementation checkpoint before this evidence: `f40486831147805562466c693a9f88b1588ce95c`.
 
-Independent GitHub Actions on the final reconciled PR head are still required before merge.
+Final reconciled PR head `29c9adbb24a95717f7d42bd82066815708a1f99c` passed:
+
+- GitHub Actions `verify`, run **395** / run id **37260775776** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **390** / run id **37260775877** — **success**.
+
+Pull request #13 merged as `f88e7ecea34e9916a31a718121a2679afaf8f21c`.
+
+The exact merged main commit passed:
+
+- GitHub Actions `verify`, run **396** / run id **37260939511** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **391** / run id **37260939544** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
