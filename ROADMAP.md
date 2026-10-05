@@ -165,7 +165,7 @@ Merge wave: 5
 - [x] T017.3 — T017.3 isolation/confirmed-effect tests
 
 ## P018 — Statistics module
-Status: **IN_PROGRESS**  
+Status: **PR_OPEN**  
 Depends on: P007, P011  
 Merge wave: 5
 
