@@ -1,5 +1,7 @@
 import { createHumanTaskService } from "../services/human-tasks.js";
 import { createPcmsUiProjectionService } from "../app/projections.js";
+import { createModuleLifecycleService } from "../modules/lifecycle.js";
+import { createBackupRestoreService } from "../recovery/backup-restore.js";
 import {
   createAccountProviderGateResolver,
   createKeyedStateStore,
@@ -51,6 +53,9 @@ export function createPcmsModuleIntegration({
   personaBroker,
   providerGate,
   remoteOps,
+  recoveryHold,
+  moduleRegistry,
+  moduleRuntime,
   featureFactories,
   provisioning,
   statisticsDefinitions=[],
@@ -61,7 +66,10 @@ export function createPcmsModuleIntegration({
   requireMethods(auditJournal,["read","transitionAndAppend"],"Audit Journal");
   requireMethods(personaBroker,["request"],"Persona Broker");
   requireMethods(providerGate,["mutate","reconcile"],"ProviderGate");
-  requireMethods(remoteOps,["get"],"RemoteOps");
+  requireMethods(remoteOps,["get","listUnresolved","recoverInterruptedDispatches","cancel"],"RemoteOps");
+  requireMethods(recoveryHold,["getStatus","enterRecoveryHold","releaseRecoveryHold"],"Recovery hold");
+  requireMethods(moduleRegistry,["getModule","getPackage"],"Module registry");
+  requireMethods(moduleRuntime,["listStates","prepareUpdate","recoverAll"],"Module runtime");
   const factories=normalizeFactories(featureFactories);
   if(typeof clock!=="function")throw new TypeError("PCMS integration clock is invalid");
   if(!plain(provisioning))throw new TypeError("Provisioning integration is invalid");
@@ -124,6 +132,16 @@ export function createPcmsModuleIntegration({
   const uiProjection=createPcmsUiProjectionService({humanTasks,accounts});
   const explorerDeployer=createExplorerDeployerBridge({explorer,deployer});
   const recoveryChecks=createIntegrationRecoveryChecks({accounts,providerProbes});
+  const moduleLifecycle=createModuleLifecycleService({storageBroker,moduleRegistry,moduleRuntime});
+  const backupRestore=createBackupRestoreService({
+    storageBroker,
+    recoveryHold,
+    remoteOps,
+    providerGate,
+    moduleRuntime,
+    reconciliationChecks:recoveryChecks,
+    clock
+  });
 
   return Object.freeze({
     accounts,
@@ -135,6 +153,8 @@ export function createPcmsModuleIntegration({
     humanTasks,
     uiProjection,
     explorerDeployer,
-    recoveryChecks
+    recoveryChecks,
+    moduleLifecycle,
+    backupRestore
   });
 }
