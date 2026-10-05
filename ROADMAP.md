@@ -174,7 +174,7 @@ Merge wave: 5
 - [x] T018.3 — T018.3 UI/export
 
 ## P019 — Account Provisioning module
-Status: **IN_PROGRESS**  
+Status: **PR_OPEN**  
 Depends on: P006, P012, P014, P013  
 Merge wave: 5
 
