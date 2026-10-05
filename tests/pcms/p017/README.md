@@ -1,6 +1,6 @@
 # P017 — Refresher module evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -75,4 +75,10 @@ The exact merged main commit passed:
 - GitHub Actions `verify`, run **516** / run id **37286746054** — **success**;
 - GitHub Actions `firefox-developer-edition`, run **511** / run id **37286745925** — **success**.
 
-Acceptance still requires the MERGED governance checkpoint to pass.
+## Acceptance decision
+
+The MERGED governance checkpoint `8e0c0a2da5f515fc388eb411121bcf0e545107cd` passed:
+- repository verification run **517** / run id **37286935173** — **success**;
+- pinned Firefox Developer Edition run **512** / run id **37286935119** — **success**.
+
+Together with the exact-product-source focused U/I/C suite, accepted P013/P014 dependencies, branch/PR CI, and exact merged-main CI, this satisfies **A017-01**, **A017-02**, and **A017-03**. P017 is **ACCEPTED**.

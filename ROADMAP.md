@@ -156,13 +156,13 @@ Merge wave: 5
 - [x] T016.3 — T016.3 module UI/integration
 
 ## P017 — Refresher module
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P014, P013  
 Merge wave: 5
 
-- [ ] T017.1 — T017.1 cohort/eligibility
-- [ ] T017.2 — T017.2 schedules/budgets
-- [ ] T017.3 — T017.3 isolation/confirmed-effect tests
+- [x] T017.1 — T017.1 cohort/eligibility
+- [x] T017.2 — T017.2 schedules/budgets
+- [x] T017.3 — T017.3 isolation/confirmed-effect tests
 
 ## P018 — Statistics module
 Status: **READY**  

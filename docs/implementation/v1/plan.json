@@ -705,7 +705,7 @@
     {
       "id": "P017",
       "title": "Refresher module",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P014",
         "P013"
