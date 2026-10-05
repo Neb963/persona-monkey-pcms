@@ -1,6 +1,6 @@
 # P016 — Explorer module evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -64,4 +64,10 @@ The exact merged main commit passed:
 - GitHub Actions `verify`, run **498** / run id **37269082865** — **success**;
 - GitHub Actions `firefox-developer-edition`, run **493** / run id **37269082864** — **success**.
 
-Acceptance still requires the MERGED governance checkpoint to pass.
+## Acceptance decision
+
+The MERGED governance checkpoint `b40d82d75deba586a4f4cfe4d23cf4045b6ceecb` passed:
+- repository verification run **499** / run id **37269315143** — **success**;
+- pinned Firefox Developer Edition run **494** / run id **37269315139** — **success**.
+
+Together with the exact-product-source focused U/I/C slice, accepted P013/P014 dependencies, branch/PR CI, and exact merged-main CI, this satisfies **A016-01**, **A016-02**, and **A016-03**. P016 is **ACCEPTED**.

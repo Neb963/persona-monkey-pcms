@@ -147,13 +147,13 @@ Merge wave: 5
 - [x] T015.3 — T015.3 reconciliation/UI
 
 ## P016 — Explorer module
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P014, P013  
 Merge wave: 5
 
-- [ ] T016.1 — T016.1 discovery/candidates
-- [ ] T016.2 — T016.2 durable claim/reconciliation
-- [ ] T016.3 — T016.3 module UI/integration
+- [x] T016.1 — T016.1 discovery/candidates
+- [x] T016.2 — T016.2 durable claim/reconciliation
+- [x] T016.3 — T016.3 module UI/integration
 
 ## P017 — Refresher module
 Status: **READY**  

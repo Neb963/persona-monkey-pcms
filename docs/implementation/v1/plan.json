@@ -666,7 +666,7 @@
     {
       "id": "P016",
       "title": "Explorer module",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P014",
         "P013"
