@@ -1,6 +1,6 @@
 # P015 — Deployer module evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -81,3 +81,12 @@ The exact merged main commit passed:
 - GitHub Actions `firefox-developer-edition`, run **457** / run id **37266124100** — **success**.
 
 Acceptance still requires the MERGED governance checkpoint to pass.
+
+## Acceptance decision
+
+The MERGED governance checkpoint `da6244da6942faf322be95ea191a921cab8aaab5` passed:
+
+- repository verification run **467** / run id **37266374987** — **success**;
+- pinned Firefox Developer Edition run **462** / run id **37266374976** — **success**.
+
+Together with the exact-source focused U/I/C slice, final PR-head CI, exact merged-main CI, and accepted P010/P013/P014 dependencies, this satisfies **A015-01**, **A015-02**, and **A015-03**. P015 is **ACCEPTED**.
