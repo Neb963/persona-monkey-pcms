@@ -126,6 +126,22 @@ test("A012-03 restart does not blindly replay due or interrupted timers", async 
   assert.equal(recovered.recovered.length,1);assert.equal(recovered.recovered[0].value.state,TIMER_STATES.MISSED);
 });
 
+
+test("A012-02 stale service generation reconciles due timers to MISSED without dispatch", async () => {
+  const h=makeP012Harness();const registry=createCoreServiceRegistry();let delivered=0;
+  registry.register("core.timer-target",{onTimer:async()=>{delivered+=1;}},{ownerId:"module-a",generation:1});
+  const timers=createTimerService({storageBroker:h.storageBroker,auditJournal:h.auditJournal,serviceRegistry:registry,clock:h.clock});
+  await timers.schedule({timerId:"old-generation",serviceName:"core.timer-target",ownerId:"module-a",generation:1,dueAt:"2026-10-05T03:00:00Z"});
+  registry.register("core.timer-target",{onTimer:async()=>{delivered+=1;}},{ownerId:"module-a",generation:2});
+  const result=await timers.runDue();
+  assert.equal(result.processed.length,1);
+  assert.equal(result.processed[0].value.state,TIMER_STATES.MISSED);
+  assert.equal(result.remainingDue,0);
+  assert.equal(delivered,0);
+  assert.equal(h.shared.events.at(-1).type,"timer.missed");
+  assert.deepEqual(h.shared.events.at(-1).data,{reason:"stale-service"});
+});
+
 test("A012-02 timer scheduling rejects stale service generations", async () => {
   const h=makeP012Harness();const registry=createCoreServiceRegistry();registry.register("core.timer-target",{onTimer(){return null;}},{ownerId:"module-a",generation:9});
   const timers=createTimerService({storageBroker:h.storageBroker,auditJournal:h.auditJournal,serviceRegistry:registry,clock:h.clock});
