@@ -349,7 +349,7 @@
     {
       "id": "P008",
       "title": "Module archive/package/authority model",
-      "status": "PR_OPEN",
+      "status": "MERGED",
       "dependsOn": [
         "P004",
         "P005"
@@ -1106,4 +1106,4 @@
       ]
     }
   ]
-}
+}\n
