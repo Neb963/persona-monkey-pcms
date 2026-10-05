@@ -102,7 +102,7 @@ Merge wave: 4
 - [x] T010.3 — T010.3 uncertain/recovery tests
 
 ## P011 — Module runtime / capability RPC / generation fencing
-Status: **CLAIMED**  
+Status: **PR_OPEN**  
 Depends on: P008, P010  
 Merge wave: 4
 
