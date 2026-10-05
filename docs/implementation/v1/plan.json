@@ -627,7 +627,7 @@
     {
       "id": "P015",
       "title": "Deployer module",
-      "status": "IN_PROGRESS",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P014",
         "P013"
