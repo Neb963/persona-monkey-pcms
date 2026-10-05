@@ -120,7 +120,7 @@ Merge wave: 4
 - [x] T012.3 — T012.3 service registry/restart tests
 
 ## P013 — Perchance provider adapter + emulator
-Status: **CLAIMED**  
+Status: **IN_PROGRESS**  
 Depends on: P009, P010  
 Merge wave: 4
 
