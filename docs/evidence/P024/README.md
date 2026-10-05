@@ -1,6 +1,6 @@
 # P024 — Adversarial/security/fault/release-candidate hardening evidence
 
-Phase state: **PR_OPEN**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -64,6 +64,20 @@ The root workflow does not auto-discover `tests/pcms/p024/*.test.mjs`; these Act
 
 No Firefox DevTools MCP, live Perchance, Mullvad, real provider mutation, CAPTCHA flow, or P025/P026 evidence is used. P025 and P026 remain the final live acceptance phases.
 
-## Pull request
+## Pull request / merged integration
 
-Pull request #25 targets `main` from `agent/gpt-5-6-sol/p024-t024-1`. Final PR-head and merged-main CI are recorded below once verified; no state is advanced from green CI alone.
+Final PR head `e7fb1c003dce0751c3d5a3bfbe4a86bd6945481f` passed:
+
+- push repository `verify`, run **621** / run id **37357497859** — **success**;
+- push pinned Firefox Developer Edition, run **616** / run id **37357497879** — **success**;
+- pull-request repository `verify`, run **622** / run id **37357504724** — **success**;
+- pull-request pinned Firefox Developer Edition, run **617** / run id **37357504830** — **success**.
+
+Pull request #25 merged as `ab5cd97eb8cf15fb503b2fca5a6b49acafbc203a`.
+
+The exact merged main commit passed:
+
+- repository `verify`, run **623** / run id **37357728002** — **success**;
+- pinned Firefox Developer Edition, run **618** / run id **37357727595** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.

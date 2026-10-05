@@ -219,7 +219,7 @@ Merge wave: 7
 - [x] T023.3 — T023.3 combined recovery acceptance
 
 ## P024 — Adversarial/security/fault/release-candidate hardening
-Status: **PR_OPEN**  
+Status: **MERGED**  
 Depends on: P023  
 Merge wave: 8
 

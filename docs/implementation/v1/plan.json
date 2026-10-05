@@ -991,7 +991,7 @@
     {
       "id": "P024",
       "title": "Adversarial/security/fault/release-candidate hardening",
-      "status": "PR_OPEN",
+      "status": "MERGED",
       "dependsOn": [
         "P023"
       ],
