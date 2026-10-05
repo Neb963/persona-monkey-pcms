@@ -66,13 +66,13 @@ Merge wave: 2
 - [x] T006.3 — T006.3 redaction/failure tests
 
 ## P007 — Minimal Audit Journal
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P005  
 Merge wave: 3
 
-- [ ] T007.1 — T007.1 Event schema/atomic append
-- [ ] T007.2 — T007.2 read/projection API
-- [ ] T007.3 — T007.3 replay tests
+- [x] T007.1 — T007.1 Event schema/atomic append
+- [x] T007.2 — T007.2 read/projection API
+- [x] T007.3 — T007.3 replay tests
 
 ## P008 — Module archive/package/authority model
 Status: **READY**  
