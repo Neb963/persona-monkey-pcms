@@ -1,6 +1,6 @@
 # P018 — Statistics module evidence
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -73,6 +73,10 @@ The exact merged main commit passed:
 - GitHub Actions `verify`, run **533** / run id **37292542942** — **success**;
 - GitHub Actions `firefox-developer-edition`, run **528** / run id **37292542910** — **success**.
 
-## Current acceptance decision
+## Acceptance decision
 
-Implementation, focused U/I/C evidence, final branch/PR CI, and exact merged-main CI are complete. Acceptance still requires the MERGED governance checkpoint to pass.
+The MERGED governance checkpoint `9938183fd9ad93e6f14d301503323350716366e6` passed:
+- repository verification run **534** / run id **37292739443** — **success**;
+- pinned Firefox Developer Edition run **529** / run id **37292739577** — **success**.
+
+Together with the exact-product-source focused U/I/C checks, accepted P007/P011 dependencies, final branch/PR CI, and exact merged-main CI, this satisfies **A018-01**, **A018-02**, and **A018-03**. P018 is **ACCEPTED**.

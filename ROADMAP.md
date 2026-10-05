@@ -165,13 +165,13 @@ Merge wave: 5
 - [x] T017.3 — T017.3 isolation/confirmed-effect tests
 
 ## P018 — Statistics module
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P007, P011  
 Merge wave: 5
 
-- [ ] T018.1 — T018.1 metric projection model
-- [ ] T018.2 — T018.2 replay/late-event handling
-- [ ] T018.3 — T018.3 UI/export
+- [x] T018.1 — T018.1 metric projection model
+- [x] T018.2 — T018.2 replay/late-event handling
+- [x] T018.3 — T018.3 UI/export
 
 ## P019 — Account Provisioning module
 Status: **READY**  

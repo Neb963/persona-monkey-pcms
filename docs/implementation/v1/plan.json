@@ -744,7 +744,7 @@
     {
       "id": "P018",
       "title": "Statistics module",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P007",
         "P011"
