@@ -1,6 +1,6 @@
 # P014 — Accounts module + Account↔personaUid binding evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -59,3 +59,19 @@ The exact implementation/test Git blobs published at checkpoint `bfb1328656cd787
 The local focused tree used a one-line stub for the already-accepted P013 `PERCHANCE_PROVIDER_ID` constant because a full repository clone was unavailable in the execution container. The actual repository P013 contract was independently inspected before implementation; the committed test imports that real repository contract. No other accepted dependency behavior was replaced by the focused harness.
 
 No live provider, Firefox DevTools MCP, credential, or browser-automation acceptance is claimed for P014.
+
+## Pull request / merged integration
+
+Final reconciled PR head `722414d9cdaa1e0618a6cf2fe6e796063b8b5cdd` passed:
+
+- GitHub Actions `verify`, run **423** / run id **37263125196** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **418** / run id **37263125216** — **success**.
+
+Pull request #14 merged as `82a13d0c4ae061edde9b52ce8bdb927f3e9db3cd`.
+
+The exact merged main commit passed:
+
+- GitHub Actions `verify`, run **424** / run id **37263239221** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **419** / run id **37263239220** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
