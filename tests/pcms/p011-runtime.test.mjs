@@ -163,6 +163,7 @@ test("A011-03 update drains privileged work, advances generation before replacem
   const first = await broker.activate("demo.module", { expectedRevision:0 });
   const slow = broker.invoke("demo.module", "slow");
   await entered;
+  const alreadyAccepted = broker.invoke("demo.module", "version");
 
   const updating = broker.prepareUpdate("demo.module", { expectedRevision:first.revision });
   for (let attempts = 0; attempts < 20; attempts += 1) {
@@ -176,7 +177,8 @@ test("A011-03 update drains privileged work, advances generation before replacem
   );
 
   release();
-  await assert.rejects(slow);
+  assert.equal(await slow, "done");
+  assert.equal(await alreadyAccepted, "v1");
   const drained = await updating;
   assert.equal(drained.value.state, MODULE_RUNTIME_STATES.IDLE);
   assert.equal(drained.value.generation, first.generation + 1);
