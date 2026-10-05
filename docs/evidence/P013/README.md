@@ -1,6 +1,6 @@
 # P013 — Perchance provider adapter + emulator
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -85,3 +85,12 @@ The exact merged main commit passed:
 - GitHub Actions `firefox-developer-edition`, run **391** / run id **37260939544** — **success**.
 
 Acceptance still requires the MERGED governance checkpoint to pass.
+
+## Acceptance decision
+
+The MERGED governance checkpoint `fa9941ab71e2a5a7fafe41100a6caffd6bcd466a` passed:
+
+- repository verification run **401** / run id **37261042002** — **success**;
+- pinned Firefox Developer Edition run **396** / run id **37261041962** — **success**.
+
+Together with the exact-source 12-test focused U/I/C suite, final PR-head CI, exact merged-main CI, and accepted P009/P010 dependencies, this satisfies **A013-01**, **A013-02**, and **A013-03**. P013 is **ACCEPTED**.
