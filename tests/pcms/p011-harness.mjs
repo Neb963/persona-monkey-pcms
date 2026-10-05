@@ -108,8 +108,10 @@ function makeWindow(origin = "moz-extension://pcms-p011-test") {
 export function makeSandboxFactories() {
   let sequence = 0;
   const childRuntimes = [];
+  const hosts = [];
   return {
     childRuntimes,
+    hosts,
     frameFactory() {
       const windowRef = makeWindow();
       const child = installSandboxControllerRuntime({ windowRef, capabilityTimeoutMs:750 });
@@ -129,12 +131,20 @@ export function makeSandboxFactories() {
       };
     },
     sandboxHostFactory(options) {
-      return createSandboxControllerHost({
+      const host = createSandboxControllerHost({
         ...options,
         messageChannelFactory:() => new MessageChannel(),
         sessionIdFactory:() => "session-p011-" + (++sequence),
         timeoutMs:750
       });
+      hosts.push(host);
+      return host;
+    },
+    async dispose() {
+      for (const host of hosts) {
+        try { await host.dispose(); } catch {}
+      }
+      for (const child of childRuntimes) child.dispose();
     }
   };
 }
