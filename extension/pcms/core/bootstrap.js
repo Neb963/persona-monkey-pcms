@@ -19,7 +19,7 @@ export function createPcmsNamespace() {
       durablePersonaIdentity: PERSONA_BROKER_IDENTITY_FIELD,
       commandCount: PERSONA_BROKER_COMMAND_NAMES.length,
       errorCodeCount: PERSONA_BROKER_ERROR_CODES.length,
-      implementation: "pending-P009"
+      implementation: "integration-v1-adapter"
     })
   });
 }

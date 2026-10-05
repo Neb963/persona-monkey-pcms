@@ -84,7 +84,7 @@ Merge wave: 3
 - [x] T008.3 — T008.3 immutable candidate lifecycle
 
 ## P009 — Persona Broker implementation
-Status: **CLAIMED**  
+Status: **PR_OPEN**  
 Depends on: P003  
 Merge wave: 3
 

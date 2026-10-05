@@ -18,7 +18,7 @@ test("A003-02 PCMS bootstrap exposes an immutable namespaced broker contract", (
   assert.equal(namespace.broker.durablePersonaIdentity, "personaUid");
   assert.equal(namespace.broker.commandCount, 55);
   assert.equal(namespace.broker.errorCodeCount, 43);
-  assert.equal(namespace.broker.implementation, "pending-P009");
+  assert.equal(namespace.broker.implementation, "integration-v1-adapter");
   assert.equal(Object.isFrozen(namespace), true);
   assert.equal(Object.isFrozen(namespace.broker), true);
 });
