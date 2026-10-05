@@ -129,16 +129,16 @@ Merge wave: 4
 - [x] T013.3 — T013.3 fail-closed adapter tests
 
 ## P014 — Accounts module + Account↔personaUid binding
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P011, P013  
 Merge wave: 5
 
-- [ ] T014.1 — T014.1 account model
-- [ ] T014.2 — T014.2 Persona binding/rebind
-- [ ] T014.3 — T014.3 rotation continuity
+- [x] T014.1 — T014.1 account model
+- [x] T014.2 — T014.2 Persona binding/rebind
+- [x] T014.3 — T014.3 rotation continuity
 
 ## P015 — Deployer module
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P014, P013  
 Merge wave: 5
 
@@ -147,7 +147,7 @@ Merge wave: 5
 - [ ] T015.3 — T015.3 reconciliation/UI
 
 ## P016 — Explorer module
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P014, P013  
 Merge wave: 5
 
@@ -156,7 +156,7 @@ Merge wave: 5
 - [ ] T016.3 — T016.3 module UI/integration
 
 ## P017 — Refresher module
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P014, P013  
 Merge wave: 5
 
@@ -174,7 +174,7 @@ Merge wave: 5
 - [ ] T018.3 — T018.3 UI/export
 
 ## P019 — Account Provisioning module
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P006, P012, P014, P013  
 Merge wave: 5
 
@@ -192,7 +192,7 @@ Merge wave: 6
 - [ ] T020.3 — T020.3 RECOVERY_HOLD reconciliation
 
 ## P021 — PCMS UI shell / notifications / search
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P012, P014  
 Merge wave: 6
 
