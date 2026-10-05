@@ -210,7 +210,7 @@ Merge wave: 6
 - [x] T022.3 — T022.3 rollback/retention acceptance
 
 ## P023 — Full module integration wave
-Status: **READY**  
+Status: **CLAIMED**  
 Depends on: P015, P016, P017, P018, P019, P020, P021, P022  
 Merge wave: 7
 
