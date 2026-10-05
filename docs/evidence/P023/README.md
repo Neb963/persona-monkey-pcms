@@ -48,9 +48,34 @@ The committed integration suite imports the real accepted P014–P019 factories 
 
 Covers backup of shared Accounts, HumanTask/Audit, Explorer, and Deployer state; post-backup divergence; staged restore under RECOVERY_HOLD; restoration of the shared module/UI projection state; module-generation reconciliation; Account↔Persona reconciliation; provider compatibility checks; hold release only after all checks clear; and Statistics replay from the restored journal tail.
 
-## Verification status
+## Focused verification actually run
 
-Focused exact-source execution and independent Actions evidence will be recorded after the committed integration checkpoint is published.
+The available execution environment does not provide a local repository checkout, so no local Node command or direct execution of `tests/pcms/p023/*.test.mjs` is claimed.
+
+The exact P023 product sources and committed integration-suite source at checkpoint `0076a5feabf9c43d95a3e058f1edc29fe1cff112` were fetched through the GitHub connector and exercised in its JavaScript isolate.
+
+Result: **14 checks passed, 0 failed**.
+
+The executed checks cover:
+
+- singleton and keyed P005-facing CAS adapters, including conflict projection;
+- read-only `persona.get` mapping and PERSONA_NOT_FOUND handling;
+- account-scoped ProviderGate resolution and bounded Provisioning RemoteControl;
+- Explorer→Deployer idempotent materialization and fail-closed conflict handling;
+- integrated Account↔Persona/provider recovery checks, including fail-closed probe failures;
+- construction of all six accepted P014–P019 feature-factory contract slots;
+- sharing of Accounts, HumanTask, Audit Journal, runtime, module registry, and recovery authorities across the composition;
+- injection of the integrated reconciliation checks into P020 backup/restore;
+- absence of raw browser/native/IndexedDB/network authority in P023 Core;
+- absence of direct `pcms-modules/**` feature-policy imports in the Core composition root;
+- committed integration-suite binding to the real P014–P019 factories and the combined RECOVERY_HOLD restore/release scenario.
+
+The isolate does not provide `structuredClone`; a deterministic JSON clone shim was used only by the verification harness. Product code was not modified.
+
+Independent branch checkpoint `0076a5feabf9c43d95a3e058f1edc29fe1cff112` passed:
+
+- repository `verify`, run **595** / run id **37349672706** — **success**;
+- pinned Firefox Developer Edition, run **590** / run id **37349672700** — **success**.
 
 The root `npm run verify` workflow does not auto-discover `tests/pcms/p023/*.test.mjs`; root Actions remain independent repository/claim/upstream/Firefox evidence.
 
