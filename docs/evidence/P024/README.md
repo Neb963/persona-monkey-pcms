@@ -1,6 +1,6 @@
 # P024 — Adversarial/security/fault/release-candidate hardening evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **PR_OPEN**.
 
 ## Implemented scope
 
@@ -63,3 +63,7 @@ The root workflow does not auto-discover `tests/pcms/p024/*.test.mjs`; these Act
 ## Scope / live boundary
 
 No Firefox DevTools MCP, live Perchance, Mullvad, real provider mutation, CAPTCHA flow, or P025/P026 evidence is used. P025 and P026 remain the final live acceptance phases.
+
+## Pull request
+
+Pull request #25 targets `main` from `agent/gpt-5-6-sol/p024-t024-1`. Final PR-head and merged-main CI are recorded below once verified; no state is advanced from green CI alone.
