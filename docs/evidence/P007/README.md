@@ -1,6 +1,6 @@
 # P007 — Minimal Audit Journal
 
-Status: **IMPLEMENTED / PR PREPARATION**
+Status: **MERGED / integration verified**
 
 Final implementation checkpoint before evidence: `11a5ebd438c12ba33ff97d4d0feb5dae8cc335c8`.
 
@@ -105,3 +105,22 @@ Compared with the durable P007 claim checkpoint `19ccf77ff73f9cb5e07a7f8f911e1ba
 - two P007 tests under `tests/pcms/**`.
 
 No P008/P009 or successor work is included. No migration, PersonaMonkey internals, raw native RPC, raw browser authority, provider mutation, or live acceptance is introduced.
+
+
+## Final PR and merged-source integration verification
+
+Final PR head `362b67dc040f26d336b0883b78c87b70284e0a6a` passed:
+
+- repository verification push run **37246747717** — success;
+- pinned Firefox Developer Edition push run **37246747687** — success;
+- repository verification PR run **37246780633** — success;
+- pinned Firefox Developer Edition PR run **37246780606** — success.
+
+PR #7 merged as `573bfc5b7322bb9da1954dd31cee6d1609438ce4`. The exact merged source passed:
+
+- repository verification run **37246873442** — success;
+- pinned Firefox Developer Edition run **37246873397** — success.
+
+The exact four production-source Git blob identities remained unchanged from the focused Node 22 verification recorded above, which passed **6 tests, 0 failed**.
+
+P007 remains MERGED until this governance checkpoint itself passes repository verification.
