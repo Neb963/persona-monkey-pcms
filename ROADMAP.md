@@ -93,7 +93,7 @@ Merge wave: 3
 - [x] T009.3 — T009.3 parity/failure tests
 
 ## P010 — RemoteOps + ProviderGate + recovery hold
-Status: **CLAIMED**  
+Status: **PR_OPEN**  
 Depends on: P005, P009  
 Merge wave: 4
 
