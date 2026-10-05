@@ -20,15 +20,38 @@ test("frozen PersonaMonkey provenance coordinates are immutable", () => {
   assert.equal(manifest.upstream.expectedXpiSha256, "928b94a871d70455e42c2a8269a7adec27c59b3c5937e7618f80da218fb126e1");
 });
 
-test("all 223 frozen upstream blobs remain byte-identical", async () => {
+test("all 223 frozen upstream blobs remain exact except explicit derivative overlays", async () => {
   assert.equal(manifest.entries.length, 223);
+  const expectedOverrides = new Set([
+    "extension/background.js",
+    "extension/lib/management-integration.js",
+    "extension/popup/popup.html",
+    "scripts/build-extension.mjs"
+  ]);
+  assert.equal(Array.isArray(manifest.derivativeOverrides), true);
+  assert.deepEqual(new Set(manifest.derivativeOverrides.map((item) => item.destinationPath)), expectedOverrides);
+  const overrides = new Map(manifest.derivativeOverrides.map((item) => [item.destinationPath, item]));
+  assert.equal(overrides.size, manifest.derivativeOverrides.length);
+
   const seen = new Set();
   for (const entry of manifest.entries) {
     assert.equal(seen.has(entry.sourcePath), false, `duplicate source path: ${entry.sourcePath}`);
     seen.add(entry.sourcePath);
     const bytes = await readFile(entry.destinationPath);
+    const override = overrides.get(entry.destinationPath);
+    if (override) {
+      assert.equal(override.upstreamBlobSha, entry.sourceBlobSha, `override upstream identity drift: ${entry.sourcePath}`);
+      assert.equal(typeof override.reason, "string");
+      assert.equal(override.reason.length > 20, true);
+      assert.equal(bytes.length, override.derivativeSize, `derivative size drift: ${entry.sourcePath}`);
+      assert.equal(gitBlobSha(bytes), override.derivativeBlobSha, `derivative blob drift: ${entry.sourcePath}`);
+      continue;
+    }
     assert.equal(bytes.length, entry.size, `size drift: ${entry.sourcePath}`);
     assert.equal(gitBlobSha(bytes), entry.sourceBlobSha, `blob drift: ${entry.sourcePath}`);
+  }
+  for (const path of expectedOverrides) {
+    assert.equal(manifest.entries.some((entry) => entry.destinationPath === path), true, `override target not in frozen manifest: ${path}`);
   }
 });
 
