@@ -627,7 +627,7 @@
     {
       "id": "P015",
       "title": "Deployer module",
-      "status": "PR_OPEN",
+      "status": "MERGED",
       "dependsOn": [
         "P014",
         "P013"
