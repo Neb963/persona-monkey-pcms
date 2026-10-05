@@ -47,27 +47,24 @@ Covers ambiguous dispatch entering `UNCERTAIN`, blocked replay, `UNKNOWN` reconc
 
 ## Focused verification actually run
 
-Node: **v22.16.0**.
+The available execution environment does not provide a local repository checkout, so no local Node command is claimed.
 
-Commands:
+Instead, the exact P019 product and committed test sources from PR head `454ce60fa7166eab3bbe7c9402f6c9827ea801c4` were fetched through the GitHub connector and executed in its JavaScript isolate:
 
-```text
-node --check pcms-modules/p019/errors.js
-node --check pcms-modules/p019/schema.js
-node --check pcms-modules/p019/provisioning.js
-node --check pcms-modules/p019/provider.js
-node --test tests/pcms/p019/*.test.mjs
-```
+- the 15 committed schema/provider/provisioning test bodies passed **15/15**;
+- the isolate lacks Node's global `structuredClone`, so a deterministic JSON clone shim was supplied only to the test harness/test bodies; product code was not modified;
+- the three committed static boundary assertions were executed separately against the exact product sources and passed **3/3**;
+- combined focused U/I/C result: **18 checks passed, 0 failed**.
 
-Result: **18 tests passed, 0 failed, exit 0**.
+The exact accepted dependency files imported by P019 were also fetched from the same repository head:
 
-The local focused tree uses exact accepted dependency files for the portions imported by P019. Their local Git blob hashes match the claim-base repository at `67626b6d6f32259fd0ae89091d04f9db7a059503`:
+- P006 `extension/pcms/secrets/errors.js`;
+- P006 `extension/pcms/secrets/secret-ref.js`;
+- P014 `pcms-modules/p014/errors.js`;
+- P014 `pcms-modules/p014/schema.js`.
 
-- P006 `extension/pcms/secrets/errors.js` — `be2584b5447ddc59bb04ebb1d488549bfb65bebb`;
-- P006 `extension/pcms/secrets/secret-ref.js` — `f5c3009d1745d23c047285fbacaa4aacb942a2c5`;
-- P014 `pcms-modules/p014/errors.js` — `fb40b889f578ccfd61c7c4846424cae2780985dd`;
-- P014 `pcms-modules/p014/schema.js` — `d3be9b6425a5679494d8a18c6949762234badc18`.
+The P019 harness emulates the accepted behavioral surfaces for Accounts, HumanTask, guarded provider sessions, and RemoteControl/RemoteOperation state so deterministic ambiguity/recovery scenarios can be injected without live provider/browser access. No P025/P026 LIVE evidence is claimed here.
 
-The P019 test harness emulates the accepted behavioral surfaces for Accounts, HumanTask, guarded provider sessions, and RemoteControl/RemoteOperation state so deterministic ambiguity/recovery scenarios can be injected without live provider/browser access. No P025/P026 LIVE evidence is claimed here.
+Repository Actions `npm run verify` does not auto-discover `tests/pcms/p019/*.test.mjs`; its green result is therefore independent repository/claim/upstream/Firefox harness evidence, not the focused P019 behavioral test run.
 
 GitHub Actions / PR / merged evidence will be appended after the exact committed P019 checkpoint is published and independently verified.
