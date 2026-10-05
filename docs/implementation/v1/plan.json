@@ -310,7 +310,7 @@
     {
       "id": "P007",
       "title": "Minimal Audit Journal",
-      "status": "PR_OPEN",
+      "status": "MERGED",
       "dependsOn": [
         "P005"
       ],
