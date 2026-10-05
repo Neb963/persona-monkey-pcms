@@ -51,9 +51,22 @@ Covers AccountId/display name/personaUid/provider search, open HumanTask title/k
 
 Covers canonical internal fragment construction/parsing, percent-encoded entity IDs, stale-entity rejection, bounded query normalization, and rejection of external/unknown/injection-like links and extra parameters.
 
-## Verification status
+## Focused verification actually run
 
-Focused exact-source execution and independent Actions evidence will be recorded after the committed test checkpoint is published.
+The available execution environment does not provide a local repository checkout, so no local Node command is claimed.
+
+The exact P021 product and committed test sources from checkpoint `221678f60cdc7e45859ce835e0c03b893f60a233` were fetched through the GitHub connector and executed in its JavaScript isolate:
+
+- **9/9** committed projection/deep-link behavior test bodies passed;
+- **3/3** committed static authority/UI-boundary assertions passed against the exact product sources;
+- combined focused U/I/C result: **12 checks passed, 0 failed**.
+
+The isolate does not provide Node's `structuredClone`; a deterministic JSON clone shim was supplied only to the committed test harness/test bodies. Product code was not modified.
+
+Independent branch checkpoint `221678f60cdc7e45859ce835e0c03b893f60a233` passed:
+
+- repository `verify`, run **567** / run id **37305090634** — **success**;
+- pinned Firefox Developer Edition, run **562** / run id **37305090648** — **success**.
 
 The repository root `npm run verify` does not auto-discover `tests/pcms/p021/*.test.mjs`; root Actions are independent repository/claim/upstream/Firefox evidence rather than the focused P021 behavior run.
 
