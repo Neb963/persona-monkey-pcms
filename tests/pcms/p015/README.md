@@ -1,6 +1,6 @@
 # P015 — Deployer module evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -64,3 +64,20 @@ Implementation/test checkpoint `32bd01420f22bfc19710aaab4cef1b175929f386` passed
 The root workflows are independent repository/FDE regressions; they do not substitute for the focused P015 behavior slice described above.
 
 No live provider, Firefox DevTools MCP, raw browser/native API, guessed Perchance selector, or successor-phase behavior is included.
+
+
+## Pull request / merged integration
+
+Final PR head `f3eb2563c988ec022f9d1eebef2d87944520ba06` passed:
+
+- GitHub Actions `verify`, run **461** / run id **37266041294** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **456** / run id **37266041303** — **success**.
+
+Pull request #15 merged as `9c7af7dbbf2657998300dee6112827a5cfef63bf`.
+
+The exact merged main commit passed:
+
+- GitHub Actions `verify`, run **462** / run id **37266124247** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **457** / run id **37266124100** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.
