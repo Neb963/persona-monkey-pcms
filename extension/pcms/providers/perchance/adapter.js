@@ -5,7 +5,8 @@ import {
   normalizeGeneratorUpdateInput,
   normalizePerchanceCompatibility,
   normalizePerchanceOperation,
-  normalizePerchanceOutcome
+  normalizePerchanceOutcome,
+  sha256Hex
 } from "./contract.js";
 import { PERCHANCE_PROVIDER_ERROR_CODES, perchanceProviderError } from "./errors.js";
 
@@ -30,7 +31,9 @@ export function createPerchanceProviderAdapter({ driver } = {}) {
 
   async function dispatch({ operation, dispatchInput } = {}) {
     const op = normalizePerchanceOperation(operation);
+    if (op.state !== "DISPATCHING") throw perchanceProviderError(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
     const input = normalizeGeneratorUpdateInput(dispatchInput, operation);
+    if (await sha256Hex(input.source) !== input.sourceHash) throw perchanceProviderError(PERCHANCE_PROVIDER_ERROR_CODES.INVALID_ARGUMENT);
     return compatibleCall(async () => normalizePerchanceOutcome(await transport.updateGenerator(Object.freeze({
       operationId: op.operationId,
       generatorId: op.generatorId,
@@ -41,6 +44,7 @@ export function createPerchanceProviderAdapter({ driver } = {}) {
 
   async function reconcile({ operation } = {}) {
     const op = normalizePerchanceOperation(operation);
+    if (op.state !== "UNCERTAIN") throw perchanceProviderError(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
     return compatibleCall(async () => normalizePerchanceOutcome(await transport.reconcileGeneratorUpdate(Object.freeze({
       operationId: op.operationId,
       generatorId: op.generatorId,
