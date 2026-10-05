@@ -548,7 +548,7 @@
     {
       "id": "P013",
       "title": "Perchance provider adapter + emulator",
-      "status": "IN_PROGRESS",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P009",
         "P010"
