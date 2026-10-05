@@ -20,6 +20,6 @@ test("A013-01/A013-02/A013-03 provider code stays behind PCMS boundaries",async(
 
 test("A013-03 provider adapter exposes only the ProviderGate mutation already established by P010",async()=>{
   const source=await readFile("extension/pcms/providers/perchance/adapter.js","utf8");
-  assert.match(source,/generator\.update/);
+  assert.match(source,/PERCHANCE_GENERATOR_UPDATE_ACTION/);
   assert.doesNotMatch(source,/generator\.create|generator\.delete|account\.|explorer|refresher/i);
 });
