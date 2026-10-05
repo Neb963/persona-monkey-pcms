@@ -147,6 +147,82 @@ export function createPcmsStorageBroker({
     });
   }
 
+
+  function normalizeAdminRecords(records) {
+    if (!Array.isArray(records) || Object.getPrototypeOf(records) !== Array.prototype || records.length > MAX_NODES) {
+      throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage snapshot record list is invalid");
+    }
+    const output = [];
+    const identities = new Set();
+    for (let index = 0; index < records.length; index += 1) {
+      if (!Object.hasOwn(records, index)) {
+        throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage snapshot record list is sparse");
+      }
+      const raw = records[index];
+      if (!raw || typeof raw !== "object" || Array.isArray(raw) || Object.getPrototypeOf(raw) !== Object.prototype
+          || Object.getOwnPropertySymbols(raw).length) {
+        throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage snapshot record is invalid");
+      }
+      const descriptors = Object.getOwnPropertyDescriptors(raw);
+      const names = ["namespace", "key", "revision", "updatedAt", "value"];
+      if (Object.keys(descriptors).length !== names.length
+          || !names.every((name) => Object.hasOwn(descriptors, name)
+            && descriptors[name].enumerable
+            && Object.hasOwn(descriptors[name], "value"))) {
+        throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage snapshot record shape is invalid");
+      }
+      const namespace = validateNamespace(descriptors.namespace.value);
+      const key = validateKey(descriptors.key.value);
+      const revision = descriptors.revision.value;
+      const updatedAt = descriptors.updatedAt.value;
+      if (!Number.isSafeInteger(revision) || revision < 1
+          || typeof updatedAt !== "string" || updatedAt.length < 1 || updatedAt.length > 64
+          || Number.isNaN(Date.parse(updatedAt))) {
+        throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage snapshot metadata is invalid");
+      }
+      const identity = namespace + "\u0000" + key;
+      if (identities.has(identity)) {
+        throw storageError(STORAGE_ERROR_CODES.INVALID_VALUE, "PCMS storage snapshot contains duplicate record identity");
+      }
+      identities.add(identity);
+      output.push(Object.freeze({
+        namespace,
+        key,
+        revision,
+        updatedAt,
+        value: clonePlainValue(descriptors.value.value)
+      }));
+    }
+    output.sort((a, b) => a.namespace.localeCompare(b.namespace) || a.key.localeCompare(b.key));
+    return Object.freeze(output);
+  }
+
+  const admin = Object.freeze({
+    validateRecords: normalizeAdminRecords,
+    async snapshotRecords() {
+      await ensureOpen();
+      if (typeof backend.listAllRecords !== "function") {
+        throw storageError(STORAGE_ERROR_CODES.UNAVAILABLE, "PCMS storage backend does not support snapshots");
+      }
+      const raw = await backend.listAllRecords();
+      return normalizeAdminRecords(raw.map((record) => ({
+        namespace:record.namespace,
+        key:record.key,
+        revision:record.revision,
+        updatedAt:record.updatedAt,
+        value:record.value
+      })));
+    },
+    async replaceAllRecords(records) {
+      const safe = normalizeAdminRecords(records);
+      await ensureOpen();
+      if (typeof backend.replaceAllRecords !== "function") {
+        throw storageError(STORAGE_ERROR_CODES.UNAVAILABLE, "PCMS storage backend does not support restore replacement");
+      }
+      return backend.replaceAllRecords(safe);
+    }
+  });
+
   return Object.freeze({
     async open() {
       await ensureOpen();
@@ -155,6 +231,7 @@ export function createPcmsStorageBroker({
       backend.close();
       open = false;
     },
-    namespace: namespaceStore
+    namespace: namespaceStore,
+    admin
   });
 }
