@@ -1,6 +1,6 @@
 # P016 — Explorer module evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -46,4 +46,22 @@ node --test tests/pcms/p016/*.test.mjs
 
 Before the real-P014 integration test was added to the committed repository suite, the focused slice result was **13 tests passed, 0 failed**. The committed suite additionally binds Explorer to the real accepted P014 Accounts implementation for repository execution/review.
 
-Independent GitHub Actions evidence will be recorded after the branch/PR heads are finalized.
+## Independent branch / PR / merged-main CI
+
+Implementation checkpoint `1ad66756b1e771f7e88ca715e84f7361d73aebb3` passed:
+- GitHub Actions `verify`, run **485** / run id **37268458909** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **480** / run id **37268458917** — **success**.
+
+Final PR head `3050eb53dcd365fdf4d37ce4a1bb68021d72d04d` passed:
+- pull-request `verify`, run **497** / run id **37268980221** — **success**;
+- pull-request `firefox-developer-edition`, run **492** / run id **37268980222** — **success**;
+- push `verify`, run **496** / run id **37268976287** — **success**;
+- push `firefox-developer-edition`, run **491** / run id **37268976341** — **success**.
+
+Pull request #16 merged as `dc699d55ffed3402e470d6a18c887bba4b38bfdf`.
+
+The exact merged main commit passed:
+- GitHub Actions `verify`, run **498** / run id **37269082865** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **493** / run id **37269082864** — **success**.
+
+Acceptance still requires the MERGED governance checkpoint to pass.

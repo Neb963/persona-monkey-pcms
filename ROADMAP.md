@@ -147,7 +147,7 @@ Merge wave: 5
 - [x] T015.3 — T015.3 reconciliation/UI
 
 ## P016 — Explorer module
-Status: **PR_OPEN**  
+Status: **MERGED**  
 Depends on: P014, P013  
 Merge wave: 5
 
