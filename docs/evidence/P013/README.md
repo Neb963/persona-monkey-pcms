@@ -11,7 +11,7 @@ P013 implements only provider-boundary mechanics needed before provider-specific
 - ProviderGate-compatible adapter descriptor for `providerId=perchance`;
 - stable generator target identity plus SHA-256 source intent fingerprinting;
 - transient source bytes are independently hashed before provider dispatch;
-- compatibility is re-probed before each dispatch and reconciliation;
+- the validated three-method driver surface is snapshotted at admission, while compatibility is re-probed before each dispatch and reconciliation;
 - deterministic in-memory Perchance emulator with explicit pre-apply, post-apply, malformed-outcome, and receipt-loss faults;
 - reconciliation returns only `APPLIED`, `NOT_APPLIED`, or `UNKNOWN`, preserving P010's fail-closed RemoteOperation rules.
 
@@ -57,19 +57,19 @@ node --check extension/pcms/providers/perchance/emulator.js
 node --test tests/pcms/p013-provider.test.mjs tests/pcms/p013-boundary.test.mjs
 ```
 
-Final result: **11 tests passed, 0 failed, exit 0**.
+Final result: **12 tests passed, 0 failed, exit 0**.
 
 The locally executed P013 blobs were byte-checked against GitHub:
 
 - `errors.js` — `12e92b09a7273533a50d87cebed352b2f2c4c8ee`
-- `contract.js` — `a67f17cd2c5513d416fd4ea06450972d67fc27cb`
+- `contract.js` — `2c92451c987a51f1b44edff3e4e24f5f936f6485`
 - `adapter.js` — `7c3793619f7b2dc701c11099a57f2ff2ee26031d`
 - `emulator.js` — `9334eed35fddc7e87c3177b1c7e7e6669d093ede`
-- `p013-provider.test.mjs` — `ae4d5e625c60995cf20f6c7483c98359230f1974`
+- `p013-provider.test.mjs` — `2957b1e7cce2e5b8e6c88d62c7bcc811387cb6fa`
 - `p013-boundary.test.mjs` — `2c8a9e573103944f1baa485943b039eb82c21203`
 
 The integration harness used the accepted P010 RemoteOps, recovery-hold, ProviderGate and RemoteOperation schema logic with the accepted P010 in-memory storage seam. Only the P005 default storage backend import was replaced locally because the focused run injects storage explicitly; no storage behavior under test was mocked.
 
-Implementation checkpoint before this evidence: `0032b870bd34f504ee6b835fdb1c7df3db386d7d`.
+Implementation checkpoint before this evidence: `f40486831147805562466c693a9f88b1588ce95c`.
 
 Independent GitHub Actions on the final reconciled PR head are still required before merge.
