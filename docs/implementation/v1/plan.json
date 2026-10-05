@@ -824,7 +824,7 @@
     {
       "id": "P020",
       "title": "Backup/restore + retention",
-      "status": "CLAIMED",
+      "status": "IN_PROGRESS",
       "dependsOn": [
         "P007",
         "P010",
