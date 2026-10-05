@@ -144,7 +144,8 @@ export function readNumericPath(root, path) {
 }
 
 export function normalizeDay(raw, code = STATISTICS_ERROR_CODES.INVALID_ARGUMENT) {
-  if (typeof raw !== "string" || !DAY.test(raw) || !Number.isFinite(Date.parse(raw + "T00:00:00.000Z"))) {
+  const parsed = typeof raw === "string" && DAY.test(raw) ? Date.parse(raw + "T00:00:00.000Z") : NaN;
+  if (!Number.isFinite(parsed) || new Date(parsed).toISOString().slice(0, 10) !== raw) {
     fail(code, "Statistics day is invalid");
   }
   return raw;
