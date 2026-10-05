@@ -102,16 +102,16 @@ Merge wave: 4
 - [x] T010.3 — T010.3 uncertain/recovery tests
 
 ## P011 — Module runtime / capability RPC / generation fencing
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P008, P010  
 Merge wave: 4
 
-- [ ] T011.1 — T011.1 runtime broker/mailboxes
-- [ ] T011.2 — T011.2 capability RPC
-- [ ] T011.3 — T011.3 draining/update/recovery
+- [x] T011.1 — T011.1 runtime broker/mailboxes
+- [x] T011.2 — T011.2 capability RPC
+- [x] T011.3 — T011.3 draining/update/recovery
 
 ## P012 — HumanTask/Attention + timers/services
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P007, P011  
 Merge wave: 4
 
@@ -165,7 +165,7 @@ Merge wave: 5
 - [ ] T017.3 — T017.3 isolation/confirmed-effect tests
 
 ## P018 — Statistics module
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P007, P011  
 Merge wave: 5
 
@@ -183,7 +183,7 @@ Merge wave: 5
 - [ ] T019.3 — T019.3 uncertain/CAPTCHA-safe tests
 
 ## P020 — Backup/restore + retention
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P007, P010, P011  
 Merge wave: 6
 
