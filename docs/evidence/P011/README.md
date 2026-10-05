@@ -1,6 +1,6 @@
 # P011 — Module runtime / capability RPC / generation fencing
 
-Phase state: **MERGED**.
+Phase state: **ACCEPTED**.
 
 ## Implemented scope
 
@@ -82,3 +82,12 @@ Merged main commit `de4410938f77ad386c382be0f697057ecbca06fb`:
 - GitHub Actions `firefox-developer-edition`, run **301** / run id **37256572168** — **success**.
 
 PR #11 is merged. These results, together with the focused acceptance suite above, provide deterministic evidence for A011-01, A011-02, and A011-03.
+
+## Acceptance decision
+
+The MERGED governance checkpoint `019f1d8243333e9472df2c788555915deaabe253` passed:
+
+- repository verification run **311** / run id **37256714092** — **success**;
+- pinned Firefox Developer Edition run **306** / run id **37256714032** — **success**.
+
+Together with the byte-verified focused 6-test suite, branch/PR CI, exact merged-main CI, and the successful MERGED governance checkpoint, this satisfies **A011-01**, **A011-02**, and **A011-03**. P011 is **ACCEPTED**.
