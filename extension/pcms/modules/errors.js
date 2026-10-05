@@ -12,6 +12,7 @@ export const MODULE_ERROR_CODES = Object.freeze({
   APPROVAL_REQUIRED: "PCMS_MODULE_APPROVAL_REQUIRED",
   INVALID_TRANSITION: "PCMS_MODULE_INVALID_TRANSITION",
   PACKAGE_MISSING: "PCMS_MODULE_PACKAGE_MISSING",
+  PACKAGE_REFERENCED: "PCMS_MODULE_PACKAGE_REFERENCED",
   CORRUPT_STATE: "PCMS_MODULE_CORRUPT_STATE"
 });
 
@@ -29,6 +30,7 @@ const SAFE_MESSAGES = Object.freeze({
   [MODULE_ERROR_CODES.APPROVAL_REQUIRED]: "Module authority expansion requires approval",
   [MODULE_ERROR_CODES.INVALID_TRANSITION]: "Module candidate transition is invalid",
   [MODULE_ERROR_CODES.PACKAGE_MISSING]: "Referenced module package is unavailable",
+  [MODULE_ERROR_CODES.PACKAGE_REFERENCED]: "Module package is still referenced",
   [MODULE_ERROR_CODES.CORRUPT_STATE]: "Module registry state is corrupt"
 });
 
