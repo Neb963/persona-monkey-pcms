@@ -905,7 +905,7 @@
     {
       "id": "P022",
       "title": "Module lifecycle end-to-end",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P011",
         "P020"
