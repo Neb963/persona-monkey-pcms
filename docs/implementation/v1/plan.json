@@ -468,7 +468,7 @@
     {
       "id": "P011",
       "title": "Module runtime / capability RPC / generation fencing",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P008",
         "P010"
