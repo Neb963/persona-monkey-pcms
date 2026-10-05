@@ -75,7 +75,7 @@ Merge wave: 3
 - [x] T007.3 — T007.3 replay tests
 
 ## P008 — Module archive/package/authority model
-Status: **READY**  
+Status: **CLAIMED**  
 Depends on: P004, P005  
 Merge wave: 3
 
