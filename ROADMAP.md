@@ -111,13 +111,13 @@ Merge wave: 4
 - [x] T011.3 — T011.3 draining/update/recovery
 
 ## P012 — HumanTask/Attention + timers/services
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P007, P011  
 Merge wave: 4
 
-- [ ] T012.1 — T012.1 HumanTask/Attention
-- [ ] T012.2 — T012.2 timers
-- [ ] T012.3 — T012.3 service registry/restart tests
+- [x] T012.1 — T012.1 HumanTask/Attention
+- [x] T012.2 — T012.2 timers
+- [x] T012.3 — T012.3 service registry/restart tests
 
 ## P013 — Perchance provider adapter + emulator
 Status: **READY**  
