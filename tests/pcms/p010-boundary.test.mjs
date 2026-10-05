@@ -8,17 +8,16 @@ const FILES=[
 ];
 
 test("A010-01/A010-02 P010 stays behind storage/provider boundaries",async()=>{
- const source=(await Promise.all(FILES.map(p=>readFile(p,"utf8")))).join("
-");
- assert.doesNotMatch(source,/browsers*(?:.|[)|chromes*(?:.|[)/);
- assert.doesNotMatch(source,/sendNativeMessage|connectNative|nativeMessaging|indexedDB/);
+ const source=(await Promise.all(FILES.map(p=>readFile(p,"utf8")))).join("\n");
+ assert.doesNotMatch(source,/\bbrowser\s*(?:\.|\[)|\bchrome\s*(?:\.|\[)/);
+ assert.doesNotMatch(source,/sendNativeMessage|connectNative|nativeMessaging|\bindexedDB\b/);
  assert.doesNotMatch(source,/management-integration|persona-api|mullvad-native|cookieStoreId|userScripts/i);
  assert.doesNotMatch(source,/createObjectStore|PCMS_DB_VERSION|PCMS_MIGRATIONS|onupgradeneeded/);
 });
 
 test("A010-02 ProviderGate has no blind automatic retry loop",async()=>{
  const source=await readFile("extension/pcms/remoteops/provider-gate.js","utf8");
- assert.doesNotMatch(source,/whiles*(|setInterval|setTimeout|retrys*(/i);
+ assert.doesNotMatch(source,/while\s*\(|setInterval|setTimeout|retry\s*\(/i);
  assert.match(source,/RECONCILE_REQUIRED/);
 });
 
