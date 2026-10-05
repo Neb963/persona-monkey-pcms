@@ -1,6 +1,6 @@
 # P018 — Statistics module evidence
 
-Phase state: **IN_PROGRESS**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -59,6 +59,20 @@ Branch head `f3689a03105d4886039d5a027f31afd9d42c2b46` passed:
 
 The repository `verify` workflow does not discover `tests/pcms/p018/*.test.mjs`; the focused P018 result above is separate and is not represented as an Actions test run.
 
+## Independent final branch / PR / merged-main CI
+
+Final synchronized PR head `c4a4e7645ed2a3ce820a22d597fbfa851a7633fa` passed:
+- push `verify`, run **531** / run id **37292318684** — **success**;
+- push `firefox-developer-edition`, run **526** / run id **37292318672** — **success**;
+- pull-request `verify`, run **532** / run id **37292342892** — **success**;
+- pull-request `firefox-developer-edition`, run **527** / run id **37292342928** — **success**.
+
+Pull request #18 merged as `208f2925f47c835ea750bdde2a2b9fe6fa309d52`.
+
+The exact merged main commit passed:
+- GitHub Actions `verify`, run **533** / run id **37292542942** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **528** / run id **37292542910** — **success**.
+
 ## Current acceptance decision
 
-Implementation and branch evidence are complete for the claimed scope. Final PR/merged-main CI and governance state transitions are still required before P018 can be marked **ACCEPTED**.
+Implementation, focused U/I/C evidence, final branch/PR CI, and exact merged-main CI are complete. Acceptance still requires the MERGED governance checkpoint to pass.
