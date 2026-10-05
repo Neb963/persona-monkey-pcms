@@ -129,7 +129,7 @@ Merge wave: 4
 - [x] T013.3 — T013.3 fail-closed adapter tests
 
 ## P014 — Accounts module + Account↔personaUid binding
-Status: **CLAIMED**  
+Status: **PR_OPEN**  
 Depends on: P011, P013  
 Merge wave: 5
 
