@@ -75,13 +75,13 @@ Merge wave: 3
 - [x] T007.3 — T007.3 replay tests
 
 ## P008 — Module archive/package/authority model
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P004, P005  
 Merge wave: 3
 
-- [ ] T008.1 — T008.1 bounded parser/hash identity
-- [ ] T008.2 — T008.2 authority envelope/delta
-- [ ] T008.3 — T008.3 immutable candidate lifecycle
+- [x] T008.1 — T008.1 bounded parser/hash identity
+- [x] T008.2 — T008.2 authority envelope/delta
+- [x] T008.3 — T008.3 immutable candidate lifecycle
 
 ## P009 — Persona Broker implementation
 Status: **READY**  
