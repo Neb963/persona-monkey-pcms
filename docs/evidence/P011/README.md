@@ -1,6 +1,6 @@
 # P011 — Module runtime / capability RPC / generation fencing
 
-Phase state: **PR_OPEN**.
+Phase state: **MERGED**.
 
 ## Implemented scope
 
@@ -74,4 +74,11 @@ P011 branch checkpoint `3ef7ccc526db3f01301b8d1c73427acdc559ca6f`:
 - GitHub Actions `verify`, run **300** / run id **37256090667** — **success**;
 - GitHub Actions `firefox-developer-edition`, run **295** / run id **37256090762** — **success**.
 
-The standard workflows do not discover `tests/pcms/**`; the focused suite above was therefore executed independently against the byte-verified branch tree. Final merge/acceptance still requires CI on the final reconciled PR head and merged main.
+The standard workflows do not discover `tests/pcms/**`; the focused suite above was therefore executed independently against the byte-verified branch tree.
+
+Merged main commit `de4410938f77ad386c382be0f697057ecbca06fb`:
+
+- GitHub Actions `verify`, run **306** / run id **37256572170** — **success**;
+- GitHub Actions `firefox-developer-edition`, run **301** / run id **37256572168** — **success**.
+
+PR #11 is merged. These results, together with the focused acceptance suite above, provide deterministic evidence for A011-01, A011-02, and A011-03.
