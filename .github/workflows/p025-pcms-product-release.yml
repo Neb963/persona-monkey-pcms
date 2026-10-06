@@ -1,0 +1,55 @@
+name: p025-pcms-product-release
+
+on:
+  push:
+    branches:
+      - artifact/p025-pcms-product-832bd26
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Verify corrected PCMS product surface
+        run: |
+          node --check extension/pcms/app/app.js
+          node --check extension/pcms/app/live-runtime.js
+          node --check extension/pcms/app/module-projections.js
+          node --check extension/pcms/app/deep-links.js
+          node --check extension/pcms/integration/live-core.js
+          node --test tests/pcms/p025/live-wiring.test.mjs tests/pcms/p021/deep-links.test.mjs
+          npm run test:upstream-integrity
+          npm run test:upstream-baseline
+      - name: Build reproducible corrective XPI
+        run: |
+          node scripts/test-build-reproducibility.mjs
+          node scripts/build-extension.mjs
+          sha256sum dist/persona-route-manager-v1.2.0.xpi
+          cat dist/persona-route-manager-v1.2.0.xpi.sha256
+          unzip -t dist/persona-route-manager-v1.2.0.xpi
+      - name: Assert installed PCMS identity and modules
+        run: |
+          unzip -p dist/persona-route-manager-v1.2.0.xpi manifest.json | grep -F '"name": "PersonaMonkey PCMS"'
+          unzip -p dist/persona-route-manager-v1.2.0.xpi manifest.json | grep -F '"page": "pcms/app/index.html"'
+          unzip -p dist/persona-route-manager-v1.2.0.xpi popup/popup.html | grep -F 'Open PCMS'
+          unzip -p dist/persona-route-manager-v1.2.0.xpi pcms/app/index.html | grep -F 'PCMS modules'
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F 'pcms-modules/p014/accounts.js'
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F 'pcms-modules/p015/deployer.js'
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F 'pcms-modules/p016/explorer.js'
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F 'pcms-modules/p017/refresher.js'
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F 'pcms-modules/p018/statistics.js'
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F 'pcms-modules/p019/provisioning.js'
+      - name: Upload corrective P025 XPI
+        uses: actions/upload-artifact@v4
+        with:
+          name: p025-pcms-product-xpi-832bd26
+          path: |
+            dist/persona-route-manager-v1.2.0.xpi
+            dist/persona-route-manager-v1.2.0.xpi.sha256
+          if-no-files-found: error
