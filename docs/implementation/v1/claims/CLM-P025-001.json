@@ -3,12 +3,12 @@
   "claimId": "CLM-P025-001",
   "phaseId": "P025",
   "taskId": "T025.1",
-  "claimEpoch": 1,
-  "state": "MERGED",
+  "claimEpoch": 2,
+  "state": "ACTIVE",
   "owner": {
     "agentId": "gpt-5-6-sol"
   },
-  "baseMainSha": "e46566802b9cb835bb7172d696b4bc4e9893ede8",
+  "baseMainSha": "554f04a56807d7325e8a10a1dc7894cc0a027069",
   "branch": "agent/gpt-5-6-sol/p025-t025-1",
   "writePaths": [
     "extension/pcms/**",
@@ -23,7 +23,9 @@
     "docs/upstream/source/extension/background.js",
     "docs/upstream/source/extension/lib/management-integration.js",
     "docs/upstream/source/extension/popup/popup.html",
-    "docs/upstream/source/scripts/build-extension.mjs"
+    "docs/upstream/source/scripts/build-extension.mjs",
+    "extension/manifest.json",
+    "docs/upstream/source/extension/manifest.json"
   ],
   "contractReads": [],
   "contractWrites": [],
@@ -34,5 +36,5 @@
     "A025-02",
     "A025-03"
   ],
-  "lastCheckpointSha": "a3bd79c9d469e94210d9d235a16ea0fa6a3d1d16"
+  "lastCheckpointSha": "554f04a56807d7325e8a10a1dc7894cc0a027069"
 }
