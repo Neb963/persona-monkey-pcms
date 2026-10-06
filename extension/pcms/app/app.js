@@ -1,6 +1,7 @@
 import { installPcmsNamespace } from "../core/bootstrap.js";
 import { parsePcmsDeepLink, pcmsRouteHref, resolvePcmsDeepLink } from "./deep-links.js";
 import { startPcmsLiveRuntime } from "./live-runtime.js";
+import { createPcmsModuleProjectionService } from "./module-projections.js";
 
 function element(documentRef,tag,className=null) {
   const node=documentRef.createElement(tag);
@@ -33,24 +34,51 @@ function appendLink(documentRef,parent,{href,title,subtitle=null,badge=null}) {
   parent.appendChild(link);
 }
 
+function appendModuleRow(documentRef,parent,title,subtitle) {
+  const row=element(documentRef,"div","module-row");
+  const strong=element(documentRef,"strong");
+  strong.textContent=title;
+  const small=element(documentRef,"small");
+  small.textContent=subtitle;
+  row.append(strong,small);
+  parent.appendChild(row);
+}
+
 function section(documentRef,id) {
   const node=documentRef.getElementById(id);
   if(!node) throw new Error("PCMS app DOM is incomplete");
   return node;
 }
 
+function moduleStatus(documentRef,name,projection,count) {
+  section(documentRef,"module"+name+"Count").textContent=String(count);
+  const node=section(documentRef,"module"+name+"Status");
+  if(projection.available) {
+    node.textContent="Live module state connected.";
+    node.dataset.state="connected";
+  } else {
+    node.textContent="Unavailable · "+String(projection.code||projection.error||"PCMS_MODULE_UNAVAILABLE");
+    node.dataset.state="error";
+  }
+}
+
 export function mountPcmsApp({
   projectionService,
+  moduleProjectionService,
   documentRef=globalThis.document,
   windowRef=globalThis.window
 }={}) {
   if(!projectionService || typeof projectionService.snapshot!=="function") {
     throw new TypeError("PCMS app requires a projection service");
   }
+  if(!moduleProjectionService || typeof moduleProjectionService.snapshot!=="function") {
+    throw new TypeError("PCMS app requires module projections");
+  }
   if(!documentRef || !windowRef) throw new TypeError("PCMS app requires a document/window");
 
   const nav=section(documentRef,"primaryNav");
   const overview=section(documentRef,"viewOverview");
+  const modules=section(documentRef,"viewModules");
   const attention=section(documentRef,"viewAttention");
   const accounts=section(documentRef,"viewAccounts");
   const search=section(documentRef,"viewSearch");
@@ -61,14 +89,17 @@ export function mountPcmsApp({
   let refreshGeneration=0;
 
   function setVisible(route) {
-    for(const [name,node] of [["overview",overview],["attention",attention],["accounts",accounts],["search",search]]) {
+    for(const [name,node] of [["overview",overview],["modules",modules],["attention",attention],["accounts",accounts],["search",search]]) {
       node.hidden=name!==route;
     }
   }
 
   function renderNav(snapshot,currentRoute) {
     clear(nav);
-    for(const item of snapshot.navigation) {
+    const overviewItem=snapshot.navigation.find((item)=>item.id==="overview") || {id:"overview",label:"Overview",href:"#/overview",badge:null};
+    const remaining=snapshot.navigation.filter((item)=>item.id!=="overview");
+    const items=[overviewItem,{id:"modules",label:"Modules",href:"#/modules",badge:5},...remaining];
+    for(const item of items) {
       const link=element(documentRef,"a","nav-link");
       link.href=item.href;
       link.textContent=item.label;
@@ -84,8 +115,58 @@ export function mountPcmsApp({
 
   function renderOverview(snapshot) {
     section(documentRef,"overviewAttentionCount").textContent=String(snapshot.notifications.count);
-    section(documentRef,"overviewCriticalCount").textContent=String(snapshot.notifications.criticalCount);
     section(documentRef,"overviewAccountCount").textContent=String(snapshot.accounts.accounts.length);
+    section(documentRef,"overviewModuleCount").textContent="5";
+  }
+
+  function renderModules(snapshot) {
+    const explorerList=section(documentRef,"moduleExplorerList");
+    clear(explorerList);
+    const explorerItems=[
+      ...snapshot.explorer.candidates.map((item)=>({
+        title:"Candidate · "+item.generatorId,
+        subtitle:item.accountId+" · "+item.freshness+(item.claimStatus ? " · "+item.claimStatus : "")
+      })),
+      ...snapshot.explorer.reservations.map((item)=>({
+        title:"Reservation · "+item.claimId,
+        subtitle:item.accountId+" · "+item.status+(item.ready ? " · ready" : "")
+      }))
+    ];
+    for(const item of explorerItems.slice(0,20)) appendModuleRow(documentRef,explorerList,item.title,item.subtitle);
+    if(explorerItems.length===0) appendModuleRow(documentRef,explorerList,"No discovery state","Explorer is connected and has no candidates or reservations.");
+    moduleStatus(documentRef,"Explorer",snapshot.explorer,explorerItems.length);
+
+    const deployerList=section(documentRef,"moduleDeployerList");
+    clear(deployerList);
+    for(const item of snapshot.deployer.items?.slice(0,20)||[]) {
+      appendModuleRow(documentRef,deployerList,item.generatorId||item.deploymentId,(item.accountId||"unknown")+" · "+(item.syncState||item.operationStatus||"unknown"));
+    }
+    if((snapshot.deployer.items?.length||0)===0) appendModuleRow(documentRef,deployerList,"No deployments","Deployer is connected and has no desired/observed targets.");
+    moduleStatus(documentRef,"Deployer",snapshot.deployer,snapshot.deployer.items?.length||0);
+
+    const refresherList=section(documentRef,"moduleRefresherList");
+    clear(refresherList);
+    for(const item of snapshot.refresher.items?.slice(0,20)||[]) {
+      appendModuleRow(documentRef,refresherList,item.cohortId,(item.accountId||"unknown")+" · "+item.mode+" · budget "+item.budget.used+"/"+item.budget.limit);
+    }
+    if((snapshot.refresher.items?.length||0)===0) appendModuleRow(documentRef,refresherList,"No cohorts","Refresher is connected and has no configured cohorts.");
+    moduleStatus(documentRef,"Refresher",snapshot.refresher,snapshot.refresher.items?.length||0);
+
+    const statisticsList=section(documentRef,"moduleStatisticsList");
+    clear(statisticsList);
+    for(const item of snapshot.statistics.items?.slice(0,20)||[]) {
+      appendModuleRow(documentRef,statisticsList,item.label,String(item.value)+" total · "+String(item.matchedEvents)+" matched events");
+    }
+    if((snapshot.statistics.items?.length||0)===0) appendModuleRow(documentRef,statisticsList,"No metrics","Statistics is connected but no metric projection is available.");
+    moduleStatus(documentRef,"Statistics",snapshot.statistics,snapshot.statistics.items?.length||0);
+
+    const provisioningList=section(documentRef,"moduleProvisioningList");
+    clear(provisioningList);
+    for(const item of snapshot.provisioning.items?.slice(0,20)||[]) {
+      appendModuleRow(documentRef,provisioningList,item.attemptId,(item.accountId||"unbound")+" · "+item.state+(item.humanReason ? " · "+item.humanReason : ""));
+    }
+    if((snapshot.provisioning.items?.length||0)===0) appendModuleRow(documentRef,provisioningList,"No attempts","Provisioning is connected and has no active attempts.");
+    moduleStatus(documentRef,"Provisioning",snapshot.provisioning,snapshot.provisioning.items?.length||0);
   }
 
   function renderAttention(snapshot,selectedId=null) {
@@ -139,11 +220,15 @@ export function mountPcmsApp({
     let parsed;
     try { parsed=parsePcmsDeepLink(windowRef.location.hash); }
     catch { parsed=parsePcmsDeepLink("#/overview"); }
-    let snapshot;
-    try { snapshot=await projectionService.snapshot({query:parsed.query}); }
-    catch {
+    let snapshot,moduleSnapshot;
+    try {
+      [snapshot,moduleSnapshot]=await Promise.all([
+        projectionService.snapshot({query:parsed.query}),
+        moduleProjectionService.snapshot()
+      ]);
+    } catch {
       if(disposed||generation!==refreshGeneration) return;
-      notificationStatus.textContent="PCMS projections are unavailable.";
+      notificationStatus.textContent="PCMS live projections are unavailable.";
       setVisible("overview");
       return;
     }
@@ -159,11 +244,12 @@ export function mountPcmsApp({
     } else {
       notificationStatus.textContent=snapshot.notifications.count
         ? snapshot.notifications.count+" item"+(snapshot.notifications.count===1?"":"s")+" need attention."
-        : "No items need attention.";
+        : "PCMS connected · all module projections available.";
     }
     const route=resolved.route;
     renderNav(snapshot,route.route);
     renderOverview(snapshot);
+    renderModules(moduleSnapshot);
     renderAttention(snapshot,route.route==="attention"?route.id:null);
     renderAccounts(snapshot,route.route==="accounts"?route.id:null);
     renderSearch(snapshot);
@@ -208,7 +294,11 @@ async function bootPcmsApp() {
     const runtime=await startPcmsLiveRuntime();
     liveStatus.textContent="Connected · rev "+runtime.brokerRevision;
     liveStatus.dataset.state="connected";
-    mountPcmsApp({projectionService:runtime.uiProjection});
+    const moduleProjectionService=createPcmsModuleProjectionService({runtime});
+    mountPcmsApp({
+      projectionService:runtime.uiProjection,
+      moduleProjectionService
+    });
     window.addEventListener("unload",()=>runtime.close(),{once:true});
   } catch {
     liveStatus.textContent="Unavailable";
