@@ -870,11 +870,11 @@
     },
     {
       "sourcePath": "extension/manifest.json",
-      "destinationPath": "extension/manifest.json",
+      "destinationPath": "docs/upstream/source/extension/manifest.json",
       "sourceBlobSha": "d24bea98aaae52bd0c4776bfdefc7f47b6f19bc6",
       "mode": "100644",
       "size": 1538,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "extension/options/automations.js",
@@ -1829,11 +1829,18 @@
       "reason": "P025 built-in PCMS Integration-v1 principal with existing operation-level policy gates preserved"
     },
     {
+      "destinationPath": "extension/manifest.json",
+      "upstreamBlobSha": "d24bea98aaae52bd0c4776bfdefc7f47b6f19bc6",
+      "derivativeBlobSha": "a95d5418d081f61db75a1a679bc9f3c752913251",
+      "derivativeSize": 1518,
+      "reason": "P025 corrective release makes PersonaMonkey PCMS the primary installed product and routes Preferences to PCMS"
+    },
+    {
       "destinationPath": "extension/popup/popup.html",
       "upstreamBlobSha": "700aff9da9276f87beb88062d1a1df7b1abcf4d7",
-      "derivativeBlobSha": "aa786ea2273a4818b729b5507c9419afc9cbcc1d",
-      "derivativeSize": 1715,
-      "reason": "P025 visible entry to the Perchance Central Management System surface"
+      "derivativeBlobSha": "211f9fafe3e8c31248005399950457bafcd14ed4",
+      "derivativeSize": 1727,
+      "reason": "P025 corrective release makes the toolbar popup lead with the PCMS control surface while retaining PersonaMonkey settings"
     },
     {
       "destinationPath": "scripts/build-extension.mjs",
