@@ -1030,7 +1030,7 @@
     {
       "id": "P025",
       "title": "Live acceptance 1 — installed FDE + PersonaMonkey/Mullvad/Perchance",
-      "status": "IN_PROGRESS",
+      "status": "MERGED",
       "dependsOn": [
         "P024"
       ],
