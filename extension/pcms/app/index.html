@@ -43,13 +43,28 @@
             <div><dt>Live Integration v1</dt><dd id="brokerLiveStatus">Connecting…</dd></div>
           </dl>
         </section>
+
+        <section class="core-status live-operations" aria-labelledby="recoveryHeading">
+          <h3 id="recoveryHeading">Recovery & backup</h3>
+          <p id="recoveryStatus" class="module-status">Loading recovery state…</p>
+          <form id="backupCreateForm" class="live-form compact-form">
+            <label>Backup ID<input name="backupId" required value="p026-manual-backup"></label>
+            <button type="submit">Create backup</button>
+          </form>
+          <textarea id="backupPayload" rows="8" spellcheck="false" placeholder="Backup JSON appears here, or paste a backup to restore."></textarea>
+          <div class="operator-actions">
+            <form id="restoreApplyForm"><button type="submit">Apply restore → RECOVERY_HOLD</button></form>
+            <form id="recoveryReleaseForm"><button type="submit">Reconcile & release hold</button></form>
+          </div>
+          <p id="liveActionStatus" class="module-status" role="status" aria-live="polite">Live mutations are ready for operator input.</p>
+        </section>
       </section>
 
       <section id="viewModules" hidden aria-labelledby="modulesHeading">
         <div class="section-heading">
           <span class="eyebrow">Modules</span>
           <h2 id="modulesHeading">PCMS modules</h2>
-          <p>Accepted module state is wired into the live PCMS composition. P025 is read-only; representative provider mutations remain gated for P026.</p>
+          <p>Accepted module state and representative P026 controls are wired into the live PCMS composition. Provider effects remain fenced by RemoteOperation and explicit operator confirmation.</p>
         </div>
 
         <div class="module-grid">
@@ -57,18 +72,41 @@
             <div class="module-head"><div><span class="eyebrow">Explorer</span><h3>Discovery & reservations</h3></div><strong id="moduleExplorerCount">0</strong></div>
             <p id="moduleExplorerStatus" class="module-status">Loading…</p>
             <div id="moduleExplorerList" class="module-items"></div>
+            <form id="explorerLiveForm" class="live-form">
+              <label>Account ID<input name="accountId" required></label>
+              <label>Discovery ID<input name="discoveryId" required></label>
+              <label>Generator ID<input name="generatorId" required></label>
+              <label>Observed source SHA-256<input name="sourceHash" required pattern="[a-f0-9]{64}"></label>
+              <label>Claim ID (optional)<input name="claimId"></label>
+              <label>Deployment ID (optional)<input name="deploymentId"></label>
+              <button type="submit">Record / reserve</button>
+            </form>
           </article>
 
           <article class="module-card">
             <div class="module-head"><div><span class="eyebrow">Deployer</span><h3>Desired / observed deployments</h3></div><strong id="moduleDeployerCount">0</strong></div>
             <p id="moduleDeployerStatus" class="module-status">Loading…</p>
             <div id="moduleDeployerList" class="module-items"></div>
+            <form id="deployerLiveForm" class="live-form">
+              <label>Deployment ID<input name="deploymentId" required></label>
+              <label>Account ID<input name="accountId" required></label>
+              <label>Generator ID<input name="generatorId" required></label>
+              <label>Desired source<textarea name="source" rows="7" required spellcheck="false"></textarea></label>
+              <button type="submit">Deploy through PCMS</button>
+            </form>
           </article>
 
           <article class="module-card">
             <div class="module-head"><div><span class="eyebrow">Refresher</span><h3>Cohorts & refresh budgets</h3></div><strong id="moduleRefresherCount">0</strong></div>
             <p id="moduleRefresherStatus" class="module-status">Loading…</p>
             <div id="moduleRefresherList" class="module-items"></div>
+            <form id="refresherLiveForm" class="live-form">
+              <label>Cohort ID<input name="cohortId" required></label>
+              <label>Account ID<input name="accountId" required></label>
+              <label>Generator ID<input name="generatorId" required></label>
+              <label>Refresh source<textarea name="source" rows="7" required spellcheck="false"></textarea></label>
+              <button type="submit">Prepare & refresh</button>
+            </form>
           </article>
 
           <article class="module-card">
@@ -81,6 +119,15 @@
             <div class="module-head"><div><span class="eyebrow">Provisioning</span><h3>Account provisioning attempts</h3></div><strong id="moduleProvisioningCount">0</strong></div>
             <p id="moduleProvisioningStatus" class="module-status">Loading…</p>
             <div id="moduleProvisioningList" class="module-items"></div>
+            <form id="provisioningLiveForm" class="live-form">
+              <label>Attempt ID<input name="attemptId" required></label>
+              <label>Account ID<input name="accountId" required></label>
+              <label>Display name<input name="displayName" required></label>
+              <label>Persona UID<input name="personaUid" required></label>
+              <label>Credential SecretRef<input name="credentialRef" required placeholder="pcms-secret:v1:&lt;uuid&gt;"></label>
+              <button type="submit">Create / continue</button>
+            </form>
+            <p class="module-status">Credentials are never accepted as plaintext here. CAPTCHA and provider verification remain manual HumanTasks.</p>
           </article>
         </div>
       </section>
@@ -100,6 +147,21 @@
           <span class="eyebrow">Accounts</span>
           <h2 id="accountsHeading">Accounts & Persona bindings</h2>
           <p>Durable AccountId and personaUid are projected from the live Accounts module.</p>
+        </div>
+        <div class="operations-grid">
+          <form id="accountCreateForm" class="live-form">
+            <h3>Bind account</h3>
+            <label>Account ID<input name="accountId" required></label>
+            <label>Display name<input name="displayName" required></label>
+            <label>Persona UID<input name="personaUid" required></label>
+            <button type="submit">Create binding</button>
+          </form>
+          <form id="accountRebindForm" class="live-form">
+            <h3>Rebind Persona</h3>
+            <label>Account ID<input name="accountId" required></label>
+            <label>New Persona UID<input name="personaUid" required></label>
+            <button type="submit">Rebind</button>
+          </form>
         </div>
         <div id="accountList" class="item-list"></div>
         <p id="accountsEmpty" class="empty-state">No accounts are available.</p>
