@@ -7,6 +7,35 @@ import { createModulePackageRegistry } from "../modules/registry.js";
 import { createModuleRuntimeBroker } from "../runtime/module-runtime.js";
 import { createPcmsModuleIntegration } from "./composition.js";
 
+export async function recoverPcmsLiveStartup({remoteOps,recoveryHold,moduleRuntime}={}) {
+  if(!remoteOps||typeof remoteOps.listUnresolved!=="function") throw new TypeError("Startup recovery requires RemoteOps");
+  if(!recoveryHold||typeof recoveryHold.getStatus!=="function"||typeof recoveryHold.enterRecoveryHold!=="function") {
+    throw new TypeError("Startup recovery requires recovery hold");
+  }
+  if(!moduleRuntime||typeof moduleRuntime.recoverAll!=="function") throw new TypeError("Startup recovery requires module runtime");
+
+  const unresolvedBefore=await remoteOps.listUnresolved();
+  const holdBefore=await recoveryHold.getStatus();
+  let interruptedOperationIds=Object.freeze([]);
+
+  if(holdBefore.value.state==="RECOVERY_HOLD"||unresolvedBefore.length>0) {
+    const entered=await recoveryHold.enterRecoveryHold({
+      reason:holdBefore.value.state==="RECOVERY_HOLD"
+        ? (holdBefore.value.reason||"restart-recovery")
+        : "restart-unresolved-remote-operations"
+    });
+    interruptedOperationIds=entered.recoveredOperationIds;
+  }
+
+  const recoveredModuleIds=await moduleRuntime.recoverAll();
+  const holdAfter=await recoveryHold.getStatus();
+  return Object.freeze({
+    interruptedOperationIds,
+    recoveredModuleIds,
+    recoveryState:holdAfter.value.state
+  });
+}
+
 export function createPcmsLiveCore({
   personaBroker,
   featureFactories,
@@ -64,26 +93,7 @@ export function createPcmsLiveCore({
     await storageBroker.open();
     await auditJournal.open();
 
-    const unresolvedBefore=await remoteOps.listUnresolved();
-    const holdBefore=await recoveryHold.getStatus();
-    let interruptedOperationIds=Object.freeze([]);
-
-    if(holdBefore.value.state==="RECOVERY_HOLD"||unresolvedBefore.length>0) {
-      const entered=await recoveryHold.enterRecoveryHold({
-        reason:holdBefore.value.state==="RECOVERY_HOLD"
-          ? (holdBefore.value.reason||"restart-recovery")
-          : "restart-unresolved-remote-operations"
-      });
-      interruptedOperationIds=entered.recoveredOperationIds;
-    }
-
-    const recoveredModuleIds=await moduleRuntime.recoverAll();
-    const holdAfter=await recoveryHold.getStatus();
-    return Object.freeze({
-      interruptedOperationIds,
-      recoveredModuleIds,
-      recoveryState:holdAfter.value.state
-    });
+    return recoverPcmsLiveStartup({remoteOps,recoveryHold,moduleRuntime});
   }
 
   function close() {
