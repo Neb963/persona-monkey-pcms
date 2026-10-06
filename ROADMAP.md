@@ -228,7 +228,7 @@ Merge wave: 8
 - [x] T024.3 — T024.3 clean install/update/restart
 
 ## P025 — Live acceptance 1 — installed FDE + PersonaMonkey/Mullvad/Perchance
-Status: **IN_PROGRESS**  
+Status: **MERGED**  
 Depends on: P024  
 Merge wave: 9
 
