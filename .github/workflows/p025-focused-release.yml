@@ -1,0 +1,49 @@
+name: p025-focused-release
+
+on:
+  push:
+    branches:
+      - artifact/p025-live-xpi-c1f1da2
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Focused P025 syntax and wiring tests
+        run: |
+          node --check extension/lib/management-integration.js
+          node --check extension/background.js
+          node --check extension/pcms/platform/firefox-persona-broker-transport.js
+          node --check extension/pcms/integration/live-core.js
+          node --check extension/pcms/app/live-runtime.js
+          node --check extension/pcms/app/app.js
+          node --test tests/pcms/p025/live-wiring.test.mjs
+          npm run test:upstream-integrity
+      - name: Reproducible release build
+        run: |
+          node scripts/test-build-reproducibility.mjs
+          node scripts/build-extension.mjs
+          sha256sum dist/persona-route-manager-v1.2.0.xpi
+          cat dist/persona-route-manager-v1.2.0.xpi.sha256
+          unzip -t dist/persona-route-manager-v1.2.0.xpi
+      - name: Assert PCMS release contents
+        run: |
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F "pcms/app/live-runtime.js"
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F "pcms/platform/firefox-persona-broker-transport.js"
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F "pcms-modules/p014/accounts.js"
+          unzip -l dist/persona-route-manager-v1.2.0.xpi | grep -F "pcms-modules/p019/provisioning.js"
+      - name: Upload P025 XPI
+        uses: actions/upload-artifact@v4
+        with:
+          name: p025-live-acceptance-xpi-c1f1da2
+          path: |
+            dist/persona-route-manager-v1.2.0.xpi
+            dist/persona-route-manager-v1.2.0.xpi.sha256
+          if-no-files-found: error
