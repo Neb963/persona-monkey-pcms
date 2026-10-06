@@ -63,9 +63,27 @@ export function createPcmsLiveCore({
   async function initialize() {
     await storageBroker.open();
     await auditJournal.open();
-    const interruptedOperationIds=await remoteOps.recoverInterruptedDispatches();
+
+    const unresolvedBefore=await remoteOps.listUnresolved();
+    const holdBefore=await recoveryHold.getStatus();
+    let interruptedOperationIds=Object.freeze([]);
+
+    if(holdBefore.value.state==="RECOVERY_HOLD"||unresolvedBefore.length>0) {
+      const entered=await recoveryHold.enterRecoveryHold({
+        reason:holdBefore.value.state==="RECOVERY_HOLD"
+          ? (holdBefore.value.reason||"restart-recovery")
+          : "restart-unresolved-remote-operations"
+      });
+      interruptedOperationIds=entered.recoveredOperationIds;
+    }
+
     const recoveredModuleIds=await moduleRuntime.recoverAll();
-    return Object.freeze({interruptedOperationIds,recoveredModuleIds});
+    const holdAfter=await recoveryHold.getStatus();
+    return Object.freeze({
+      interruptedOperationIds,
+      recoveredModuleIds,
+      recoveryState:holdAfter.value.state
+    });
   }
 
   function close() {
