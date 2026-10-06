@@ -1,6 +1,6 @@
 # P025 — Live acceptance 1
 
-Phase state: **MERGED — replacement candidate ready for manual LIVE acceptance**.
+Phase state: **ACCEPTED**.
 
 ## Rejected candidates
 
@@ -61,10 +61,17 @@ Merged main passed:
 - repository verification run **726** / run id **37441371432** — **success**;
 - pinned Firefox Developer Edition run **721** / run id **37441371555** — **success**.
 
-## LIVE acceptance still required
+## LIVE acceptance
 
-- **A025-01:** replacement candidate pending manual clean-install/PCMS boot evidence.
-- **A025-02:** pending manual Persona/Mullvad continuity evidence.
-- **A025-03:** pending manual Perchance session/provider compatibility evidence.
+Operator LIVE acceptance was supplied on **2026-10-06** for the replacement XPI SHA-256 `e316e2fd6d52f359d865b9c396a7af9e47d9ea99337fc9de7330e24bb2e469e8`.
 
-P025 must not be marked `ACCEPTED`, and P026 must remain `BLOCKED`, until all three LIVE acceptance IDs pass on the replacement XPI.
+- **A025-01 — PASS:** operator screenshots show the installed PCMS product booted successfully, all five feature-module projections available, Namespace `v1`, Persona Broker contract `v1`, 55 broker commands, implementation `integration-v1-adapter`, and `Live Integration v1 = Connected · rev 1`.
+- **A025-02 — PASS:** operator reports both standard Persona operation and Mullvad-protected Persona operation working correctly in the live Firefox environment.
+- **A025-03 — PASS:** operator reports an existing Perchance login/session working correctly in the live setup.
+
+The live screenshots additionally show Explorer, Deployer, Refresher, Statistics and Provisioning all reporting `Live module state connected`.
+
+No representative provider mutation, recovery, restore/update, or final human-acceptance evidence is claimed here. Those behaviors remain exclusively in P026.
+
+These LIVE observations, together with the merged deterministic/FDE evidence above, satisfy **A025-01**, **A025-02**, and **A025-03**. P025 is **ACCEPTED**.
+
