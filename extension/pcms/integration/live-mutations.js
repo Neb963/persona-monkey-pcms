@@ -231,7 +231,12 @@ async function requireContext(operationContext,operationId){
 }
 
 async function openPersona(client,context,url,operationId,suffix){
-  return client.request("persona.open",{personaUid:context.personaUid,url},{
+  return client.request("persona.open",{
+    personaUid:context.personaUid,
+    url,
+    active:true,
+    allowDirect:true
+  },{
     operationId:operationSuffix(operationId,suffix)
   });
 }
