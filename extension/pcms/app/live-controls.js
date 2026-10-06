@@ -214,7 +214,10 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
     }else if(state==="UNCERTAIN"){
       row=await runtime.provisioning.reconcileAttempt(attemptId,{expectedRevision:row.revision});
     }else if(state==="WAITING_HUMAN"){
-      throw new Error("Resolve the open HumanTask in Attention, then continue.");
+      row=await runtime.provisioning.advance(attemptId,{expectedRevision:row.revision});
+      if(row.value.state==="WAITING_HUMAN") {
+        throw new Error("Resolve the open HumanTask in Attention, then continue.");
+      }
     }else if(state==="COMPLETED"||state==="CANCELLED"){
       return "Provisioning is "+state+".";
     }else{
