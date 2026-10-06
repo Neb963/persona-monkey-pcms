@@ -242,9 +242,18 @@ export function mountPcmsApp({
       notificationStatus.textContent="That PCMS item is no longer available.";
       windowRef.history.replaceState(null,"",resolved.route.href);
     } else {
+      const modulesReady=[
+        moduleSnapshot.deployer.available,
+        moduleSnapshot.explorer.available,
+        moduleSnapshot.refresher.available,
+        moduleSnapshot.statistics.available,
+        moduleSnapshot.provisioning.available
+      ].every(Boolean);
       notificationStatus.textContent=snapshot.notifications.count
         ? snapshot.notifications.count+" item"+(snapshot.notifications.count===1?"":"s")+" need attention."
-        : "PCMS connected · all module projections available.";
+        : modulesReady
+          ? "PCMS connected · all module projections available."
+          : "PCMS connected · one or more module projections are unavailable.";
     }
     const route=resolved.route;
     renderNav(snapshot,route.route);
