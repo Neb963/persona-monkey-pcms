@@ -89,7 +89,11 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
       const created=await runtime.deployer.createDeployment({deploymentId,accountId,generatorId,sourceHash},{expectedRevision:revision});
       deployment=created.deployment;revision=created.revision;
     }else if(deployment.desired.sourceHash!==sourceHash){
-      const desired=await runtime.deployer.setDesired(deploymentId,{expectedRevision:revision,sourceHash});
+      const desired=await runtime.deployer.setDesired(deploymentId,{
+        expectedRevision:revision,
+        expectedDesiredRevision:deployment.desired.revision,
+        sourceHash
+      });
       deployment=desired.deployment;revision=desired.revision;
     }
     const result=await runtime.deployer.deploy(deploymentId,{expectedRevision:revision,source});
