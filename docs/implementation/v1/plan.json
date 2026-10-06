@@ -1030,7 +1030,7 @@
     {
       "id": "P025",
       "title": "Live acceptance 1 — installed FDE + PersonaMonkey/Mullvad/Perchance",
-      "status": "CLAIMED",
+      "status": "IN_PROGRESS",
       "dependsOn": [
         "P024"
       ],
@@ -1045,7 +1045,11 @@
           "extension/popup/popup.html",
           "scripts/build-extension.mjs",
           "tests/upstream/import-integrity.test.mjs",
-          "docs/upstream/import-manifest.json"
+          "docs/upstream/import-manifest.json",
+          "docs/upstream/source/extension/background.js",
+          "docs/upstream/source/extension/lib/management-integration.js",
+          "docs/upstream/source/extension/popup/popup.html",
+          "docs/upstream/source/scripts/build-extension.mjs"
         ],
         "contractReads": [],
         "contractWrites": [],

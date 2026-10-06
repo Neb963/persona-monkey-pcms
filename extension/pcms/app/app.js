@@ -1,6 +1,6 @@
 import { installPcmsNamespace } from "../core/bootstrap.js";
 import { parsePcmsDeepLink, pcmsRouteHref, resolvePcmsDeepLink } from "./deep-links.js";
-import { createPcmsUiProjectionService } from "./projections.js";
+import { startPcmsLiveRuntime } from "./live-runtime.js";
 
 function element(documentRef,tag,className=null) {
   const node=documentRef.createElement(tag);
@@ -196,14 +196,25 @@ export function mountPcmsApp({
   });
 }
 
-const pcms=installPcmsNamespace();
-document.getElementById("namespaceVersion").textContent="v"+pcms.version;
-document.getElementById("brokerVersion").textContent="v"+pcms.broker.contractVersion;
-document.getElementById("commandCount").textContent=String(pcms.broker.commandCount);
-document.getElementById("brokerImplementation").textContent=pcms.broker.implementation;
+async function bootPcmsApp() {
+  const pcms=installPcmsNamespace();
+  document.getElementById("namespaceVersion").textContent="v"+pcms.version;
+  document.getElementById("brokerVersion").textContent="v"+pcms.broker.contractVersion;
+  document.getElementById("commandCount").textContent=String(pcms.broker.commandCount);
+  document.getElementById("brokerImplementation").textContent=pcms.broker.implementation;
 
-const emptyProjection=createPcmsUiProjectionService({
-  humanTasks:Object.freeze({async listAttention(){return Object.freeze([]);}}),
-  accounts:Object.freeze({async listAccounts(){return Object.freeze({revision:0,accounts:Object.freeze([])});}})
-});
-mountPcmsApp({projectionService:emptyProjection});
+  const liveStatus=document.getElementById("brokerLiveStatus");
+  try {
+    const runtime=await startPcmsLiveRuntime();
+    liveStatus.textContent="Connected · rev "+runtime.brokerRevision;
+    liveStatus.dataset.state="connected";
+    mountPcmsApp({projectionService:runtime.uiProjection});
+    window.addEventListener("unload",()=>runtime.close(),{once:true});
+  } catch {
+    liveStatus.textContent="Unavailable";
+    liveStatus.dataset.state="error";
+    document.getElementById("notificationStatus").textContent="PCMS could not connect to PersonaMonkey Integration v1.";
+  }
+}
+
+void bootPcmsApp();

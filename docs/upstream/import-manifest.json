@@ -494,11 +494,11 @@
     },
     {
       "sourcePath": "extension/background.js",
-      "destinationPath": "extension/background.js",
+      "destinationPath": "docs/upstream/source/extension/background.js",
       "sourceBlobSha": "4fbbe2125dd6f325acf1c31696af76b35e2ebef9",
       "mode": "100644",
       "size": 59871,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "extension/content/userscript-trigger.js",
@@ -606,11 +606,11 @@
     },
     {
       "sourcePath": "extension/lib/management-integration.js",
-      "destinationPath": "extension/lib/management-integration.js",
+      "destinationPath": "docs/upstream/source/extension/lib/management-integration.js",
       "sourceBlobSha": "6abee91e8a83e08083a6dc6f473e3f1b9f5d20a0",
       "mode": "100644",
       "size": 146745,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "extension/lib/mullvad-native.js",
@@ -1046,11 +1046,11 @@
     },
     {
       "sourcePath": "extension/popup/popup.html",
-      "destinationPath": "extension/popup/popup.html",
+      "destinationPath": "docs/upstream/source/extension/popup/popup.html",
       "sourceBlobSha": "700aff9da9276f87beb88062d1a1df7b1abcf4d7",
       "mode": "100644",
       "size": 1573,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "extension/popup/popup.js",
@@ -1646,11 +1646,11 @@
     },
     {
       "sourcePath": "scripts/build-extension.mjs",
-      "destinationPath": "scripts/build-extension.mjs",
+      "destinationPath": "docs/upstream/source/scripts/build-extension.mjs",
       "sourceBlobSha": "512c437e4a07400e8553340ccfb12e5c7adfae53",
       "mode": "100644",
       "size": 3582,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "scripts/build-workflow-examples.mjs",
@@ -1811,6 +1811,36 @@
       "mode": "100755",
       "size": 2581,
       "disposition": "snapshot-exact"
+    }
+  ],
+  "derivativeOverrides": [
+    {
+      "destinationPath": "extension/background.js",
+      "upstreamBlobSha": "4fbbe2125dd6f325acf1c31696af76b35e2ebef9",
+      "derivativeBlobSha": "36f36a19f451545fa7c9d73e5b99ccd41dea140e",
+      "derivativeSize": 60732,
+      "reason": "P025 same-extension PCMS bridge into the existing Integration-v1 dispatcher"
+    },
+    {
+      "destinationPath": "extension/lib/management-integration.js",
+      "upstreamBlobSha": "6abee91e8a83e08083a6dc6f473e3f1b9f5d20a0",
+      "derivativeBlobSha": "3ad8e5cf27ff64aae06462288144dc3a6ccf9bc7",
+      "derivativeSize": 148045,
+      "reason": "P025 built-in PCMS Integration-v1 principal with existing operation-level policy gates preserved"
+    },
+    {
+      "destinationPath": "extension/popup/popup.html",
+      "upstreamBlobSha": "700aff9da9276f87beb88062d1a1df7b1abcf4d7",
+      "derivativeBlobSha": "aa786ea2273a4818b729b5507c9419afc9cbcc1d",
+      "derivativeSize": 1715,
+      "reason": "P025 visible entry to the Perchance Central Management System surface"
+    },
+    {
+      "destinationPath": "scripts/build-extension.mjs",
+      "upstreamBlobSha": "512c437e4a07400e8553340ccfb12e5c7adfae53",
+      "derivativeBlobSha": "c53475a164ccf3d0960367a278cd06efc0923144",
+      "derivativeSize": 3722,
+      "reason": "P025 release packaging includes accepted top-level PCMS feature modules"
     }
   ]
 }

@@ -581,8 +581,6 @@ function requireMethod(personaApi, service, method) {
   return fn.bind(personaApi[service]);
 }
 
-export const INTERNAL_PCMS_INTEGRATION_SENDER_ID = "pcms-internal@personamonkey.local";
-
 export function createManagementIntegration({
   personaApi,
   stateManager,
@@ -964,15 +962,9 @@ export function createManagementIntegration({
 
   async function authorize(senderId) {
     const current = await policy();
-    if (senderId === INTERNAL_PCMS_INTEGRATION_SENDER_ID) {
-      // Built-in PCMS is a first-party Integration-v1 principal. It bypasses
-      // only the external-extension enable/trust-list gate; all operation-level
-      // local authority flags remain exactly as configured by PersonaMonkey.
-      return Object.freeze({ ...current, enabled:true });
-    }
     if (!current.enabled) throw makeIntegrationError(INTEGRATION_ERROR_CODES.DISABLED, "Integration is disabled");
     if (selfExtensionId && senderId === selfExtensionId) {
-      throw makeIntegrationError(INTEGRATION_ERROR_CODES.UNAUTHORIZED, "Same-extension callers must use the PCMS Integration-v1 bridge or internal management API");
+      throw makeIntegrationError(INTEGRATION_ERROR_CODES.UNAUTHORIZED, "Same-extension callers must use the internal management API");
     }
     if (!isAuthorizedIntegrationSender(current, senderId)) {
       throw makeIntegrationError(INTEGRATION_ERROR_CODES.UNAUTHORIZED, "External extension is not authorized");
@@ -1454,7 +1446,6 @@ export function createManagementIntegration({
     const availableSenders = new Set(current.enabled && current.allowExternalAutomation
       ? current.trustedExtensionIds
       : []);
-    if (current.allowExternalAutomation) availableSenders.add(INTERNAL_PCMS_INTEGRATION_SENDER_ID);
     for (const senderId of automationSenders) {
       if (availableSenders.has(senderId)) continue;
       for (const [key, lease] of [...controlLeases]) if (lease.ownerSenderId === senderId) {
@@ -2807,10 +2798,6 @@ export function createManagementIntegration({
     }
   }
 
-  async function handleInternalRequest(rawRequest) {
-    return handleExternalRequest(rawRequest, { id:INTERNAL_PCMS_INTEGRATION_SENDER_ID });
-  }
-
   async function attachExternalPort(port) {
     if (port?.name !== INTEGRATION_EVENTS_PORT) {
       try { port?.disconnect?.(); } catch {}
@@ -2880,21 +2867,6 @@ export function createManagementIntegration({
     return true;
   }
 
-  async function attachInternalPort(port) {
-    if (!port || port.name !== "PCMS_PERSONA_BROKER_EVENTS") {
-      try { port?.disconnect?.(); } catch {}
-      return false;
-    }
-    const delegated = Object.freeze({
-      name: INTEGRATION_EVENTS_PORT,
-      sender: Object.freeze({ id:INTERNAL_PCMS_INTEGRATION_SENDER_ID }),
-      onDisconnect: port.onDisconnect,
-      postMessage: (...args) => port.postMessage(...args),
-      disconnect: () => port.disconnect()
-    });
-    return attachExternalPort(delegated);
-  }
-
   async function reapTerminalExternalExecutions() {
     const getExecution = personaApi?.WorkflowRunner?.getExternalExecution;
     if (typeof getExecution !== "function") return;
@@ -2939,10 +2911,8 @@ export function createManagementIntegration({
   return Object.freeze({
     bootId,
     handleExternalRequest,
-    handleInternalRequest,
     failureResponse,
     attachExternalPort,
-    attachInternalPort,
     authorize,
     handleUserscriptInput,
     listControlLeases,
