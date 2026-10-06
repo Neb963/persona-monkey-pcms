@@ -1,6 +1,6 @@
 # P025 — Live acceptance 1
 
-Phase state: **IN PROGRESS — replacement candidate required after live module-load failure**.
+Phase state: **MERGED — replacement candidate ready for manual LIVE acceptance**.
 
 ## Rejected candidates
 
@@ -51,6 +51,15 @@ Replacement candidate from that workflow:
 - SHA-256: `e316e2fd6d52f359d865b9c396a7af9e47d9ea99337fc9de7330e24bb2e469e8`;
 - artifact id: **11401555882**;
 - artifact ZIP digest: `sha256:28176f5abbab6bae019838707b55e0a4243fedf48abe881d9c3a69c3080465b9`.
+
+## Merge / merged-main verification
+
+PR #31 merged as `0501b533ab2cddbe135bc3dc0ee8ef3dade0419e`. The final PR-head product tree and merge tree are identical.
+
+Merged main passed:
+
+- repository verification run **726** / run id **37441371432** — **success**;
+- pinned Firefox Developer Edition run **721** / run id **37441371555** — **success**.
 
 ## LIVE acceptance still required
 
