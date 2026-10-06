@@ -77,7 +77,7 @@ export function createLiveBrokerClient({broker}={}){
       };
       if(descriptor.requiresOperation){
         const operationId=id(options.operationId,"operationId");
-        if(!state) await syncUnlocked();
+        await syncUnlocked();
         envelope.operationId=operationId;
         envelope.precondition={bootId:state.bootId,revision:state.revision};
       }
