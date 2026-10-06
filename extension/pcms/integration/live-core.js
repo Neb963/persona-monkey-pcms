@@ -13,6 +13,7 @@ export function createPcmsLiveCore({
   provisioning,
   statisticsDefinitions,
   providerProbes=[],
+  liveMutationFactory=null,
   clock=()=>new Date().toISOString()
 }={}) {
   if(!personaBroker||typeof personaBroker.request!=="function") throw new TypeError("PCMS live Core requires Persona Broker");
@@ -20,18 +21,24 @@ export function createPcmsLiveCore({
   if(!provisioning||typeof provisioning!=="object") throw new TypeError("PCMS live Core requires provisioning adapters");
   if(!Array.isArray(statisticsDefinitions)||statisticsDefinitions.length<1) throw new TypeError("PCMS live Core requires statistics definitions");
   if(!Array.isArray(providerProbes)) throw new TypeError("PCMS live Core provider probes are invalid");
+  if(liveMutationFactory!==null&&typeof liveMutationFactory!=="function") throw new TypeError("PCMS live mutation factory is invalid");
   if(typeof clock!=="function") throw new TypeError("PCMS live Core clock is invalid");
 
   const storageBroker=createPcmsStorageBroker({clock});
   const auditJournal=createPcmsAuditJournal({clock});
   const remoteOps=createRemoteOps({storageBroker,clock});
   const recoveryHold=createRecoveryHoldController({storageBroker,remoteOps,clock});
-  // P025 exposes module state and read-only compatibility only. Provider mutation
-  // drivers remain unavailable until P026 representative-mutation acceptance.
+  const liveMutations=liveMutationFactory
+    ? liveMutationFactory({storageBroker,personaBroker,remoteOps,recoveryHold,clock})
+    : null;
+  const activeProviders=liveMutations?.providers||Object.freeze({});
+  const activeProvisioning=liveMutations?.provisioning||provisioning;
+  const activeProviderProbes=liveMutations?.providerProbes||providerProbes;
+  const operationContext=liveMutations?.operationContext||null;
   const providerGate=createProviderGate({
     remoteOps,
     recoveryHold,
-    providers:Object.freeze({})
+    providers:activeProviders
   });
   const moduleRegistry=createModulePackageRegistry({storageBroker,clock});
   const moduleRuntime=createModuleRuntimeBroker({storageBroker,moduleRegistry,recoveryHold});
@@ -46,9 +53,10 @@ export function createPcmsLiveCore({
     moduleRegistry,
     moduleRuntime,
     featureFactories,
-    provisioning,
+    provisioning:activeProvisioning,
+    operationContext,
     statisticsDefinitions,
-    providerProbes,
+    providerProbes:activeProviderProbes,
     clock
   });
 
@@ -76,6 +84,7 @@ export function createPcmsLiveCore({
     providerGate,
     moduleRegistry,
     moduleRuntime,
+    liveMutations,
     ...integration
   });
 }
