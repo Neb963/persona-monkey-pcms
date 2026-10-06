@@ -83,7 +83,10 @@ test("P025 production runtime composes and surfaces all accepted feature modules
   assert.match(liveCore,/providers:Object\.freeze\(\{\}\)/);
   assert.match(liveRuntime,/command:"system\.status"/);
   assert.match(builder,/const moduleSource = resolve\(root, "pcms-modules"\)/);
-  assert.match(builder,/copyTree\(moduleSource, resolve\(stage, "pcms-modules"\)\)/);
+  assert.match(builder,/copyModuleTree\(moduleSource, resolve\(stage, "pcms-modules"\)\)/);
+  assert.match(builder,/relocateModuleSource/);
+  assert.match(builder,/verifyPackagedModuleGraph/);
+  assert.doesNotMatch(builder,/copyTree\(moduleSource, resolve\(stage, "pcms-modules"\)\)/);
   assert.equal(pcmsRouteHref("modules"),"#/modules");
   assert.equal(parsePcmsDeepLink("#/modules").route,"modules");
 });
@@ -130,4 +133,18 @@ test("P025 built-in principal reuses Integration-v1 policy rather than legacy ma
   assert.match(background,/managementIntegration\.handleInternalRequest\(message\.request\)/);
   assert.match(background,/managementIntegration\.attachInternalPort\(port\)/);
   assert.doesNotMatch(liveCore,/pcms-client|PCMS_REQUEST|browser\.|nativeMessaging|personaApi|stateManager/);
+});
+
+
+test("P025 packaging regression: repository-relative module imports require relocation inside the XPI", async () => {
+  const sources=await Promise.all([
+    readFile("pcms-modules/p015/deployer.js","utf8"),
+    readFile("pcms-modules/p016/schema.js","utf8"),
+    readFile("pcms-modules/p017/refresher-helpers.js","utf8"),
+    readFile("pcms-modules/p019/schema.js","utf8")
+  ]);
+  assert.equal(sources.some((source)=>source.includes("../../extension/pcms/")),true);
+  const builder=await readFile("scripts/build-extension.mjs","utf8");
+  assert.match(builder,/Unresolved repository-relative extension import/);
+  assert.match(builder,/Broken packaged PCMS import/);
 });

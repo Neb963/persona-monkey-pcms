@@ -1,67 +1,61 @@
 # P025 — Live acceptance 1
 
-Phase state: **MERGED — corrective candidate ready for manual LIVE acceptance**.
+Phase state: **IN PROGRESS — replacement candidate required after live module-load failure**.
 
-## Rejected first candidate
+## Rejected candidates
 
-The first P025 candidate XPI, SHA-256 `2f54280f96f08013c9499566e3044edfa98a3609966ff1ea734f71b54e8a0cc6`, is **superseded and rejected**.
+Two earlier P025 candidates are rejected and must not be used:
 
-Live operator inspection found that it still presented primarily as PersonaMonkey Route Manager and exposed only a thin PCMS shell. That candidate must not be used for acceptance.
+1. SHA-256 `2f54280f96f08013c9499566e3044edfa98a3609966ff1ea734f71b54e8a0cc6` — installed primarily as PersonaMonkey with only a thin PCMS shell.
+2. SHA-256 `0ca203d9b63aa98897807efc546810cf6593a1f48e4e3c6ff6e8fe4ff6c07b03` — corrected product identity/modules, but live Firefox remained at `Loading PCMS…` / `Connecting…` and never populated even the synchronous Core fields.
+
+The second failure was reproduced deterministically from the actual XPI module graph.
+
+## Root cause
+
+Accepted P014–P019 sources live in the repository under `pcms-modules/**` and legitimately import accepted Core contracts with repository-relative paths such as:
+
+`../../extension/pcms/providers/perchance/contract.js`
+
+The XPI build flattens the repository's `extension/` directory to the archive root. It copied `pcms-modules/**` unchanged, so those imports resolved inside the XPI to nonexistent `extension/pcms/**` paths. Firefox rejected the ESM graph before `pcms/app/app.js` could execute, which explains why Namespace/Broker fields remained `—` while the static HTML was visible.
 
 ## Corrective implementation
 
-The corrective P025 build:
+The P025 build now:
 
-- installs as **PersonaMonkey PCMS**;
-- uses **PersonaMonkey PCMS** as the toolbar action title;
-- routes add-on Preferences directly to `pcms/app/index.html`;
-- makes **Open PCMS** the primary popup action while retaining a separate PersonaMonkey settings link;
-- boots the accepted P023 full module integration composition;
-- injects the accepted P014–P019 factories into the production composition root;
-- exposes live read-only module surfaces for Explorer, Deployer, Refresher, Statistics and Provisioning, plus Accounts, Attention and Search;
-- keeps provider mutation drivers fail-closed in P025; representative real mutations remain P026;
-- preserves PersonaMonkey as the sole authority for browser/page execution, personas, routing, Mullvad and control leases via Integration-v1 semantics;
-- keeps the frozen PersonaMonkey baseline byte-identical by snapshotting explicit derivative overlays.
+- preserves accepted repository module sources unchanged;
+- relocates only repository-relative `extension/` import specifiers while copying modules into the XPI, e.g. `../../extension/pcms/...` → `../../pcms/...`;
+- validates every static/dynamic ESM edge under packaged `pcms/**` and `pcms-modules/**` before producing the archive;
+- fails the build on a missing packaged module target or a bare module specifier;
+- keeps a single PCMS runtime copy in the archive rather than duplicating `extension/pcms/**`;
+- retains the existing Persona Broker / Integration-v1 authority boundary and keeps P025 provider mutations fail-closed.
 
-## Verification
+## Focused verification
 
-Corrective PR head `832bd262660ade3403da45359980f198078b786a` passed:
+Focused release workflow run **37440898249** passed on product checkpoint `def34bf31c9ef7e32416588101f044fcc345b840`:
 
-- repository verification run **700** / run id **37437154338** — **success**;
-- pinned Firefox Developer Edition run **695** / run id **37437154406** — **success**.
-
-Focused corrective release workflow run **37437228734** passed:
-
-- **9/9** P021/P025 focused tests;
-- **3/3** upstream-integrity checks;
-- exact frozen PersonaMonkey baseline rerun with original XPI SHA-256 `928b94a871d70455e42c2a8269a7adec27c59b3c5937e7618f80da218fb126e1`;
+- **6/6** focused P025 tests;
+- **3/3** frozen-upstream integrity tests;
+- exact frozen PersonaMonkey baseline XPI SHA-256 `928b94a871d70455e42c2a8269a7adec27c59b3c5937e7618f80da218fb126e1`;
 - derivative XPI reproducibility across UTC and Europe/Warsaw;
 - ZIP integrity;
-- installed manifest identity `PersonaMonkey PCMS`;
-- Preferences target `pcms/app/index.html`;
-- popup contains `Open PCMS`;
-- module dashboard contains Explorer, Deployer, Refresher, Statistics and Provisioning;
-- P014–P019 module files are present in the XPI.
+- no packaged `pcms-modules/**` source retains `../../extension/pcms/`;
+- relocated Deployer import resolves to `../../pcms/providers/perchance/contract.js`;
+- relocated Provisioning import resolves to `../../pcms/secrets/secret-ref.js`;
+- exact pinned Firefox Developer Edition **153.0b10** loaded the unpacked release graph and reached the `__pcms_booted__` probe, proving `app.js` executed past module loading.
 
-Corrective XPI:
+Replacement candidate from that workflow:
 
 - version: **1.2.0**;
 - Gecko ID: **persona-route-manager@local**;
-- SHA-256: `0ca203d9b63aa98897807efc546810cf6593a1f48e4e3c6ff6e8fe4ff6c07b03`;
-- artifact id: **11399449572**;
-- artifact ZIP digest: `sha256:5e9823f7b4f950c53d46083e2ce7c2423ec2c60176f6085f6219eb47a101fd05`.
-
-PR #29 merged as `f7bf3af605f9f5e726cd26207e88d9a5c6bff2f5`. The PR-head product tree and merge product tree are identical.
-
-Merged main `f7bf3af605f9f5e726cd26207e88d9a5c6bff2f5` passed:
-
-- repository verification run **701** / run id **37437426128** — **success**;
-- pinned Firefox Developer Edition run **696** / run id **37437426096** — **success**.
+- SHA-256: `e316e2fd6d52f359d865b9c396a7af9e47d9ea99337fc9de7330e24bb2e469e8`;
+- artifact id: **11401555882**;
+- artifact ZIP digest: `sha256:28176f5abbab6bae019838707b55e0a4243fedf48abe881d9c3a69c3080465b9`.
 
 ## LIVE acceptance still required
 
-- **A025-01:** corrective candidate pending manual clean-install/product-surface evidence.
+- **A025-01:** replacement candidate pending manual clean-install/PCMS boot evidence.
 - **A025-02:** pending manual Persona/Mullvad continuity evidence.
 - **A025-03:** pending manual Perchance session/provider compatibility evidence.
 
-P025 must not be marked `ACCEPTED`, and P026 must remain `BLOCKED`, until all three LIVE acceptance IDs pass on the corrective XPI.
+P025 must not be marked `ACCEPTED`, and P026 must remain `BLOCKED`, until all three LIVE acceptance IDs pass on the replacement XPI.

@@ -47,6 +47,64 @@ function copyTree(src, dst) {
     else cpSync(from, to);
   }
 }
+
+function relocateModuleSource(sourceText, sourcePath) {
+  let replacements = 0;
+  const relocated = sourceText.replace(/(["'])((?:\.\.\/)+)extension\/([^"'\r\n]+)\1/g, (_match, quote, prefix, target) => {
+    replacements += 1;
+    return quote + prefix + target + quote;
+  });
+  if (/(["'])(?:\.\.\/)+extension\//.test(relocated)) {
+    throw new Error("Unresolved repository-relative extension import in packaged module: " + relative(root, sourcePath));
+  }
+  return { relocated, replacements };
+}
+
+function copyModuleTree(src, dst) {
+  mkdirSync(dst, { recursive: true });
+  for (const entry of readdirSync(src, { withFileTypes: true })) {
+    if (entry.name === "tests") continue;
+    const from = resolve(src, entry.name);
+    const to = resolve(dst, entry.name);
+    if (entry.isDirectory()) {
+      copyModuleTree(from, to);
+      continue;
+    }
+    if (entry.name.endsWith(".js")) {
+      const { relocated } = relocateModuleSource(readFileSync(from, "utf8"), from);
+      writeFileSync(to, relocated, "utf8");
+    } else {
+      cpSync(from, to);
+    }
+  }
+}
+
+function moduleSpecifiers(sourceText) {
+  const found = [];
+  const pattern = /(?:\b(?:import|export)\s+(?:[^"'()]*?\s+from\s+)?["']([^"']+)["'])|(?:\bimport\s*\(\s*["']([^"']+)["']\s*\))/g;
+  for (const match of sourceText.matchAll(pattern)) found.push(match[1] || match[2]);
+  return found;
+}
+
+function verifyPackagedModuleGraph() {
+  const roots = [resolve(stage, "pcms"), resolve(stage, "pcms-modules")].filter(existsSync);
+  for (const graphRoot of roots) {
+    for (const file of walk(graphRoot).filter((candidate) => candidate.endsWith(".js"))) {
+      const sourceText = readFileSync(file, "utf8");
+      for (const specifier of moduleSpecifiers(sourceText)) {
+        if (!(specifier.startsWith(".") || specifier.startsWith("/"))) {
+          throw new Error("Bare module specifier is not allowed in packaged PCMS graph: " + specifier + " from " + archivePath(file));
+        }
+        const target = specifier.startsWith("/")
+          ? resolve(stage, specifier.slice(1))
+          : resolve(dirname(file), specifier);
+        if (!existsSync(target) || !statSync(target).isFile()) {
+          throw new Error("Broken packaged PCMS import: " + archivePath(file) + " -> " + specifier);
+        }
+      }
+    }
+  }
+}
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -59,7 +117,8 @@ function walk(dir) {
 
 try {
   copyTree(source, stage);
-  if (existsSync(moduleSource)) copyTree(moduleSource, resolve(stage, "pcms-modules"));
+  if (existsSync(moduleSource)) copyModuleTree(moduleSource, resolve(stage, "pcms-modules"));
+  verifyPackagedModuleGraph();
   const files = walk(stage).sort(compareArchivePaths);
   for (const file of files) utimesSync(file, epoch, epoch);
   for (const dir of [...new Set(files.map((file) => dirname(file)))].sort((a, b) => b.length - a.length)) {

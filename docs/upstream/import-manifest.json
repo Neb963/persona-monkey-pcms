@@ -1845,9 +1845,9 @@
     {
       "destinationPath": "scripts/build-extension.mjs",
       "upstreamBlobSha": "512c437e4a07400e8553340ccfb12e5c7adfae53",
-      "derivativeBlobSha": "c53475a164ccf3d0960367a278cd06efc0923144",
-      "derivativeSize": 3722,
-      "reason": "P025 release packaging includes accepted top-level PCMS feature modules"
+      "derivativeBlobSha": "48b6c20235c19f10db3221bbf2546800bb38e357",
+      "derivativeSize": 6056,
+      "reason": "P025 release packaging relocates accepted top-level PCMS feature-module imports into the XPI root and fails the build on broken packaged PCMS module edges"
     }
   ]
 }
