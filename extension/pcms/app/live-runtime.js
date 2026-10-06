@@ -1,6 +1,8 @@
 import { createPersonaBroker } from "../core/persona-broker.js";
 import { createFirefoxPersonaBrokerTransport } from "../platform/firefox-persona-broker-transport.js";
 import { createPcmsLiveCore } from "../integration/live-core.js";
+import { createPcmsLiveMutationIntegration } from "../integration/live-mutations.js";
+import { createPcmsOperatorBridge } from "./operator-bridge.js";
 
 import { createAccountsService } from "/pcms-modules/p014/accounts.js";
 import { createDeployerService } from "/pcms-modules/p015/deployer.js";
@@ -47,11 +49,17 @@ const statisticsDefinitions=Object.freeze([Object.freeze({
 export async function startPcmsLiveRuntime() {
   const transport=createFirefoxPersonaBrokerTransport();
   const personaBroker=createPersonaBroker({transport});
+  const operator=createPcmsOperatorBridge();
   const core=createPcmsLiveCore({
     personaBroker,
     featureFactories,
     provisioning,
-    statisticsDefinitions
+    statisticsDefinitions,
+    liveMutationFactory:({storageBroker})=>createPcmsLiveMutationIntegration({
+      storageBroker,
+      personaBroker,
+      operator
+    })
   });
   try {
     const recovery=await core.initialize();
