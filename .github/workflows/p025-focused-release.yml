@@ -47,3 +47,5 @@ jobs:
             dist/persona-route-manager-v1.2.0.xpi
             dist/persona-route-manager-v1.2.0.xpi.sha256
           if-no-files-found: error
+
+# trigger focused P025 release verification
