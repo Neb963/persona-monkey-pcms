@@ -1,0 +1,94 @@
+name: p025-import-graph-release
+
+on:
+  push:
+    branches:
+      - artifact/p025-import-graph-def34bf
+
+permissions:
+  contents: read
+
+jobs:
+  verify-build-firefox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Focused P025 regression
+        run: |
+          node --test tests/pcms/p025/live-wiring.test.mjs
+          npm run test:upstream-integrity
+          npm run test:upstream-baseline
+
+      - name: Build corrected XPI
+        run: |
+          node scripts/test-build-reproducibility.mjs
+          node scripts/build-extension.mjs
+          mkdir -p unpack
+          unzip -q dist/persona-route-manager-v1.2.0.xpi -d unpack
+          ! grep -R -F '../../extension/pcms/' unpack/pcms-modules
+          grep -F '../../pcms/providers/perchance/contract.js' unpack/pcms-modules/p015/deployer.js
+          grep -F '../../pcms/secrets/secret-ref.js' unpack/pcms-modules/p019/schema.js
+          sha256sum dist/persona-route-manager-v1.2.0.xpi
+          cat dist/persona-route-manager-v1.2.0.xpi.sha256
+          unzip -t dist/persona-route-manager-v1.2.0.xpi
+
+      - name: Install Firefox runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libdbus-glib-1-2 libasound2t64 libx11-xcb1
+
+      - name: Install exact pinned Firefox Developer Edition
+        id: install
+        env:
+          FIREFOX_INSTALL_ROOT: ${{ runner.temp }}/pcms-firefox
+        run: npm run firefox:install
+
+      - name: Prove PCMS ESM graph boots in pinned FDE
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("unpack/pcms/app/index.html")
+          s=p.read_text()
+          probe="""<script>
+          (() => {
+            let sent=false;
+            const timer=setInterval(() => {
+              const ns=document.getElementById("namespaceVersion")?.textContent;
+              const live=document.getElementById("brokerLiveStatus")?.textContent;
+              if(!sent && ns && ns !== "—" && live && live !== "Connecting…") {
+                sent=true;
+                clearInterval(timer);
+                fetch("/__pcms_booted__").catch(()=>{});
+              }
+            },50);
+          })();
+          </script>"""
+          p.write_text(s.replace("</body>", probe+"</body>"))
+          PY
+          python3 -m http.server 8765 --directory unpack > "${RUNNER_TEMP}/pcms-http.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in {1..50}; do
+            curl -fsS http://127.0.0.1:8765/pcms/app/index.html >/dev/null && break
+            sleep .1
+          done
+          mkdir -p "${RUNNER_TEMP}/pcms-firefox-profile"
+          timeout 20s "$FIREFOX_BIN" --headless --no-remote --profile "${RUNNER_TEMP}/pcms-firefox-profile" http://127.0.0.1:8765/pcms/app/index.html || true
+          cat "${RUNNER_TEMP}/pcms-http.log"
+          grep -F '__pcms_booted__' "${RUNNER_TEMP}/pcms-http.log"
+
+      - name: Upload corrected P025 XPI
+        uses: actions/upload-artifact@v4
+        with:
+          name: p025-import-graph-xpi-def34bf
+          path: |
+            dist/persona-route-manager-v1.2.0.xpi
+            dist/persona-route-manager-v1.2.0.xpi.sha256
+          if-no-files-found: error
