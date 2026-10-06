@@ -228,16 +228,16 @@ Merge wave: 8
 - [x] T024.3 — T024.3 clean install/update/restart
 
 ## P025 — Live acceptance 1 — installed FDE + PersonaMonkey/Mullvad/Perchance
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P024  
 Merge wave: 9
 
-- [ ] T025.1 — T025.1 clean live install
-- [ ] T025.2 — T025.2 protected routing/Persona continuity
-- [ ] T025.3 — T025.3 provider/session compatibility
+- [x] T025.1 — T025.1 clean live install
+- [x] T025.2 — T025.2 protected routing/Persona continuity
+- [x] T025.3 — T025.3 provider/session compatibility
 
 ## P026 — Live acceptance 2 — representative mutations + recovery + final acceptance
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P025  
 Merge wave: 10
 
