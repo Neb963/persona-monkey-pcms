@@ -2,6 +2,7 @@ import { installPcmsNamespace } from "../core/bootstrap.js";
 import { parsePcmsDeepLink, pcmsRouteHref, resolvePcmsDeepLink } from "./deep-links.js";
 import { startPcmsLiveRuntime } from "./live-runtime.js";
 import { createPcmsModuleProjectionService } from "./module-projections.js";
+import { bindPcmsLiveControls } from "./live-controls.js";
 
 function element(documentRef,tag,className=null) {
   const node=documentRef.createElement(tag);
@@ -32,6 +33,7 @@ function appendLink(documentRef,parent,{href,title,subtitle=null,badge=null}) {
     link.appendChild(count);
   }
   parent.appendChild(link);
+  return link;
 }
 
 function appendModuleRow(documentRef,parent,title,subtitle) {
@@ -65,6 +67,7 @@ function moduleStatus(documentRef,name,projection,count) {
 export function mountPcmsApp({
   projectionService,
   moduleProjectionService,
+  runtime=null,
   documentRef=globalThis.document,
   windowRef=globalThis.window
 }={}) {
@@ -181,6 +184,13 @@ export function mountPcmsApp({
         title:item.title,
         subtitle:item.priority+" · "+item.taskKind
       });
+      if(runtime?.humanTasks) {
+        const resolve=element(documentRef,"button","inline-action");
+        resolve.type="button";
+        resolve.dataset.resolveTask=item.taskId;
+        resolve.textContent="Resolve";
+        list.appendChild(resolve);
+      }
     }
     section(documentRef,"attentionEmpty").hidden=items.length!==0;
   }
@@ -304,11 +314,21 @@ async function bootPcmsApp() {
     liveStatus.textContent="Connected · rev "+runtime.brokerRevision;
     liveStatus.dataset.state="connected";
     const moduleProjectionService=createPcmsModuleProjectionService({runtime});
-    mountPcmsApp({
+    const app=mountPcmsApp({
       projectionService:runtime.uiProjection,
-      moduleProjectionService
+      moduleProjectionService,
+      runtime
     });
-    window.addEventListener("unload",()=>runtime.close(),{once:true});
+    const controls=bindPcmsLiveControls({
+      runtime,
+      documentRef:document,
+      refresh:app.refresh
+    });
+    window.addEventListener("unload",()=>{
+      controls.close();
+      app.destroy();
+      runtime.close();
+    },{once:true});
   } catch {
     liveStatus.textContent="Unavailable";
     liveStatus.dataset.state="error";
