@@ -25,6 +25,7 @@ test("all 223 frozen upstream blobs remain exact and derivative overlays are exp
   const expectedOverrides = new Set([
     "extension/background.js",
     "extension/lib/management-integration.js",
+    "extension/manifest.json",
     "extension/popup/popup.html",
     "scripts/build-extension.mjs"
   ]);

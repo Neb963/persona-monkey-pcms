@@ -1,6 +1,6 @@
 import { PCMS_UI_ERROR_CODES, pcmsUiError } from "./errors.js";
 
-export const PCMS_UI_ROUTES = Object.freeze(["overview","attention","accounts","search"]);
+export const PCMS_UI_ROUTES = Object.freeze(["overview","modules","attention","accounts","search"]);
 const ENTITY_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$/;
 const QUERY_MAX = 200;
 
@@ -30,7 +30,7 @@ export function pcmsRouteHref(route,{id=null,query=""}={}) {
     return safe ? "#/search?q="+encodeURIComponent(safe) : "#/search";
   }
   if(query!=="") fail();
-  return "#/overview";
+  return route==="modules" ? "#/modules" : "#/overview";
 }
 
 function decodeSegment(value) {
@@ -60,9 +60,9 @@ export function parsePcmsDeepLink(rawHash) {
   const route=parts[0];
   if(!PCMS_UI_ROUTES.includes(route)) fail();
 
-  if(route==="overview") {
+  if(route==="overview" || route==="modules") {
     if(parts.length!==1 || queryString!=="") fail();
-    return Object.freeze({route,id:null,query:"",href:"#/overview"});
+    return Object.freeze({route,id:null,query:"",href:"#/"+route});
   }
 
   if(route==="search") {

@@ -8,6 +8,8 @@ import {
   createFirefoxPersonaBrokerTransport
 } from "../../../extension/pcms/platform/firefox-persona-broker-transport.js";
 import { PERSONA_BROKER_INTEGRATION_EVENTS_PORT } from "../../../extension/pcms/core/persona-broker.js";
+import { createPcmsModuleProjectionService } from "../../../extension/pcms/app/module-projections.js";
+import { parsePcmsDeepLink, pcmsRouteHref } from "../../../extension/pcms/app/deep-links.js";
 
 test("P025 Firefox Persona Broker transport uses only bounded same-extension messages", async () => {
   const sent=[];
@@ -44,21 +46,70 @@ test("P025 Firefox Persona Broker transport uses only bounded same-extension mes
   assert.throws(()=>transport.openEvents("wrong-port",()=>{}),TypeError);
 });
 
-test("P025 production app mounts live projections and ships accepted feature modules", async () => {
-  const [app,liveRuntime,builder,popup]=await Promise.all([
+test("P025 installed product identifies and opens as PCMS", async () => {
+  const [manifestText,popup,index]=await Promise.all([
+    readFile("extension/manifest.json","utf8"),
+    readFile("extension/popup/popup.html","utf8"),
+    readFile("extension/pcms/app/index.html","utf8")
+  ]);
+  const manifest=JSON.parse(manifestText);
+  assert.equal(manifest.name,"PersonaMonkey PCMS");
+  assert.equal(manifest.action.default_title,"PersonaMonkey PCMS");
+  assert.equal(manifest.options_ui.page,"pcms/app/index.html");
+  assert.match(popup,/PersonaMonkey PCMS/);
+  assert.match(popup,/<button id="options" class="primary">Open PCMS<\/button>/);
+  assert.match(popup,/PersonaMonkey settings/);
+  assert.match(index,/PCMS modules/);
+  for(const module of ["Explorer","Deployer","Refresher","Statistics","Provisioning"]) {
+    assert.match(index,new RegExp(">"+module+"<"));
+  }
+});
+
+test("P025 production runtime composes and surfaces all accepted feature modules", async () => {
+  const [app,liveRuntime,liveCore,builder]=await Promise.all([
     readFile("extension/pcms/app/app.js","utf8"),
     readFile("extension/pcms/app/live-runtime.js","utf8"),
-    readFile("scripts/build-extension.mjs","utf8"),
-    readFile("extension/popup/popup.html","utf8")
+    readFile("extension/pcms/integration/live-core.js","utf8"),
+    readFile("scripts/build-extension.mjs","utf8")
   ]);
-  assert.match(app,/startPcmsLiveRuntime/);
+  assert.match(app,/createPcmsModuleProjectionService/);
+  assert.match(app,/renderModules/);
   assert.doesNotMatch(app,/emptyProjection/);
-  assert.match(app,/mountPcmsApp\(\{projectionService:runtime\.uiProjection\}\)/);
-  assert.match(liveRuntime,/from "\/pcms-modules\/p014\/accounts\.js"/);
+  for(const phase of ["p014","p015","p016","p017","p018","p019"]) {
+    assert.match(liveRuntime,new RegExp("/pcms-modules/"+phase+"/"));
+  }
+  assert.match(liveCore,/createPcmsModuleIntegration/);
+  assert.match(liveCore,/createProviderGate/);
+  assert.match(liveCore,/providers:Object\.freeze\(\{\}\)/);
   assert.match(liveRuntime,/command:"system\.status"/);
   assert.match(builder,/const moduleSource = resolve\(root, "pcms-modules"\)/);
   assert.match(builder,/copyTree\(moduleSource, resolve\(stage, "pcms-modules"\)\)/);
-  assert.match(popup,/\.\.\/pcms\/app\/index\.html/);
+  assert.equal(pcmsRouteHref("modules"),"#/modules");
+  assert.equal(parsePcmsDeepLink("#/modules").route,"modules");
+});
+
+test("P025 module projection reads Explorer, Deployer, Refresher, Statistics and Provisioning", async () => {
+  const runtime={
+    deployer:{async listDeploymentViews(){return {revision:1,deployments:[{deploymentId:"dep-1",accountId:"acct-1",generatorId:"gen-1",syncState:"IN_SYNC"}]};}},
+    explorer:{
+      async listCandidates(){return {revision:2,candidates:[{candidateId:"cand-1",accountId:"acct-1",generatorId:"gen-2",freshness:"CURRENT"}]};},
+      async listReservations(){return {revision:2,reservations:[{claimId:"claim-1",deploymentId:"dep-2",accountId:"acct-1",status:"READY",ready:true}]};}
+    },
+    refresher:{async listCohortViews(){return {revision:3,cohorts:[{cohortId:"cohort-1",accountId:"acct-1",mode:"MANUAL",budget:{limit:10,used:1}}]};}},
+    statistics:{
+      async rebuild(){return {cursor:0};},
+      view(){return {cursor:4,lateEventCount:0,metrics:[{metricId:"attention_opened",label:"Attention opened",value:2,matchedEvents:2,series:[]}]};}
+    },
+    provisioning:{async listAttempts(){return [{revision:1,value:{attemptId:"attempt-1",accountId:"acct-1",state:"WAITING_HUMAN",humanReason:"CAPTCHA"}}];}}
+  };
+  const service=createPcmsModuleProjectionService({runtime});
+  const snapshot=await service.snapshot();
+  assert.equal(snapshot.deployer.items.length,1);
+  assert.equal(snapshot.explorer.candidates.length,1);
+  assert.equal(snapshot.explorer.reservations.length,1);
+  assert.equal(snapshot.refresher.items.length,1);
+  assert.equal(snapshot.statistics.items[0].value,2);
+  assert.equal(snapshot.provisioning.items[0].state,"WAITING_HUMAN");
 });
 
 test("P025 built-in principal reuses Integration-v1 policy rather than legacy management API", async () => {

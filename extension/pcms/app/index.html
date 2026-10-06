@@ -3,17 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Perchance Central Management System</title>
+  <title>PersonaMonkey PCMS</title>
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <span class="eyebrow">PersonaMonkey-PCMS</span>
+        <span class="eyebrow">PersonaMonkey PCMS</span>
         <h1>Perchance Central Management System</h1>
       </div>
-      <p id="notificationStatus" class="notification-status" role="status" aria-live="polite">Loading PCMS projections…</p>
+      <div class="topbar-tools">
+        <p id="notificationStatus" class="notification-status" role="status" aria-live="polite">Loading PCMS…</p>
+        <a class="secondary-link" href="../../options/options.html">PersonaMonkey settings</a>
+      </div>
     </header>
 
     <nav id="primaryNav" class="primary-nav" aria-label="PCMS"></nav>
@@ -22,16 +25,16 @@
       <section id="viewOverview" aria-labelledby="overviewHeading">
         <div class="section-heading">
           <span class="eyebrow">Overview</span>
-          <h2 id="overviewHeading">Operations at a glance</h2>
-          <p>Read-only projections surface attention and account state without becoming operational authority.</p>
+          <h2 id="overviewHeading">PCMS control plane</h2>
+          <p>This is the PCMS product surface. PersonaMonkey remains the execution and routing authority underneath it.</p>
         </div>
         <div class="metric-grid">
           <article><strong id="overviewAttentionCount">0</strong><span>Open attention</span></article>
-          <article><strong id="overviewCriticalCount">0</strong><span>Critical</span></article>
           <article><strong id="overviewAccountCount">0</strong><span>Accounts</span></article>
+          <article><strong id="overviewModuleCount">5</strong><span>Feature modules</span></article>
         </div>
         <section class="core-status" aria-labelledby="coreStatusHeading">
-          <h3 id="coreStatusHeading">Core boundary</h3>
+          <h3 id="coreStatusHeading">Live PCMS core</h3>
           <dl>
             <div><dt>Namespace</dt><dd id="namespaceVersion">—</dd></div>
             <div><dt>Persona Broker contract</dt><dd id="brokerVersion">—</dd></div>
@@ -42,11 +45,51 @@
         </section>
       </section>
 
+      <section id="viewModules" hidden aria-labelledby="modulesHeading">
+        <div class="section-heading">
+          <span class="eyebrow">Modules</span>
+          <h2 id="modulesHeading">PCMS modules</h2>
+          <p>Accepted module state is wired into the live PCMS composition. P025 is read-only; representative provider mutations remain gated for P026.</p>
+        </div>
+
+        <div class="module-grid">
+          <article class="module-card">
+            <div class="module-head"><div><span class="eyebrow">Explorer</span><h3>Discovery & reservations</h3></div><strong id="moduleExplorerCount">0</strong></div>
+            <p id="moduleExplorerStatus" class="module-status">Loading…</p>
+            <div id="moduleExplorerList" class="module-items"></div>
+          </article>
+
+          <article class="module-card">
+            <div class="module-head"><div><span class="eyebrow">Deployer</span><h3>Desired / observed deployments</h3></div><strong id="moduleDeployerCount">0</strong></div>
+            <p id="moduleDeployerStatus" class="module-status">Loading…</p>
+            <div id="moduleDeployerList" class="module-items"></div>
+          </article>
+
+          <article class="module-card">
+            <div class="module-head"><div><span class="eyebrow">Refresher</span><h3>Cohorts & refresh budgets</h3></div><strong id="moduleRefresherCount">0</strong></div>
+            <p id="moduleRefresherStatus" class="module-status">Loading…</p>
+            <div id="moduleRefresherList" class="module-items"></div>
+          </article>
+
+          <article class="module-card">
+            <div class="module-head"><div><span class="eyebrow">Statistics</span><h3>Audit-derived metrics</h3></div><strong id="moduleStatisticsCount">0</strong></div>
+            <p id="moduleStatisticsStatus" class="module-status">Loading…</p>
+            <div id="moduleStatisticsList" class="module-items"></div>
+          </article>
+
+          <article class="module-card">
+            <div class="module-head"><div><span class="eyebrow">Provisioning</span><h3>Account provisioning attempts</h3></div><strong id="moduleProvisioningCount">0</strong></div>
+            <p id="moduleProvisioningStatus" class="module-status">Loading…</p>
+            <div id="moduleProvisioningList" class="module-items"></div>
+          </article>
+        </div>
+      </section>
+
       <section id="viewAttention" hidden aria-labelledby="attentionHeading">
         <div class="section-heading">
           <span class="eyebrow">Attention</span>
           <h2 id="attentionHeading">Operator attention</h2>
-          <p>Open HumanTasks appear here in priority order. The shell does not resolve or mutate tasks.</p>
+          <p>Open HumanTasks appear here in priority order.</p>
         </div>
         <div id="attentionList" class="item-list"></div>
         <p id="attentionEmpty" class="empty-state">No open HumanTasks.</p>
@@ -55,8 +98,8 @@
       <section id="viewAccounts" hidden aria-labelledby="accountsHeading">
         <div class="section-heading">
           <span class="eyebrow">Accounts</span>
-          <h2 id="accountsHeading">Account projection</h2>
-          <p>Durable AccountId and personaUid are shown as read-only identity projections.</p>
+          <h2 id="accountsHeading">Accounts & Persona bindings</h2>
+          <p>Durable AccountId and personaUid are projected from the live Accounts module.</p>
         </div>
         <div id="accountList" class="item-list"></div>
         <p id="accountsEmpty" class="empty-state">No accounts are available.</p>
@@ -65,7 +108,7 @@
       <section id="viewSearch" hidden aria-labelledby="searchHeading">
         <div class="section-heading">
           <span class="eyebrow">Search</span>
-          <h2 id="searchHeading">Search PCMS projections</h2>
+          <h2 id="searchHeading">Search PCMS</h2>
           <p>Search covers bounded non-secret Account and open HumanTask projection fields.</p>
         </div>
         <form id="searchForm" class="search-form" role="search">
@@ -81,7 +124,7 @@
     </main>
 
     <footer>
-      <p>PCMS UI is a projection surface. It does not access raw browser APIs, PersonaMonkey internals, raw IndexedDB, routing, native RPC, or secret values.</p>
+      <p>PCMS uses bounded services and Persona Broker Integration v1. It does not take raw browser, routing, native-RPC, or PersonaMonkey-internal authority.</p>
     </footer>
   </div>
   <script type="module" src="app.js"></script>

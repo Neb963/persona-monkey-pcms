@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>PersonaMonkey Route Manager</title>
+  <title>PersonaMonkey PCMS</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <main>
     <header class="head">
-      <div><span class="eyebrow">PersonaMonkey</span><strong>Current persona</strong></div>
+      <div><span class="eyebrow">PersonaMonkey PCMS</span><strong>Current persona</strong></div>
       <span id="status" class="badge" role="status" aria-live="polite" aria-atomic="true">…</span>
     </header>
     <div id="context" class="card context-card"></div>
@@ -20,8 +20,8 @@
         <p>Traffic from this persona will use Firefox's normal network path without the configured VPN/proxy route.</p>
         <div class="direct-warning-actions"><button id="confirmDirect" type="button" class="danger">Use Direct network</button><button id="cancelDirect" type="button">Cancel</button></div>
       </div>
-      <div class="actions"><button id="test" class="primary" aria-describedby="actionHint" disabled>Verify route</button><button id="options">Open settings</button></div>
-      <p class="action-hint"><a href="../pcms/app/index.html" target="_blank" rel="noopener">Open Perchance Central Management System</a></p>
+      <div class="actions"><button id="options" class="primary">Open PCMS</button><button id="test" aria-describedby="actionHint" disabled>Verify route</button></div>
+      <p class="action-hint">PCMS is the primary control surface. <a href="../options/options.html" target="_blank" rel="noopener">PersonaMonkey settings</a></p>
       <p id="actionHint" class="action-hint"></p>
     </section>
     <div id="result" class="result" role="status" aria-live="polite" aria-atomic="true"></div>
