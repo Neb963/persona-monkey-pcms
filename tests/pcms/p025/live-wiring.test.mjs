@@ -145,6 +145,6 @@ test("P025 packaging regression: repository-relative module imports require relo
   ]);
   assert.equal(sources.some((source)=>source.includes("../../extension/pcms/")),true);
   const builder=await readFile("scripts/build-extension.mjs","utf8");
-  assert.match(builder,/\(\["'\]\)\(\(\?:\\\.\\\.\\\/\)\+\)extension\\\//);
+  assert.match(builder,/Unresolved repository-relative extension import/);
   assert.match(builder,/Broken packaged PCMS import/);
 });
