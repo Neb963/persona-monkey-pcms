@@ -1838,8 +1838,8 @@
     {
       "destinationPath": "scripts/build-extension.mjs",
       "upstreamBlobSha": "512c437e4a07400e8553340ccfb12e5c7adfae53",
-      "derivativeBlobSha": "3668ee6a57f6bbc0fa3c1cc045c9d3ad8b60eeef",
-      "derivativeSize": 3692,
+      "derivativeBlobSha": "c53475a164ccf3d0960367a278cd06efc0923144",
+      "derivativeSize": 3722,
       "reason": "P025 release packaging includes accepted top-level PCMS feature modules"
     }
   ]
