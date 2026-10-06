@@ -19,7 +19,11 @@
     "extension/popup/popup.html",
     "scripts/build-extension.mjs",
     "tests/upstream/import-integrity.test.mjs",
-    "docs/upstream/import-manifest.json"
+    "docs/upstream/import-manifest.json",
+    "docs/upstream/source/extension/background.js",
+    "docs/upstream/source/extension/lib/management-integration.js",
+    "docs/upstream/source/extension/popup/popup.html",
+    "docs/upstream/source/scripts/build-extension.mjs"
   ],
   "contractReads": [],
   "contractWrites": [],
@@ -30,5 +34,5 @@
     "A025-02",
     "A025-03"
   ],
-  "lastCheckpointSha": "0e2c345032f4a5957e340bf8d9ac58ce15ec3e8f"
+  "lastCheckpointSha": "814d46b5af144fd806d9217b1b4d969ec21b3724"
 }
