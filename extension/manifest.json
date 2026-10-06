@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "PersonaMonkey Route Manager",
+  "name": "PersonaMonkey PCMS",
   "version": "1.2.0",
-  "description": "Firefox personas with fail-closed routing, PersonaMonkey Management, diagnostics, storage controls, portable packages, userscripts, and workflows.",
+  "description": "Perchance Central Management System built on PersonaMonkey personas, protected routing, modules, diagnostics, storage, userscripts and workflows.",
   "permissions": [
     "storage",
     "proxy",
@@ -35,7 +35,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "PersonaMonkey Route Manager",
+    "default_title": "PersonaMonkey PCMS",
     "default_popup": "popup/popup.html",
     "default_icon": {
       "48": "icons/icon48.png",
@@ -47,7 +47,7 @@
     "96": "icons/icon96.png"
   },
   "options_ui": {
-    "page": "options/options.html",
+    "page": "pcms/app/index.html",
     "open_in_tab": true
   },
   "browser_specific_settings": {
