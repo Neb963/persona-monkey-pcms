@@ -59,7 +59,7 @@ function walk(dir) {
 
 try {
   copyTree(source, stage);
-  copyTree(moduleSource, resolve(stage, "pcms-modules"));
+  if (existsSync(moduleSource)) copyTree(moduleSource, resolve(stage, "pcms-modules"));
   const files = walk(stage).sort(compareArchivePaths);
   for (const file of files) utimesSync(file, epoch, epoch);
   for (const dir of [...new Set(files.map((file) => dirname(file)))].sort((a, b) => b.length - a.length)) {
