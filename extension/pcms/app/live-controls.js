@@ -82,20 +82,51 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
     const generatorId=value(node,"generatorId");
     const source=String(new FormData(node).get("source")||"");
     const sourceHash=await sha256Hex(source);
-    let listed=await runtime.deployer.listDeployments();
+    const listed=await runtime.deployer.listDeployments();
     let deployment=await runtime.deployer.getDeployment(deploymentId);
     let revision=listed.revision;
+
     if(!deployment){
       const created=await runtime.deployer.createDeployment({deploymentId,accountId,generatorId,sourceHash},{expectedRevision:revision});
-      deployment=created.deployment;revision=created.revision;
-    }else if(deployment.desired.sourceHash!==sourceHash){
-      const desired=await runtime.deployer.setDesired(deploymentId,{
-        expectedRevision:revision,
-        expectedDesiredRevision:deployment.desired.revision,
-        sourceHash
-      });
-      deployment=desired.deployment;revision=desired.revision;
+      deployment=created.deployment;
+      revision=created.revision;
+    }else{
+      if(deployment.accountId!==accountId||deployment.targetRef?.id!==generatorId) {
+        throw new Error("Deployment identity does not match the existing durable target.");
+      }
+
+      if(["ACTIVE","RECONCILE"].includes(deployment.operation.status)){
+        const reconciled=await runtime.deployer.reconcileDeployment(deploymentId,{expectedRevision:revision});
+        deployment=reconciled.deployment;
+        revision=reconciled.revision;
+        if(["ACTIVE","RECONCILE"].includes(deployment.operation.status)){
+          throw new Error("Deployment outcome remains uncertain; PCMS will not replay it.");
+        }
+      }
+
+      if(deployment.operation.status==="RETRYABLE"&&deployment.desired.sourceHash!==sourceHash){
+        throw new Error("Retryable deployment must prove the existing intent first; desired source cannot change yet.");
+      }
+
+      if(deployment.operation.status==="SUCCEEDED"&&deployment.desired.sourceHash===sourceHash){
+        return "Deployer: already in sync ("+sourceHash.slice(0,12)+"…).";
+      }
+
+      if(deployment.desired.sourceHash!==sourceHash){
+        const desired=await runtime.deployer.setDesired(deploymentId,{
+          expectedRevision:revision,
+          expectedDesiredRevision:deployment.desired.revision,
+          sourceHash
+        });
+        deployment=desired.deployment;
+        revision=desired.revision;
+      }else if(["FAILED","CANCELLED"].includes(deployment.operation.status)){
+        const retry=await runtime.deployer.prepareRetry(deploymentId,{expectedRevision:revision});
+        deployment=retry.deployment;
+        revision=retry.revision;
+      }
     }
+
     const result=await runtime.deployer.deploy(deploymentId,{expectedRevision:revision,source});
     return "Deployer: "+result.status+" ("+sourceHash.slice(0,12)+"…)";
   });
@@ -106,9 +137,11 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
     const generatorId=value(node,"generatorId");
     const source=String(new FormData(node).get("source")||"");
     const sourceHash=await sha256Hex(source);
-    let listed=await runtime.refresher.listCohorts();
+    const listed=await runtime.refresher.listCohorts();
     let cohort=listed.cohorts.find((item)=>item.cohortId===cohortId);
     let revision=listed.revision;
+    let member=null;
+
     if(!cohort){
       const created=await runtime.refresher.createCohort({
         cohortId,
@@ -124,17 +157,41 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
         },
         members:[{generatorId,sourceHash}]
       },{expectedRevision:revision});
-      cohort=created.cohort;revision=created.revision;
+      cohort=created.cohort;
+      member=cohort.members.find((item)=>item.generatorId===generatorId);
+      revision=created.revision;
     }else{
-      const member=cohort.members.find((item)=>item.generatorId===generatorId);
+      if(cohort.accountId!==accountId) throw new Error("Cohort identity does not match the existing durable account.");
+      member=cohort.members.find((item)=>item.generatorId===generatorId);
       if(!member)throw new Error("Generator is not a member of this cohort");
-      if(member.sourceHash!==sourceHash){
+
+      if(["ACTIVE","RECONCILE"].includes(member.operation.status)){
+        const reconciled=await runtime.refresher.reconcileRefresh(cohortId,generatorId,{expectedRevision:revision});
+        member=reconciled.member;
+        revision=reconciled.revision;
+        if(["ACTIVE","RECONCILE"].includes(member.operation.status)){
+          throw new Error("Refresh outcome remains uncertain; PCMS will not replay it.");
+        }
+      }
+
+      if(["PENDING","RETRYABLE"].includes(member.operation.status)&&member.sourceHash!==sourceHash){
+        throw new Error("Unresolved refresh intent must settle before its source can change.");
+      }
+
+      if(!["PENDING","RETRYABLE"].includes(member.operation.status)&&member.sourceHash!==sourceHash){
         const updated=await runtime.refresher.setMemberSourceHash(cohortId,generatorId,{expectedRevision:revision,sourceHash});
+        member=updated.member;
         revision=updated.revision;
       }
     }
-    const prepared=await runtime.refresher.prepareRefresh(cohortId,generatorId,{expectedRevision:revision});
-    const result=await runtime.refresher.dispatchRefresh(cohortId,generatorId,{expectedRevision:prepared.revision,source});
+
+    if(!["PENDING","RETRYABLE"].includes(member.operation.status)){
+      const prepared=await runtime.refresher.prepareRefresh(cohortId,generatorId,{expectedRevision:revision});
+      member=prepared.member;
+      revision=prepared.revision;
+    }
+
+    const result=await runtime.refresher.dispatchRefresh(cohortId,generatorId,{expectedRevision:revision,source});
     return "Refresher: "+result.status+" ("+sourceHash.slice(0,12)+"…)";
   });
 
