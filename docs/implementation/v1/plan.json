@@ -587,7 +587,7 @@
     },
     {
       "id": "P014",
-      "title": "Accounts module + Account↔personaUid binding",
+      "title": "Accounts module + Account\u2194personaUid binding",
       "status": "ACCEPTED",
       "dependsOn": [
         "P011",
@@ -1029,7 +1029,7 @@
     },
     {
       "id": "P025",
-      "title": "Live acceptance 1 — installed FDE + PersonaMonkey/Mullvad/Perchance",
+      "title": "Live acceptance 1 \u2014 installed FDE + PersonaMonkey/Mullvad/Perchance",
       "status": "ACCEPTED",
       "dependsOn": [
         "P024"
@@ -1080,7 +1080,7 @@
     },
     {
       "id": "P026",
-      "title": "Live acceptance 2 — representative mutations + recovery + final acceptance",
+      "title": "Live acceptance 2 \u2014 representative mutations + recovery + final acceptance",
       "status": "ACCEPTED",
       "dependsOn": [
         "P025"
@@ -1124,7 +1124,7 @@
     {
       "id": "P027",
       "title": "Packaged-XPI Firefox harness + browser pin >=154",
-      "status": "READY",
+      "status": "IN_PROGRESS",
       "dependsOn": [
         "P026"
       ],
@@ -1137,7 +1137,11 @@
           ".github/workflows/firefox.yml",
           "package.json",
           "tests/pcms/p027/**",
-          "docs/evidence/P027/**"
+          "docs/evidence/P027/**",
+          "docs/implementation/v1/claims/CLM-P027-001.json",
+          "docs/implementation/v1/plan.json",
+          "ROADMAP.md",
+          "docs/progress/STATUS.md"
         ],
         "contractReads": [],
         "contractWrites": [],
@@ -1859,7 +1863,7 @@
     },
     {
       "id": "P043",
-      "title": "Live acceptance 3 — background continuity, runtime modules, repository/provider compatibility",
+      "title": "Live acceptance 3 \u2014 background continuity, runtime modules, repository/provider compatibility",
       "status": "BLOCKED",
       "dependsOn": [
         "P035",
@@ -1903,7 +1907,7 @@
     },
     {
       "id": "P044",
-      "title": "Live acceptance 4 — representative mutations, drift, unattended operation, recovery, final human acceptance",
+      "title": "Live acceptance 4 \u2014 representative mutations, drift, unattended operation, recovery, final human acceptance",
       "status": "BLOCKED",
       "dependsOn": [
         "P043"
