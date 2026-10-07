@@ -47,4 +47,12 @@ account secrets, operator profiles or routing inputs are used.
 
 ## Independent CI checkpoint
 
-Recorded below once the PR's required workflows are observed.
+CI_VERIFIED on head `26335aebd7355f73bad5b8662133689f98b4756f` (PR #37):
+
+- `verify` run [37681163018](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37681163018): success.
+- `firefox-developer-edition` run [37681162986](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37681162986),
+  job `pinned-firefox`: success, including "Verify P028 background Core, wake recovery and UI client protocol" and the
+  packaged XPI run with the P028 checks (one Core across two dashboards, revision signal, sender rejection, warm wake,
+  cold restart).
+
+This commit only records evidence; CI on it re-confirms the same tree.
