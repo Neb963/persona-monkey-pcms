@@ -2,7 +2,7 @@ export const PCMS_CONTINUITY_FIXTURE_TIMER_ID="core.p029.continuity";
 export const PCMS_CONTINUITY_FIXTURE_SERVICE="core.timer-continuity";
 export const PCMS_CONTINUITY_FIXTURE_OWNER="core";
 export const PCMS_CONTINUITY_FIXTURE_GENERATION=0;
-export const PCMS_CONTINUITY_FIXTURE_DELAY_MS=12000;
+export const PCMS_CONTINUITY_FIXTURE_DELAY_MS=30000;
 
 export function createPcmsContinuityFixture({
   timers,
