@@ -3,13 +3,13 @@
   "claimId": "CLM-P028-001",
   "phaseId": "P028",
   "taskId": "T028.1",
-  "claimEpoch": 1,
+  "claimEpoch": 2,
   "state": "ACTIVE",
   "owner": {
-    "agentId": "gpt-5-6-sol"
+    "agentId": "claude-thread-gg298x"
   },
-  "baseMainSha": "b74b839f732d918d7808621af86ba96beea4ac0a",
-  "branch": "agent/gpt-5-6-sol/p028-t028-1",
+  "baseMainSha": "cfa0d07d80cae66072bae3dc693615d6d48eea73",
+  "branch": "agent/claude-thread-gg298x/p028-t028-1",
   "writePaths": [
     "extension/lib/recovery-bootstrap.js",
     "extension/background.js",
@@ -24,6 +24,9 @@
     "extension/pcms/app/**",
     "tests/pcms/p028/**",
     "docs/evidence/P028/**",
+    "package.json",
+    ".github/workflows/firefox.yml",
+    "tools/firefox/packaged.mjs",
     "docs/implementation/v1/claims/CLM-P028-001.json",
     "docs/implementation/v1/plan.json",
     "ROADMAP.md",

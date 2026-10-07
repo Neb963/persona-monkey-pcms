@@ -1176,7 +1176,7 @@
     {
       "id": "P028",
       "title": "Background-authoritative PCMS Core + UI client protocol",
-      "status": "CLAIMED",
+      "status": "IN_PROGRESS",
       "dependsOn": [
         "P027"
       ],
@@ -1195,7 +1195,10 @@
           "extension/pcms/platform/**",
           "extension/pcms/app/**",
           "tests/pcms/p028/**",
-          "docs/evidence/P028/**"
+          "docs/evidence/P028/**",
+          "package.json",
+          ".github/workflows/firefox.yml",
+          "tools/firefox/packaged.mjs"
         ],
         "contractReads": [],
         "contractWrites": [
