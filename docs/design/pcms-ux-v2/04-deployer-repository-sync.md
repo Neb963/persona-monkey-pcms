@@ -3,7 +3,9 @@
 > **The generator repository does not exist yet.** This document fixes no URL, owner, branch, token arrangement,
 > webhook or schema version beyond what PCMS itself defines. `perchance_generators_github_repo` is only the earlier
 > working name. Items that depend on the future repository are marked **[REPO]**. Items that depend on live Perchance
-> investigation are marked **[LIVE]**.
+> behaviour are marked **[LIVE]**: they ship capability-gated and fail-closed, are proven on emulator/FDE fixtures, and
+> are confirmed only in the final live phases (P043/P044). Each live observation is encoded as a deterministic fixture
+> before any resulting fix is accepted.
 
 ## E.1 Three state layers (never conflated)
 
@@ -188,7 +190,8 @@ commands. It is not a queue of mutations.
 
 ```
 scan():
-  0. single-flight: if a scan is RUNNING in this Core host → return "already running"
+  0. single-flight: if a durable scan record is RUNNING and not stale → return "already running"
+     (scans run in the background Core as bounded steps; each step commits a checkpoint — ADR-002 §7)
   1. ref → commitId                               (RepositoryProvider.resolveRef)
   2. if commitId == lastSnapshot.commitId and config unchanged and validatorVersion unchanged:
         record "Checked — no changes" (lastCheckedAt), done
@@ -215,12 +218,25 @@ scan():
 
 ### E.6.1 Mechanism (no new scheduler)
 
-- Deployer registers a service `deployer.repository-sync` with the existing service registry (P012) and keeps
-  **at most one** `SCHEDULED` timer with ID `deployer:repo-scan:<n>`.
-- A tiny Core **timer pump** in the Core host calls `timers.runDue({limit})`. It runs every 60 s and also on the
-  `online` and `visibilitychange→visible` events. It contains no domain logic.
-- Bundled modules register services with a Core-assigned generation, because they have no sandbox runtime
-  generation. When a sandboxed module is later disabled, P011 fencing already turns its timers into MISSED.
+- Scans run in the **background Core** (ADR-002). Whether any dashboard tab is open makes no difference.
+- Deployer registers a service `deployer.repository-sync` and, on every Core start, **declares** its schedule
+  idempotently: `timers.ensure("deployer.repo-scan", dueAt)`. `dueAt` is computed from durable Deployer state
+  (`lastSuccessfulScanAt + I`, or the backoff/reset time). At most one scan schedule exists.
+- Wakeups come only from the Core alarm mechanism (ADR-002 §6):
+  - `pcms.timers.next`, set to the earliest due timer;
+  - `pcms.core.heartbeat`, as a safety net.
+  On wake the due pass claims the timer by CAS, so duplicate wakes are harmless.
+- A scan is a sequence of **bounded steps**, each ≤ ~10 s:
+  1. resolve ref;
+  2. list tree;
+  3. validate N generators per step;
+  4. persist the snapshot;
+  5. apply it to Deployer.
+
+  Each step writes a durable checkpoint `{scanId, commitId, step, cursor}` and ensures an immediate continuation
+  timer. If the event page unloads mid-step, the next wake resumes from the last checkpoint. Steps 1–4 are
+  read-only; step 5 uses idempotent Deployer commands.
+- Dashboard focus, visibility, `online` events and UI timers never trigger scans. They may only refresh projections.
 
 ### E.6.2 Cadence
 
@@ -229,7 +245,7 @@ scan():
 | Success | `now + I`, with I = setting (default 30 min, min 15, max 240), ±10 % jitter |
 | Failure (unavailable / timeout) | `now + min(I·2^k, 4 h)`, where k counts consecutive failures |
 | Rate limited | provider-reported reset time (+ jitter), never earlier |
-| Offline (`navigator.onLine === false`) | skip. On `online`, scan in 30 s if overdue. |
+| Offline (`navigator.onLine === false` at step start, or network error) | treated as unavailable: backoff schedule. No event-driven retry; the next alarm wake retries. |
 | "Check now" | immediate (single-flight). The schedule restarts from completion. |
 | Paused mode | no timer. Manual "Check now" still allowed. |
 
@@ -238,11 +254,14 @@ scan():
 - The existing timer service marks overdue (> 24 h) or interrupted timers `MISSED`. Deployer then schedules **one**
   scan: in 60 s if the last successful scan is older than I, otherwise at `lastScan + I`. It never schedules one
   scan per missed interval. **No backlog replay.**
-- A scan record left `RUNNING` by a crash or tab close is marked `INTERRUPTED` at startup. Because scans are
+- A scan record left `RUNNING` by an event-page unload, crash or browser exit is marked `INTERRUPTED` at the next Core start. Because scans are
   read-only plus idempotent Deployer commands, a fresh scan is always safe.
-- After the computer sleeps, the first pump tick after wake sees the timer due and runs one scan.
-- While no PCMS Core host is open, no scans happen. The popup and Deployer page say "Checks run only while PCMS is
-  open" until ADR-002 (Q6) moves hosting to the background.
+- After the computer sleeps, the first alarm or heartbeat wake sees the schedule due and runs **one** scan.
+- After a browser restart (alarms are not persisted), the cold-start path recreates alarms from durable timers. The
+  declared schedule then yields at most one catch-up scan.
+- After a Deployer `INTERRUPTED` checkpoint, the scan resumes or restarts from the checkpoint. It never re-runs
+  completed Deployer application commands with different inputs, because every command is keyed by
+  `(scanId, slug)`.
 
 ### E.6.4 Failure behaviour
 
@@ -264,8 +283,7 @@ that lacks the generator.
 
 ### E.7.1 Record
 
-This extends the accepted v1 record (`pcms-modules/p015/schema.js`). It needs one allocated migration (no invented
-ID; the plan authority allocates it in U5).
+This extends the accepted v1 record (`pcms-modules/p015/schema.js`). It needs one allocated migration (`MIG-P036-deployer-state-v2` in `plan.json`).
 
 ```js
 {
@@ -297,7 +315,7 @@ Migration v1 → v2 is mechanical:
 - `policy.paused = false`.
 - `operationId` derivation is unchanged, so existing RemoteOperations stay linked.
 
-The v1 projection fields (`syncState`, `actions`) are retired in favour of §E.8, after U5 updates every consumer.
+The v1 projection fields (`syncState`, `actions`) are retired in favour of §E.8, after P036 updates every consumer.
 
 Observations are stored **outside** the singleton document, in keyed store `module.deployer.observations`. Key is the
 slug, holding the latest and previous observation only:
@@ -330,10 +348,10 @@ slug, holding the latest and previous observation only:
 2. **Verification sweep:** each scan cycle observes up to N generators (setting, default 20), oldest-verified
    first, spaced ≥ 10 s apart. For 400 generators at 30-min cycles, each generator is checked about every 10 h.
    "Verify now" on one or a few is always available.
-3. **Operator confirmation:** the reconcile dialog answer records an `OPERATOR_CONFIRMED` observation without a
-   hash.
+3. **Operator confirmation:** the answer to the durable `provider.confirm-apply` HumanTask (ADR-002 §9) records an
+   `OPERATOR_CONFIRMED` observation without a hash.
 
-Until `generator.observe` exists (Q4), steps 1–2 are unavailable. Status then reads "In sync · not verified" with
+Until `generator.observe` is enabled (P039 capability, live-confirmed in P043), steps 1–2 are unavailable. Status then reads "In sync · not verified" with
 the time of the last confirmed apply. PCMS never claims verified sync without an observation.
 
 ### E.8.2 Drift definition
@@ -374,16 +392,23 @@ No policy setting enables automatic drift overwrite in v2. Adding one would requ
 | Mode | Scan | Prepare (desired update) | Dispatch | Availability |
 |---|---|---|---|---|
 | **Paused** | manual only | manual only | manual only | always |
-| **Assisted** (default) | timer while Core host open | automatic | operator clicks Deploy / Deploy all ready; operator-assisted apply dialog (queued) | now (U6) |
-| **Automatic** | timer | automatic | automatic for eligible targets | gated (below; U10) |
+| **Assisted** (default) | background timer (tabs irrelevant) | automatic | operator clicks Deploy / Deploy all ready; each apply is a durable handoff HumanTask reconciled from any tab (ADR-002 §9) | P037 |
+| **Automatic** | background timer | automatic | automatic for eligible targets, in the background with zero tabs | gated (below; P042) |
 
 Automatic-mode gates. All must hold, and the Deployer Settings page lists any that are unmet:
 
-1. Perchance driver supports unattended `generator.update` v2 through a PersonaMonkey execution artifact
-   (compatibility probe).
-2. `generator.observe` is available, for post-apply verification and drift guard.
-3. ADR-002 is accepted *or* the operator explicitly accepts "only while PCMS is open".
-4. Recovery state is NORMAL, the provider is compatible, and there is no unresolved challenge.
+1. The unattended Perchance driver (`generator.update` v2 as a PersonaMonkey execution artifact under a control
+   lease, P042) reports `capabilities.unattended = true` from its compatibility probe.
+2. `generator.observe` is enabled (P039), for post-apply verification and drift guard.
+3. Recovery state is NORMAL, the provider is compatible, and there is no unresolved challenge HumanTask.
+4. The operator has turned Automatic on.
+
+How the gate is proven:
+
+- Gates 1–2 are proven on the emulator and FDE fixture pages (A039, A042).
+- For *real* Perchance, both capabilities ship **disabled** and are enabled only after the final live phase confirms
+  the probe (P043 captures the observation as a fixture; P044 exercises unattended deployment).
+- An open or closed dashboard is never a gate.
 
 Per-target eligibility in an automatic pass:
 
@@ -399,13 +424,13 @@ revision set `pauseReason = "REPEATED_FAILURE"`. Nothing is blind-retried: `UNCE
 reconciliation (unchanged RemoteOps rule).
 
 **New generators:** if the target does not exist on Perchance (observation `exists:false`, or the assisted operator
-answers "doesn't exist"), Assisted mode opens a "Create & deploy" dialog that instructs the operator to create
+answers "doesn't exist"), Assisted mode opens a durable "Create & deploy" HumanTask that instructs the operator to create
 `<slug>` in the bound Persona, then continues with the deploy. Automatic requires a `generator.create` provider
 capability **[LIVE]** (Q7).
 
 ## E.10 Reconciliation
 
-Unchanged from accepted P010/P015/P026 semantics:
+Unchanged from accepted P010/P015/P026 semantics. These are executed by the background Core (ADR-002):
 
 - the durable RemoteOperation exists before dispatch;
 - ambiguous dispatch → `UNCERTAIN`;
@@ -465,8 +490,9 @@ errors: REPO_UNAVAILABLE | REPO_RATE_LIMITED{resetAt} | REPO_AUTH_FAILED | REPO_
 ```
 
 - **Location:** Core provider `extension/pcms/providers/repository/` (contract plus GitHub implementation, like the
-  Perchance provider), injected into Deployer as `repositoryProvider`. Deployer is bundled. A future sandboxed module
-  would need a Core capability (`repository.read`) because the sandbox CSP forbids network access.
+  Perchance provider), injected into Deployer as `repositoryProvider`. It runs in the background Core. Deployer is
+  built-in. A runtime module that needs repository data would get a new bounded capability (`repository.read`),
+  added only for a concrete need, because sandbox frames have no network access.
 - **GitHub implementation:** uses the public REST API:
   - `GET /repos/{owner}/{repo}/commits/{ref}`;
   - `GET /repos/{owner}/{repo}/git/trees/{sha}?recursive=1` (honours `truncated`);
@@ -491,8 +517,13 @@ errors: REPO_UNAVAILABLE | REPO_RATE_LIMITED{resetAt} | REPO_AUTH_FAILED | REPO_
 
 - The compatibility probe returns `{contractVersion:2, operations:[…], capabilities:{unattended, observe, listing,
   thumbnail, create}}`. Any unknown or absent capability → fail closed for that capability only.
-- The operator-assisted driver (today's) implements v2 by showing code and HTML separately with copy buttons, the
-  thumbnail for download, and the listing instruction. It sets `unattended:false`.
+- The operator-assisted driver implements v2 as a **durable handoff** (ADR-002 §9):
+  - it opens the target in the bound Persona;
+  - it records `UNCERTAIN` with a handoff marker;
+  - it opens a `provider.confirm-apply` HumanTask whose page shows code and HTML separately with copy buttons, the
+    thumbnail for download, and the listing instruction.
+
+  It sets `unattended:false`. The operator answers from any dashboard tab, at any later time.
 - An unattended driver must be a PersonaMonkey execution artifact started through `execution.start` in the bound
   Persona, under a control lease. PCMS does not create a `userScripts` authority.
 
@@ -534,7 +565,7 @@ anything else (missing, non-boolean, new field shape) → "UNKNOWN"
 | Later managed deployments | Every deployment carries the desired listing, so the intended listing is preserved. |
 | Listing-only change | Same payload, different listing → "Listing change ready" → a normal deployment with the same content. |
 | Observed mismatch | Listing drift (§E.8.2). Never auto-corrected. Offers "Set Publicly listed…" (EXTERNAL_MUTATION). |
-| Observed UNKNOWN | Not a mismatch. Shown as "Listing unknown". Listing changes are disabled while `capabilities.listing` is false. The assisted dialog then asks the operator to set it, and the answer is recorded as `OPERATOR_CONFIRMED`. |
+| Observed UNKNOWN | Not a mismatch. Shown as "Listing unknown". Listing changes are disabled while `capabilities.listing` is false. The assisted handoff HumanTask then asks the operator to set it, and the answer is recorded as `OPERATOR_CONFIRMED`. |
 | Manual (`v1-source`) deployments | `listing:null` = "not managed by PCMS". Nothing is enforced. |
 
 ## E.14 What changes when the repository is created

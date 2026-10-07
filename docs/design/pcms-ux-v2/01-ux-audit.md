@@ -10,7 +10,7 @@ Classes: **COR** correctness · **USE** usability · **SCA** scalability · **EX
 
 | # | Finding | Evidence | Class |
 |---|---|---|---|
-| 1 | Two PCMS tabs each start a full Core and run startup recovery against the same IndexedDB. A second tab can turn the first tab's in-flight `DISPATCHING` operation into `UNCERTAIN` and enter `RECOVERY_HOLD`. | `app/app.js` `bootPcmsApp()`; `integration/live-core.js:10` `recoverPcmsLiveStartup` | COR |
+| 1 | Root cause: Core is hosted by the dashboard tab, so PCMS stops when the tab closes (fixed by ADR-002). Also, two PCMS tabs each start a full Core and run startup recovery against the same IndexedDB. A second tab can turn the first tab's in-flight `DISPATCHING` operation into `UNCERTAIN` and enter `RECOVERY_HOLD`. | `app/app.js` `bootPcmsApp()`; `integration/live-core.js:10` `recoverPcmsLiveStartup` | COR |
 | 2 | All action feedback goes into one global line under the nav and is overwritten by the next action. While an operation runs it reads just "Working…", with no subject. Concurrent actions are indistinguishable. | `app/live-controls.js:29`; `app/index.html` `#liveActionStatus` | USE |
 | 3 | Projections refresh only on `hashchange` or after a local action. Nothing refreshes on a timer or on focus, and changes made by another tab or by background services stay invisible. Staleness is never shown. | `app/app.js` `refresh()` triggers | USE |
 | 4 | The navigation is assembled by hand. "Modules" is injected with a hard-coded `badge:5`, and the Overview module count is hard-coded to `"5"`. A disabled or unavailable module still counts. | `app/app.js:105`, `app/app.js:123`, `app/index.html:35` | EXT |
@@ -72,7 +72,7 @@ Classes: **COR** correctness · **USE** usability · **SCA** scalability · **EX
 
 | # | Finding | Evidence | Class |
 |---|---|---|---|
-| 38 | Only one dialog can be active, and a second request throws "Another PCMS operator action is already active". Nothing queues it or tells the operator which object is waiting. | `app/operator-bridge.js` `pending` | USE |
+| 38 | Only one in-tab dialog can be active, and it dies with the tab (fixed by ADR-002 §9 durable handoff), and a second request throws "Another PCMS operator action is already active". Nothing queues it or tells the operator which object is waiting. | `app/operator-bridge.js` `pending` | USE |
 | 39 | The reconcile dialog asks the operator to compare "the saved source matches the intended SHA-256". A human cannot compute a SHA-256. | `integration/live-mutations.js` `reconcileGeneratorUpdate` instructions | USE |
 | 40 | The apply dialog shows one `source` blob. Perchance has separate code and HTML panels, and the planned packages also carry a thumbnail and listing. | `integration/live-mutations.js` `updateGenerator` | USE / EXT |
 
@@ -103,3 +103,13 @@ Classes: **COR** correctness · **USE** usability · **SCA** scalability · **EX
   redesigned; its semantics are kept.
 - Bounded startup retry (`startup-retry.js`).
 - The popup's fixed intrinsic width and its Direct-route confirmation.
+
+## A.10 Runtime-ownership findings (revision 2)
+
+| # | Finding | Evidence | Class | Resolution |
+|---|---|---|---|---|
+| 44 | PCMS Core lives in the dashboard page. Closing it stops timers, scans, reconciliation and module work. | `app/app.js` `bootPcmsApp()`; `background.js` hosts only PersonaMonkey | COR | ADR-002, P028/P029 |
+| 45 | The production module runtime has no sandbox page in the manifest, no frame factory and no capabilities, and nothing activates modules. Admitted runtime modules cannot execute. | `extension/manifest.json`; `integration/live-core.js` `createModuleRuntimeBroker({storageBroker,moduleRegistry,recoveryHold})` | COR / EXT | ADR-003, P030/P031 |
+| 46 | The pinned Firefox 153.0b10 predates `sandbox` manifest support (Firefox 154). | `docs/implementation/v1/browser-pin.json`; MDN BCD | COR | P027 pin ≥ 154 |
+| 47 | The Firefox CI job loads only a static page. No packaged-XPI extension test exists, so background or lifecycle guarantees cannot be proven in CI. | `tools/firefox/smoke.mjs` | EXT (testability) | P027 harness |
+| 48 | PersonaMonkey registers its 1-minute alarm listener inside the dynamically imported `background.js`, not synchronously at the top level. MDN says asynchronously added listeners may not restart an event page. | `extension/background.js:1352`; `lib/recovery-bootstrap.js` dynamic import | COR-risk | Record pinned-build behaviour in P027. PCMS listeners register synchronously from the static entry (P028). |

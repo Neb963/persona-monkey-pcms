@@ -9,25 +9,30 @@ shell or editing unrelated Core files.
 Non-goals:
 
 - Generic form or layout engine. No JSON-schema-to-UI renderer.
-- Sandboxed modules touching the privileged DOM.
+- Any module (built-in or runtime) touching dashboard DOM outside its own page container or frame.
+- Raw browser, PersonaMonkey or network APIs for runtime modules. Browser/page automation stays PersonaMonkey-owned.
 - Core owning or interpreting module business rules (cohort policy, deployment state machine, provisioning steps).
 - A workflow engine (see 05 §H).
 
 ## 2. Two kinds of module, one contract
 
-| | Bundled module (today: Accounts, Deployer, Explorer, Refresher, Statistics, Provisioning) | Installed sandboxed module (future) |
-|---|---|---|
-| Code location | `pcms-modules/<id>/**`, shipped in the XPI | Immutable package in the registry (P008) |
-| Runs in | PCMS Core host page (privileged, reviewed) | Firefox sandbox page, bounded RPC (P004/P011) |
-| Provides contribution | `export function createUiContribution(api)` in `pcms-modules/<id>/ui.js` | `describeUi()` / `invokeUi()` controller methods over existing RPC |
-| Custom page rendering | **Allowed**: `renderPage(container, api)` using Core UI primitives | **Not allowed**. Declarative list/detail only (§5) |
-| Trust boundary | Same as the composition root (code review) | Authority envelope plus Core validation of every returned value |
+Both kinds of module are first-class product modules (ADR-003). Both run in the **background Core**, and both
+contribute to dashboards that are pure UI clients (ADR-002).
 
-Both kinds return the same descriptor shape, which Core validates with the same exact-keys/bounded style used
-elsewhere in PCMS. Bundled modules get a richer *page*. Everything that shows up outside the module's own page
-(nav, summary, facets, search, conditions, activity, actions) goes through the same narrow data path for both kinds.
-This keeps the shell uniform and makes "a bundled module later becomes installable" a packaging change rather than
-a UI rewrite.
+| | Built-in module (Accounts, Deployer, Explorer, Refresher, Statistics, Provisioning) | Runtime-installed module |
+|---|---|---|
+| Code location | `pcms-modules/<id>/**`, shipped in the XPI | Immutable package admitted through PCMS (P008), never compiled into the XPI |
+| Business logic runs in | Background Core, in process (privileged, reviewed) | Sandbox controller frame in the background page; bounded capability RPC (P004/P011/ADR-003) |
+| Lifecycle | Ships with the extension | Live install / update / disable / enable / rollback / remove / purge, with no reload (P031) |
+| Background / scheduled work | Declared schedules via Core timers | Same, via `module.timers.ensure` capability; runs with zero tabs open |
+| Declarative contributions (§4) | `createUiContribution(api)` in `pcms-modules/<id>/ui.js` | Published through `core.ui.publish` (cached by Core) plus on-demand controller methods (`listRows`, `getDetail`, `invokeUi`) |
+| Module page | Trusted `renderPage(container, api)` with Core primitives in the dashboard | **Sandboxed module-UI frame** in the dashboard (`pcms/sandbox/module-ui.html`): package `ui` entry + Core UI kit + primitives, private `MessagePort`, no extension APIs, no network |
+| Risky-action confirmation | Core-rendered | Core-rendered, outside the frame; the frame can only request |
+| Trust boundary | Code review | Authority envelope + approval + Core validation of every value crossing the boundary |
+
+Everything shown outside a module's own page goes through the same narrow, validated data path for both kinds:
+nav, summary, facets, search, conditions, activity and actions. The difference between the kinds is execution
+isolation, not product capability.
 
 ## 3. What Core owns vs what a module owns
 
@@ -72,12 +77,18 @@ All strings are bounded. All arrays are capped. Unknown keys are rejected. Text 
   settings:     SettingSpec[],                                 // §4.8 (≤ 20)
   formatActivity: (event) => ActivityLine | null,              // §4.9
   humanTaskActions: { [taskKind]: actionId },                  // binds HumanTask kinds to actions
-  page?:        PageSpec                                       // §5 (declarative) — or bundled renderPage
+  page?:        PageSpec                                       // §5: declarative views, built-in renderPage, or runtime module-UI frame
 }
 ```
 
 `ctx` is a Core-provided read-only context: `{ asOf, recovery: "NORMAL"|"RECOVERY_HOLD", generation, locale }`. A
 module must not hold references across generations, because Core recreates the contribution after an update.
+
+For **runtime modules** the function-valued members map onto controller methods called over the bounded RPC.
+`summary`, `conditions` and search entries are normally *pushed* with `core.ui.publish` whenever the module's state
+changes. Core stores the latest validated publish durably and serves it to dashboards even while the module is not
+activated, so opening the dashboard does not wake every module. `facets`, `listRows`, `getDetail` and `invoke`
+are pulled on demand and lazily activate the module (ADR-003 §3).
 
 ### 4.1 Status token
 
@@ -200,14 +211,15 @@ There are six field kinds. A new kind is added only when a second real consumer 
 | `entity` | Core EntityPicker filtered to `account` / `generator` / `persona` | EntityRef id |
 | `file` | file picker (bounded bytes, accepted types), read by Core, passed as text | string |
 
-No conditional fields, no nesting, no layouts. If an input needs more, a bundled module renders its own page form.
-A sandboxed module splits the input into steps (separate actions).
+No conditional fields, no nesting, no layouts. If an input needs more, the module renders it on its own page: a
+built-in module through `renderPage`, a runtime module inside its module-UI frame. The frame then submits through a
+declared action, so Core still validates and confirms it.
 
 ### 4.8 Settings
 
 ```js
 SettingSpec = { key:"scanIntervalMinutes", label:"Check repository every", kind:"integer", min:15, max:240,
-                unit:"minutes", default:30, help:"Only while PCMS is open." }
+                unit:"minutes", default:30, help:"Runs in the background whether or not PCMS is open." }
 ```
 
 The kinds are those of InputSpec except `file`, plus `duration` (rendered as integer + unit). Core persists values in
@@ -225,17 +237,29 @@ diagnostics?: async (ctx) => [{label, value}]   // ≤ 30, shown only in Setting
 
 ## 5. Module pages
 
-- **Bundled:** `renderPage(container, api, route)`, where `api` exposes the Core UI primitives (`table`, `picker`,
-  `statusPill`, `confirm`, `track(action)`, `link(entityRef)`) and the module's own service. The container is a
-  `<section>` that the module owns. The module must not touch other DOM. A boundary test enforces this statically,
-  as P021/P026 tests do today.
-- **Sandboxed:** `page: { views: [ListView | DetailView] }`, rendered by Core.
-  - `ListView = { id, title, columns ≤ 8 (text|status|time|count|entity), rowsFrom:"listRows", rowHref?, actions }`
-    with `listRows(ctx, {cursor, filter})` returning bounded pages.
-  - `DetailView = { id, title, sections: [{title, facts ≤ 12}], actions }` via `getDetail(ctx, id)`.
+- **Declarative views** (any module): `page: { views: [ListView | DetailView] }`, rendered by Core.
+  - `ListView = { id, title, columns ≤ 8 (text|status|time|count|entity), rowsFrom:"listRows", rowHref?, actions }`.
+  - `DetailView = { id, title, sections:[{title, facts ≤ 12}], actions }`.
 
-  This is deliberately as capable as a module card plus a table. Anything richer has to become a bundled module or
-  wait for a proven need.
+  These views suffice for many modules and need no module UI code.
+- **Built-in custom page:** `renderPage(container, api, route)`, running in the dashboard with Core primitives
+  (`table`, `picker`, `statusPill`, `confirm`, `track(action)`, `link(entityRef)`) and the UI-client facade for its
+  own service. It must not touch DOM outside its container. A static boundary test enforces this.
+- **Runtime custom page:** the package's `ui` entry (module manifest v2, additive) runs in a sandboxed iframe
+  (`pcms/sandbox/module-ui.html`) inside the dashboard.
+  - The frame receives:
+    - the module UI source;
+    - the Core UI kit stylesheet and primitives library (same look as built-ins, light/dark aware);
+    - a private `MessagePort`.
+  - It can request:
+    - reads of the module's own projections;
+    - invocation of the module's declared actions;
+    - navigation to `EntityRef`s;
+    - size changes.
+  - Core relays these requests to the background as the module's **UI-scoped** capabilities.
+  - Every `EXTERNAL_MUTATION`, `BINDING`, `DESTRUCTIVE` or `RESOLUTION` action is confirmed in a Core dialog outside
+    the frame.
+  - The frame has no extension APIs, no network and no access to other modules.
 
 ## 6. Lifecycle behaviour
 
@@ -253,6 +277,8 @@ Core computes a *presentation state* for every module from P022 lifecycle + P011
 | Incompatible (`contractVersion` unsupported, or descriptor fails validation) | shown greyed | omitted | "Needs a newer PCMS (contract v2)" or "Module UI is invalid" + Diagnostics | "Incompatible" |
 | Runtime error (summary/facet throws) | shown with ERROR dot | that call shows "unavailable"; others continue | error card + Retry | "Errors (3) · Details" |
 | Recovery hold | shown | shown; mutating actions rendered `HELD` | banner | unchanged |
+| Background context unloaded (normal idle) | shown | served from Core's durable published cache; module activated lazily on demand (ADR-003 §3) | normal | unchanged |
+| Firefox < 154 (runtime modules only) | hidden | omitted | "Requires Firefox 154+" | "Unavailable on this Firefox" |
 
 Other cases:
 
@@ -266,20 +292,19 @@ Other cases:
 
 ## 7. Adding a module: the edit list
 
-**Bundled module:**
+**Runtime module (the normal path for new modules):** build a package (controller, optional `ui` entry, authority
+capabilities), then install it from Settings → Modules or the UI-client install command. There are **no edits to
+the extension, no XPI rebuild and no reload** (ADR-003).
+
+**Built-in module (only for modules that need privileged in-process integration):**
 
 1. `pcms-modules/<id>/**`: service, plus `ui.js` exporting `createUiContribution`.
-2. `extension/pcms/integration/bundled-modules.js` (new in U3): one entry `{ moduleId, factory, uiContribution,
-   dependsOn }`. This replaces the hard-coded `FACTORY_NAMES` and static imports for UI purposes. Service wiring for
-   modules that need other modules' services remains explicit in `composition.js`. That explicitness is intentional
-   because cross-module dependencies are reviewed.
+2. `extension/pcms/integration/bundled-modules.js` (P033): one entry `{ moduleId, factory, uiContribution,
+   dependsOn }`. This replaces the hard-coded `FACTORY_NAMES`. Cross-module service wiring stays explicit in
+   `composition.js`.
 3. Tests in `tests/pcms/<phase>/`.
 
-No changes are needed in `app.js`, `index.html`, `deep-links.js`, the Overview, Attention, Search or Activity views.
-
-**Sandboxed module:** an archive with a controller that implements `describeUi`, plus whatever `listRows`,
-`getDetail`, `invokeUi`, `summary`, `facet`, `conditions` and `search` methods its descriptor declares. There are no
-Core edits.
+Neither path edits `app.js`, `index.html`, the route grammar, Overview, Attention, Search or Activity.
 
 ## 8. Initial contribution plan for existing modules
 
@@ -292,5 +317,5 @@ Core edits.
 | Statistics | ✓ | ✓ | — | generator, account | — | `export` (READ) | — |
 | Provisioning | ✓ | ✓ | — | account | waiting for human, uncertain | `start`, `continue`, `cancel`, `reconcile` | `provisioning.captcha` → `continue` |
 
-Accounts uses Core-owned pages because Account is a Core shared identity (`01-system-architecture.md`). It still
+Initial modules stay built-in. A future runtime module (for example a workflow or reporting module) uses the same table. Accounts uses Core-owned pages because Account is a Core shared identity (`01-system-architecture.md`). It still
 contributes conditions and actions through the same contract, which keeps its actions available to future workflows.

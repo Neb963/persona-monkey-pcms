@@ -15,8 +15,9 @@ PersonaMonkey-PCMS Firefox Developer Edition extension
 |   +-- control leases
 |   +-- existing persistence / compatibility
 |
-+-- PCMS subsystem
-    +-- Persona Broker
++-- PCMS subsystem  (Core in the background event page; ADR-002)
+    +-- PCMS background entry / ensurePcmsCore()
+    +-- Persona Broker (in-process internal endpoint, Integration-v1 semantics)
     +-- module registry / package store
     +-- sandbox runtime broker
     +-- separate PCMS IndexedDB
@@ -27,8 +28,9 @@ PersonaMonkey-PCMS Firefox Developer Edition extension
     +-- timers/services
     +-- minimal Audit Journal
     +-- recovery / backup
-    +-- PCMS UI shell
+    +-- module supervisor + sandbox controller frames (ADR-003)
     +-- installable modules
+    +-- UI clients: PCMS dashboard tabs, popup (no Core instance)
 ```
 
 ## Boundary rule
@@ -74,3 +76,13 @@ Both participate in mutating browser operations; neither substitutes for the oth
 ## Recovery
 
 Restore activates PCMS in `RECOVERY_HOLD`. Module generations, unresolved RemoteOps, Persona bindings and provider capabilities reconcile before mutation is re-enabled. Missed timers are not replayed as an unbounded backlog.
+
+## Runtime host (ADR-002)
+
+PCMS Core is created once per extension background context by an idempotent initializer that waits for PersonaMonkey's fail-closed bootstrap. Firefox MV3 background contexts are event pages: they unload when idle and are woken by events. All correctness state is durable; alarms only wake the background and are recreated from durable timers. Dashboards and the popup are clients that communicate through validated `PCMS_UI_REQUEST` messages and a `storage.session` change signal; they never construct Core services.
+
+Cold start (browser/extension start) runs the full startup recovery; a warm wake within the same browser session treats any `DISPATCHING` operation as interrupted (`UNCERTAIN` + `RECOVERY_HOLD`) without re-holding for operations that were already unresolved while the previous context operated normally.
+
+## Runtime modules in production (ADR-003)
+
+Runtime-installed module controllers run in the declared Firefox sandbox page (Firefox ≥ 154), framed inside the background page, behind the accepted bounded RPC and generation fencing. Lifecycle transitions run live without extension reload; execution contexts are reconstructed lazily after unload/restart.

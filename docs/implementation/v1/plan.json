@@ -7,8 +7,8 @@
     "claimAcquisition": "serialized",
     "implementation": "parallel when mechanically non-conflicting",
     "finalLivePhases": [
-      "P025",
-      "P026"
+      "P043",
+      "P044"
     ]
   },
   "statuses": [
@@ -1119,6 +1119,826 @@
         "A026-01",
         "A026-02",
         "A026-03"
+      ]
+    },
+    {
+      "id": "P027",
+      "title": "Packaged-XPI Firefox harness + browser pin >=154",
+      "status": "READY",
+      "dependsOn": [
+        "P026"
+      ],
+      "mergeWave": 11,
+      "ownership": {
+        "writePaths": [
+          "docs/implementation/v1/browser-pin.json",
+          "tools/firefox/**",
+          "tests/firefox/**",
+          ".github/workflows/firefox.yml",
+          "package.json",
+          "tests/pcms/p027/**",
+          "docs/evidence/P027/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [
+          {
+            "key": "firefox-browser-pin",
+            "mode": "exclusive"
+          },
+          {
+            "key": "ci-workflows",
+            "mode": "exclusive"
+          }
+        ],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T027.1",
+          "title": "T027.1 Pin exact Firefox Developer Edition build >=154"
+        },
+        {
+          "id": "T027.2",
+          "title": "T027.2 Packaged-XPI install/drive harness (tabs, idle unload, profile restart)"
+        },
+        {
+          "id": "T027.3",
+          "title": "T027.3 Baseline packaged regression and pinned-build platform facts"
+        }
+      ],
+      "acceptanceIds": [
+        "A027-01",
+        "A027-02",
+        "A027-03"
+      ]
+    },
+    {
+      "id": "P028",
+      "title": "Background-authoritative PCMS Core + UI client protocol",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P027"
+      ],
+      "mergeWave": 12,
+      "ownership": {
+        "writePaths": [
+          "extension/lib/recovery-bootstrap.js",
+          "extension/background.js",
+          "docs/upstream/source/extension/lib/recovery-bootstrap.js",
+          "docs/upstream/source/extension/background.js",
+          "docs/upstream/import-manifest.json",
+          "tests/upstream/import-integrity.test.mjs",
+          "extension/lib/pcms-internal-broker-endpoint.js",
+          "extension/pcms/background/**",
+          "extension/pcms/integration/**",
+          "extension/pcms/platform/**",
+          "extension/pcms/app/**",
+          "tests/pcms/p028/**",
+          "docs/evidence/P028/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [
+          "pcms.ui-client/v1",
+          "pcms.persona-broker.internal-endpoint/v1"
+        ],
+        "resources": [
+          {
+            "key": "pcms-background-entry",
+            "mode": "exclusive"
+          }
+        ],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T028.1",
+          "title": "T028.1 Background entry, PersonaMonkey-ready ordering, idempotent Core, in-process broker endpoint"
+        },
+        {
+          "id": "T028.2",
+          "title": "T028.2 Cold-start/warm-wake recovery and durable HumanTask handoff for assisted provider steps"
+        },
+        {
+          "id": "T028.3",
+          "title": "T028.3 UI client protocol, revision signal, status summary; dashboard becomes a client"
+        }
+      ],
+      "acceptanceIds": [
+        "A028-01",
+        "A028-02",
+        "A028-03"
+      ]
+    },
+    {
+      "id": "P029",
+      "title": "Durable PCMS timers woken by extension alarms",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P028"
+      ],
+      "mergeWave": 13,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/services/**",
+          "extension/pcms/background/alarms/**",
+          "tests/pcms/p029/**",
+          "docs/evidence/P029/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [
+          "pcms.timers.ensure/v1"
+        ],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T029.1",
+          "title": "T029.1 Alarm mapping (next-due + heartbeat) and cold-start recreation"
+        },
+        {
+          "id": "T029.2",
+          "title": "T029.2 Due pass, interrupted-timer recovery, declared schedules (timers.ensure), bounded work steps"
+        },
+        {
+          "id": "T029.3",
+          "title": "T029.3 Background continuity proof with zero PCMS tabs and forced unloads"
+        }
+      ],
+      "acceptanceIds": [
+        "A029-01",
+        "A029-02",
+        "A029-03"
+      ]
+    },
+    {
+      "id": "P030",
+      "title": "Production sandbox pages + background-hosted controller frames",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P028"
+      ],
+      "mergeWave": 13,
+      "ownership": {
+        "writePaths": [
+          "extension/manifest.json",
+          "docs/upstream/source/extension/manifest.json",
+          "docs/upstream/import-manifest.json",
+          "tests/upstream/import-integrity.test.mjs",
+          "extension/pcms/sandbox/**",
+          "extension/pcms/runtime/**",
+          "extension/pcms/background/sandbox/**",
+          "tests/pcms/p030/**",
+          "docs/evidence/P030/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [
+          {
+            "key": "extension-manifest",
+            "mode": "exclusive"
+          }
+        ],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T030.1",
+          "title": "T030.1 Declare sandbox pages/CSP in the production manifest; browser-floor detection"
+        },
+        {
+          "id": "T030.2",
+          "title": "T030.2 Background frame factory and frame lifecycle bound to generations"
+        },
+        {
+          "id": "T030.3",
+          "title": "T030.3 Packaged proof that runtime-supplied controller source executes in a real sandbox page"
+        }
+      ],
+      "acceptanceIds": [
+        "A030-01",
+        "A030-02",
+        "A030-03"
+      ]
+    },
+    {
+      "id": "P031",
+      "title": "Runtime module lifecycle live in production",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P029",
+        "P030"
+      ],
+      "mergeWave": 14,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/modules/**",
+          "extension/pcms/runtime/**",
+          "extension/pcms/background/modules/**",
+          "extension/pcms/integration/**",
+          "tests/fixtures/modules/**",
+          "tests/pcms/p031/**",
+          "docs/evidence/P031/**"
+        ],
+        "contractReads": [
+          "pcms.timers.ensure/v1",
+          "pcms.ui-client/v1"
+        ],
+        "contractWrites": [
+          "pcms.module-capabilities/v1"
+        ],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T031.1",
+          "title": "T031.1 Install/approve/admit/activate via UI client commands; module supervisor with lazy rehydration"
+        },
+        {
+          "id": "T031.2",
+          "title": "T031.2 Capability set v1 (module storage, timers, attention, audit, read projections, provider via ProviderGate)"
+        },
+        {
+          "id": "T031.3",
+          "title": "T031.3 Live update/disable/enable/rollback/remove/purge and packaged end-to-end proof"
+        }
+      ],
+      "acceptanceIds": [
+        "A031-01",
+        "A031-02",
+        "A031-03"
+      ]
+    },
+    {
+      "id": "P032",
+      "title": "PCMS dashboard shell v2 as UI client",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P028"
+      ],
+      "mergeWave": 13,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/app/**",
+          "tests/pcms/p032/**",
+          "docs/evidence/P032/**"
+        ],
+        "contractReads": [
+          "pcms.ui-client/v1"
+        ],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T032.1",
+          "title": "T032.1 Shell, tokens, primitives, router v2 with legacy routes"
+        },
+        {
+          "id": "T032.2",
+          "title": "T032.2 Core status, durable receipts and Attention v2 over durable HumanTasks"
+        },
+        {
+          "id": "T032.3",
+          "title": "T032.3 Diagnostics page and multi-tab behaviour"
+        }
+      ],
+      "acceptanceIds": [
+        "A032-01",
+        "A032-02",
+        "A032-03"
+      ]
+    },
+    {
+      "id": "P033",
+      "title": "Module UI contribution contract v1 for built-in and runtime modules",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P031",
+        "P032"
+      ],
+      "mergeWave": 15,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/app/**",
+          "extension/pcms/integration/**",
+          "extension/pcms/modules/**",
+          "pcms-modules/p018/**",
+          "tests/pcms/p033/**",
+          "docs/evidence/P033/**"
+        ],
+        "contractReads": [
+          "pcms.module-capabilities/v1"
+        ],
+        "contractWrites": [
+          "pcms.ui-contribution/v1",
+          "pcms.module-manifest/v2"
+        ],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T033.1",
+          "title": "T033.1 Contribution validator and Core merge points (nav, overview, search, conditions, settings, activity)"
+        },
+        {
+          "id": "T033.2",
+          "title": "T033.2 Runtime-module contributions via core.ui.publish and the sandboxed module page surface"
+        },
+        {
+          "id": "T033.3",
+          "title": "T033.3 Statistics pilot and fixture runtime-module UI proof, including lifecycle presentation states"
+        }
+      ],
+      "acceptanceIds": [
+        "A033-01",
+        "A033-02",
+        "A033-03"
+      ]
+    },
+    {
+      "id": "P034",
+      "title": "Accounts UX with Persona/account pickers",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P032"
+      ],
+      "mergeWave": 14,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/app/views/accounts/**",
+          "extension/pcms/app/ui/picker/**",
+          "pcms-modules/p014/**",
+          "tests/pcms/p034/**",
+          "docs/evidence/P034/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T034.1",
+          "title": "T034.1 Accounts table and detail"
+        },
+        {
+          "id": "T034.2",
+          "title": "T034.2 Add-account dialog with generated IDs and shared EntityPicker"
+        },
+        {
+          "id": "T034.3",
+          "title": "T034.3 Guarded rebind and visible-row route/session state"
+        }
+      ],
+      "acceptanceIds": [
+        "A034-01",
+        "A034-02",
+        "A034-03"
+      ]
+    },
+    {
+      "id": "P035",
+      "title": "Toolbar popup PCMS status block",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P028",
+        "P032"
+      ],
+      "mergeWave": 14,
+      "ownership": {
+        "writePaths": [
+          "extension/popup/popup.html",
+          "extension/popup/popup.css",
+          "extension/popup/popup.js",
+          "docs/upstream/source/extension/popup/popup.html",
+          "docs/upstream/source/extension/popup/popup.css",
+          "docs/upstream/source/extension/popup/popup.js",
+          "docs/upstream/import-manifest.json",
+          "tests/upstream/import-integrity.test.mjs",
+          "tests/pcms/p035/**",
+          "docs/evidence/P035/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T035.1",
+          "title": "T035.1 Read the non-secret storage.session status summary"
+        },
+        {
+          "id": "T035.2",
+          "title": "T035.2 PCMS line and account-for-active-Persona deep link"
+        },
+        {
+          "id": "T035.3",
+          "title": "T035.3 ESR sizing regression extension"
+        }
+      ],
+      "acceptanceIds": [
+        "A035-01",
+        "A035-02",
+        "A035-03"
+      ]
+    },
+    {
+      "id": "P036",
+      "title": "Deployer v2 domain, Perchance contract v2 and Generators views",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P033",
+        "P034"
+      ],
+      "mergeWave": 16,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p015/**",
+          "extension/pcms/providers/perchance/**",
+          "extension/pcms/integration/**",
+          "extension/pcms/app/views/generators/**",
+          "tests/pcms/p036/**",
+          "docs/evidence/P036/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [
+          "pcms.perchance.driver/v2",
+          "pcms.deployer.state/v2",
+          "pcms.generator-index/v1"
+        ],
+        "resources": [],
+        "migrationSlots": [
+          "MIG-P036-deployer-state-v2"
+        ]
+      },
+      "tasks": [
+        {
+          "id": "T036.1",
+          "title": "T036.1 Deployer state v2 migration and status derivation"
+        },
+        {
+          "id": "T036.2",
+          "title": "T036.2 Perchance driver v2 (code/HTML/thumbnail/listing) with GeneratorListing adapter mapping and emulator"
+        },
+        {
+          "id": "T036.3",
+          "title": "T036.3 Generator index, Generators list/detail and assisted manual deploy"
+        }
+      ],
+      "acceptanceIds": [
+        "A036-01",
+        "A036-02",
+        "A036-03"
+      ]
+    },
+    {
+      "id": "P037",
+      "title": "Generator repository provider, manual scan and assisted repository deployments",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P036"
+      ],
+      "mergeWave": 17,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/providers/repository/**",
+          "pcms-modules/p015/**",
+          "extension/pcms/integration/**",
+          "extension/pcms/app/views/settings/connections/**",
+          "tests/pcms/p037/**",
+          "docs/evidence/P037/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [
+          "pcms.repository-provider/v1",
+          "pcms.generator-repository/v1"
+        ],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T037.1",
+          "title": "T037.1 Repository provider boundary, GitHub implementation and fixture provider"
+        },
+        {
+          "id": "T037.2",
+          "title": "T037.2 Repository format validation, payload identity, release ledger and snapshot"
+        },
+        {
+          "id": "T037.3",
+          "title": "T037.3 Snapshot application to Deployer, account-folder linking, adoption and Deployer page"
+        }
+      ],
+      "acceptanceIds": [
+        "A037-01",
+        "A037-02",
+        "A037-03"
+      ]
+    },
+    {
+      "id": "P038",
+      "title": "Scheduled background repository synchronization",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P037",
+        "P029"
+      ],
+      "mergeWave": 18,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p015/**",
+          "tests/pcms/p038/**",
+          "docs/evidence/P038/**"
+        ],
+        "contractReads": [
+          "pcms.timers.ensure/v1"
+        ],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T038.1",
+          "title": "T038.1 Deployer repository-sync service on declared schedules"
+        },
+        {
+          "id": "T038.2",
+          "title": "T038.2 Cadence, backoff, rate-limit and offline handling"
+        },
+        {
+          "id": "T038.3",
+          "title": "T038.3 Interrupted-scan recovery and packaged continuity proof"
+        }
+      ],
+      "acceptanceIds": [
+        "A038-01",
+        "A038-02",
+        "A038-03"
+      ]
+    },
+    {
+      "id": "P039",
+      "title": "Perchance observation, verification and drift (capability-gated)",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P038"
+      ],
+      "mergeWave": 19,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/providers/perchance/**",
+          "pcms-modules/p015/**",
+          "extension/pcms/integration/**",
+          "extension/pcms/app/views/generators/**",
+          "tests/pcms/p039/**",
+          "docs/evidence/P039/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [
+          "pcms.perchance.driver/v2"
+        ],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T039.1",
+          "title": "T039.1 generator.observe contract and PersonaMonkey execution-artifact read driver (fixture page)"
+        },
+        {
+          "id": "T039.2",
+          "title": "T039.2 Post-apply baseline, bounded background verification sweep"
+        },
+        {
+          "id": "T039.3",
+          "title": "T039.3 Drift detection, comparison and operator choices"
+        }
+      ],
+      "acceptanceIds": [
+        "A039-01",
+        "A039-02",
+        "A039-03"
+      ]
+    },
+    {
+      "id": "P040",
+      "title": "Refresher, Explorer and Provisioning background services and UI migration",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P033",
+        "P036",
+        "P029"
+      ],
+      "mergeWave": 17,
+      "ownership": {
+        "writePaths": [
+          "pcms-modules/p016/**",
+          "pcms-modules/p017/**",
+          "pcms-modules/p019/**",
+          "extension/pcms/integration/**",
+          "extension/pcms/app/**",
+          "tests/pcms/p040/**",
+          "docs/evidence/P040/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": [
+          "MIG-P040-refresher-state-v2"
+        ]
+      },
+      "tasks": [
+        {
+          "id": "T040.1",
+          "title": "T040.1 Refresher background schedules and content from Deployer confirmed release"
+        },
+        {
+          "id": "T040.2",
+          "title": "T040.2 Explorer and Provisioning contribution UIs with pickers and SecretRef creation"
+        },
+        {
+          "id": "T040.3",
+          "title": "T040.3 Removal of P026 legacy operator forms with superseding assertions"
+        }
+      ],
+      "acceptanceIds": [
+        "A040-01",
+        "A040-02",
+        "A040-03"
+      ]
+    },
+    {
+      "id": "P041",
+      "title": "Backup/restore and module management UX",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P033",
+        "P031"
+      ],
+      "mergeWave": 16,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/app/views/settings/**",
+          "extension/pcms/recovery/**",
+          "tests/pcms/p041/**",
+          "docs/evidence/P041/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T041.1",
+          "title": "T041.1 File-based backup and previewed restore with typed confirmation"
+        },
+        {
+          "id": "T041.2",
+          "title": "T041.2 Recovery checklist with per-item reconciliation"
+        },
+        {
+          "id": "T041.3",
+          "title": "T041.3 Modules page driving live install/review/update/rollback/remove/purge"
+        }
+      ],
+      "acceptanceIds": [
+        "A041-01",
+        "A041-02",
+        "A041-03"
+      ]
+    },
+    {
+      "id": "P042",
+      "title": "Unattended Perchance automation via PersonaMonkey execution artifacts (gated)",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P039"
+      ],
+      "mergeWave": 20,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/providers/perchance/**",
+          "extension/pcms/integration/**",
+          "pcms-modules/p015/**",
+          "tests/pcms/p042/**",
+          "docs/evidence/P042/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T042.1",
+          "title": "T042.1 Unattended generator.update v2 (and optional create) as PersonaMonkey execution artifacts under control lease"
+        },
+        {
+          "id": "T042.2",
+          "title": "T042.2 Automatic-mode gates, eligibility and bounded serial background pass"
+        },
+        {
+          "id": "T042.3",
+          "title": "T042.3 Emulator/FDE fixture end-to-end deploy-verify proof"
+        }
+      ],
+      "acceptanceIds": [
+        "A042-01",
+        "A042-02",
+        "A042-03"
+      ]
+    },
+    {
+      "id": "P043",
+      "title": "Live acceptance 3 — background continuity, runtime modules, repository/provider compatibility",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P035",
+        "P038",
+        "P040",
+        "P041",
+        "P042"
+      ],
+      "mergeWave": 21,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "pcms-modules/**",
+          "tests/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T043.1",
+          "title": "T043.1 Operator-installed background continuity"
+        },
+        {
+          "id": "T043.2",
+          "title": "T043.2 Live runtime-module lifecycle without reload"
+        },
+        {
+          "id": "T043.3",
+          "title": "T043.3 Real repository and Perchance read/listing compatibility capture"
+        }
+      ],
+      "acceptanceIds": [
+        "A043-01",
+        "A043-02",
+        "A043-03"
+      ]
+    },
+    {
+      "id": "P044",
+      "title": "Live acceptance 4 — representative mutations, drift, unattended operation, recovery, final human acceptance",
+      "status": "BLOCKED",
+      "dependsOn": [
+        "P043"
+      ],
+      "mergeWave": 22,
+      "ownership": {
+        "writePaths": [
+          "extension/pcms/**",
+          "pcms-modules/**",
+          "tests/**",
+          "docs/evidence/**"
+        ],
+        "contractReads": [],
+        "contractWrites": [],
+        "resources": [],
+        "migrationSlots": []
+      },
+      "tasks": [
+        {
+          "id": "T044.1",
+          "title": "T044.1 Assisted and unattended deployments verified on real Perchance"
+        },
+        {
+          "id": "T044.2",
+          "title": "T044.2 Induced drift, uncertain reconciliation, restore/hold/release"
+        },
+        {
+          "id": "T044.3",
+          "title": "T044.3 Final human acceptance"
+        }
+      ],
+      "acceptanceIds": [
+        "A044-01",
+        "A044-02",
+        "A044-03"
       ]
     }
   ]

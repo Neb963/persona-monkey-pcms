@@ -128,7 +128,7 @@ Page-level loading states:
 |---|---|
 | Loading (first) | Skeleton rows in the target region only. The shell and nav render immediately. No full-page spinner. |
 | Refreshing | Data stays visible and the region header shows a small "Refreshing…" marker. |
-| Reconnecting | Header connection pill: `● Connected` → `◌ Reconnecting (attempt 2)…` → `✕ Disconnected · Retry`. Mutating buttons are disabled with a tooltip. Read views stay visible and marked stale. |
+| Core status (ADR-002) | The header pill reflects the **background** Core, not the tab: `● Running`; `◌ Starting (waiting for PersonaMonkey)…`; `✕ Unavailable · Details`. A tab never "hosts" PCMS, so there is no per-tab disconnect. A request that wakes an idle background simply takes a moment, and the region shows Refreshing. Mutating buttons are disabled only while Core is Starting or Unavailable. |
 | Empty | One sentence explaining why it is empty, plus the primary next step ("No accounts yet. **Add account**"). |
 | Error (region) | Inline error card in that region with plain wording, a Retry button and "Technical details" (code). Other regions keep working. |
 | Unavailable (module) | The module page shows the reason ("Disabled in Settings → Modules", "Failed to start after update; rolled back to 1.2.0", "Needs a newer PCMS"). Its facets are omitted elsewhere. |
@@ -140,16 +140,18 @@ Every action goes through Core's **ActionTracker**. A receipt names:
 
 - the subject ("fantasy-names · Alice");
 - the verb ("Deploying 1.4.0");
-- the phase ("Waiting for you in the Perchance tab" / "Verifying" / "Done");
+- the phase ("Waiting for your confirmation" / "Verifying" / "Done");
 - for uncertain or failed outcomes, a link to the object and the next action.
 
 Receipts appear in the **action tray** and inline on the subject's row or page. Successful receipts fade after 6 s.
 Failures and uncertain outcomes stay until the operator dismisses them or a later receipt for the same subject
-replaces them. Unacknowledged failures also appear in Attention as Core conditions, so a reload does not lose them.
-The tray is session-scoped and the Audit Journal stays the durable record.
+replaces them. Receipts are **durable Core records** (ADR-002 §8), so every open tab shows the same progress, and
+closing all tabs and reopening later shows the same outcome. Unacknowledged failures also appear in Attention as
+Core conditions.
 
-The operator dialog becomes a **queue**. If a second assisted action is requested, its receipt shows "Queued —
-waiting for the current Perchance step" instead of throwing.
+There is no in-tab operator dialog. Every assisted provider step is a **durable HumanTask handoff** (ADR-002 §9).
+Any number can be pending at once. Each one appears in Attention, on its subject page and in the popup count. It
+can be answered from any tab, at any time, including after every tab was closed.
 
 ## 4. Confirmations (§17)
 
@@ -320,7 +322,7 @@ Statistics Deployments 3 · Refreshes 0
 **Compare** opens a side-by-side or unified diff of the code and HTML panels (repository release vs current
 Perchance content). The diff is in memory only and never persisted. For thumbnails the dialog shows both images.
 
-**Reconcile dialog** (from "Check" on an uncertain item; replaces audit #39):
+**Confirm / reconcile page** (the HumanTask page for an assisted handoff or an uncertain outcome; opened from Attention, the subject page or the popup; replaces audit #39):
 
 ```
 Did the save of fantasy-names 1.4.0 reach Perchance?
@@ -344,7 +346,7 @@ Tabs: **Repository** (default) · Ready to deploy · History · Settings.
 Deployer                                                     Mode: [Assisted ▾]  [Pause]
 Repository  github · <owner>/<repo> · branch main · folder /              [Open ↗]
 ✓ Last checked 12:04 (commit 9f3c2a1, "Update tavern-names to 1.1.0")      [Check now]
-Next check ≈ 12:34 (every 30 min while PCMS is open)
+Next check ≈ 12:34 (every 30 min, in the background — tabs need not be open)
 Found 412 generators in 51 account folders
   ✓ 398 in sync   ⚠ 9 updates ready   ✚ 2 new   ⛔ 3 blocked   ▢ 1 no longer in repository
 Problems (4)
@@ -462,7 +464,8 @@ Modules
 │ Name-tools    │ 0.3.1   │ Installed │ ⚠ Update 0.4.0 needs approval│ [Review update]       │
 │ Old-reporter  │ 1.0.0   │ Installed │ ✕ Failed to start → rolled back to 0.9.2 │ [Details] │
 └───────────────┴─────────┴───────────┴──────────────────────────────┴───────────────────────┘
-[Install from file…]   (shown only when the sandbox host is wired — see 05 U11)
+[Install from file…]   (installs and starts immediately — no rebuild, reload or restart; ADR-003)
+On Firefox < 154: "Runtime modules require Firefox 154 or later" and installed modules show Unavailable.
 ```
 
 - **Review update / install** dialog: name, version, publisher note, *capabilities in plain language*. New
@@ -470,7 +473,7 @@ Modules
 - Remove: `EXTERNAL`-style confirmation listing what stays (data kept for restore, rollback packages retained).
 - Purge: `DESTRUCTIVE`. Type the module name. The dialog says that data and retained packages are deleted
   permanently.
-- Built-in modules have no Remove or Purge. "Disable" for built-ins is not yet scheduled (a later phase after U11), with
+- Built-in modules have no Remove or Purge. "Disable" for built-ins is not scheduled in P027–P044; if it is added later, it needs
   dependency checks: Accounts is required, and Deployer, Refresher and Explorer depend on it.
 
 ### 5.10 Settings → Diagnostics (§18)
@@ -506,10 +509,17 @@ units, so the ESR fix is preserved.
 └─────────────────────────────────────────────────┘
 ```
 
-- **Data source:** while running, the Core host publishes a small *non-secret* status summary to
+- **Data source:** the background Core publishes a small *non-secret* status summary to
   `browser.storage.session` (key `pcms.status.v1`). It contains counts, recovery state, `asOf`, and the
   `personaUid → {accountId, displayName}` map. The popup only reads it and never starts a Core.
-- **No PCMS host running:** the block shows "PCMS isn't open — automatic checks paused" and offers [Open PCMS].
+- **Core states:**
+  - Running.
+  - Idle: the background is unloaded between events; the last summary is shown "as of" its time, and work
+    continues on schedule.
+  - Unavailable: PersonaMonkey bootstrap or Core initialisation failed. The block then shows "PCMS unavailable —
+    open for details".
+
+  There is no "PCMS isn't open" state, because PCMS does not depend on its tab.
 - **Recovery hold** replaces the attention line: "⏸ PCMS on hold after restore".
 - "Open account in PCMS" focuses the existing PCMS tab, or opens one, at `#/accounts/<id>`.
 - Height budget is ≤ 560 px. Long names ellipsize. There are no tables or lists in the popup.
@@ -519,10 +529,10 @@ units, so the ESR fix is preserved.
 
 | Live lesson | Design response |
 |---|---|
-| ESR vs Developer Edition popup sizing differ | Fixed 370 px body kept. No `vw`/`min()`. Height budget. Regression test extended to the new block (U4). |
-| Opening PCMS before Integration is ready raced | Shell renders immediately. Connection pill with attempt count and Retry. Mutations are disabled until connected. Bounded retry kept (U1). |
+| ESR vs Developer Edition popup sizing differ | Fixed 370 px body kept. No `vw`/`min()`. Height budget. Regression test extended to the new block (P035). |
+| Opening PCMS before Integration is ready raced | Shell renders immediately. Connection pill with attempt count and Retry. Core initialisation waits for PersonaMonkey's fail-closed bootstrap in the background (ADR-002 §2), so a dashboard opened early only shows "Starting" (P028). |
 | Account creation looked like a dead button | Feedback in the dialog and the per-subject tray. New row highlighted. No single shared status line. |
 | Persona selection beats typing `personaUid` | One shared EntityPicker for Persona, Account and Generator, used in every form. |
 | Typed Account/generator IDs are poor primary UX | IDs are generated or picked. Typed IDs remain only in Settings → Diagnostics tools. |
-| Live mutations need obvious reconciliation state | `UNCERTAIN` is top priority in lists, Attention, Overview and popup, with a dedicated reconcile dialog. |
+| Live mutations need obvious reconciliation state | `UNCERTAIN` is top priority in lists, Attention, Overview and popup, with a durable confirm/reconcile HumanTask page. |
 | Marionette triggers Cloudflare independently | Live acceptance stays manual, without Marionette. CI uses the emulator and FDE fixtures. Provider probes are rate-bounded, and a challenge becomes a single HumanTask, not retries. |
