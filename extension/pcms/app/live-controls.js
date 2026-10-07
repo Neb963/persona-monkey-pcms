@@ -9,6 +9,8 @@ function setStatus(documentRef,message,state=""){
 }
 function errorMessage(error){return error?.code?error.code+": "+error.message:(error?.message||String(error));}
 
+function personaOptionLabel(persona){return persona.name+" · "+persona.cookieStoreId;}
+
 export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,refresh=async()=>{}}={}){
   if(!runtime||!documentRef) throw new TypeError("Live controls require runtime and document");
   const cleanups=[];
@@ -21,6 +23,9 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
     const node=documentRef.getElementById(id);
     on(node,"submit",async(event)=>{
       event.preventDefault();
+      const submit=node?.querySelector?.('button[type="submit"]');
+      if(submit)submit.disabled=true;
+      node?.setAttribute?.("aria-busy","true");
       setStatus(documentRef,"Working…");
       try{
         const result=await run(node,event);
@@ -29,9 +34,39 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
       }catch(error){
         console.error(error);
         setStatus(documentRef,errorMessage(error),"error");
+      }finally{
+        node?.removeAttribute?.("aria-busy");
+        if(submit)submit.disabled=false;
       }
     });
   }
+
+  function renderPersonaSelect(select,personas){
+    if(!select)return;
+    const previous=select.value;
+    select.textContent="";
+    const prompt=documentRef.createElement("option");
+    prompt.value="";
+    prompt.textContent=personas.length?"Choose a managed Persona":"No managed Personas available";
+    select.appendChild(prompt);
+    for(const persona of personas){
+      const option=documentRef.createElement("option");
+      option.value=persona.personaUid;
+      option.textContent=personaOptionLabel(persona);
+      select.appendChild(option);
+    }
+    if(personas.some((persona)=>persona.personaUid===previous))select.value=previous;
+  }
+
+  async function loadPersonaOptions(){
+    if(!runtime.personaDirectory||typeof runtime.personaDirectory.list!=="function")throw new Error("Managed Persona directory is unavailable");
+    const personas=await runtime.personaDirectory.list();
+    renderPersonaSelect(documentRef.getElementById("accountCreatePersonaUid"),personas);
+    renderPersonaSelect(documentRef.getElementById("accountRebindPersonaUid"),personas);
+    return personas;
+  }
+
+  void loadPersonaOptions().catch((error)=>setStatus(documentRef,errorMessage(error),"error"));
 
   form("accountCreateForm",async(node)=>{
     const listed=await runtime.accounts.listAccounts();
