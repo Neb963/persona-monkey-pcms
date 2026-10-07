@@ -20,6 +20,7 @@
     </header>
 
     <nav id="primaryNav" class="primary-nav" aria-label="PCMS"></nav>
+    <p id="liveActionStatus" class="module-status global-action-status" role="status" aria-live="polite">Live controls ready.</p>
 
     <main class="content">
       <section id="viewOverview" aria-labelledby="overviewHeading">
@@ -56,7 +57,6 @@
             <form id="restoreApplyForm"><button type="submit">Apply restore → RECOVERY_HOLD</button></form>
             <form id="recoveryReleaseForm"><button type="submit">Reconcile & release hold</button></form>
           </div>
-          <p id="liveActionStatus" class="module-status" role="status" aria-live="polite">Live mutations are ready for operator input.</p>
         </section>
       </section>
 
@@ -153,13 +153,13 @@
             <h3>Bind account</h3>
             <label>Account ID<input name="accountId" required></label>
             <label>Display name<input name="displayName" required></label>
-            <label>Persona UID<input name="personaUid" required></label>
+            <label>Persona<select id="accountCreatePersonaUid" name="personaUid" required><option value="">Loading managed Personas…</option></select></label>
             <button type="submit">Create binding</button>
           </form>
           <form id="accountRebindForm" class="live-form">
             <h3>Rebind Persona</h3>
             <label>Account ID<input name="accountId" required></label>
-            <label>New Persona UID<input name="personaUid" required></label>
+            <label>New Persona<select id="accountRebindPersonaUid" name="personaUid" required><option value="">Loading managed Personas…</option></select></label>
             <button type="submit">Rebind</button>
           </form>
         </div>
