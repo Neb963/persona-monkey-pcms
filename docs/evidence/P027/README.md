@@ -9,11 +9,12 @@ Implementation scope: T027.1–T027.3 under CLM-P027-001, epoch 1.
   Mozilla checksum source: https://archive.mozilla.org/pub/devedition/releases/154.0b10/SHA256SUMS.
   The installer verifies the archive before extraction and checks the executable version. Pre-154 pins fail validation.
 - **A027-02:** `PackagedFirefox` persistently installs unsigned XPIs in a disposable test profile, opens/closes
-  extension tabs, sets `extensions.background.idle.timeout`, observes background state without waking it, and
+  extension tabs, sets `extensions.background.idle.timeout`, observes background state without waking it, deterministically
+  suspends active product contexts with Firefox’s test-only `terminateBackground` hook, and
   restarts the same profile. A dependency-free Marionette v3 client provides bounded commands, fragmented UTF-8
   framing, correlation and explicit errors. No Firefox DevTools MCP, geckodriver, or Chromium is used.
 - **A027-03:** the existing builder supplies the unchanged P026 product XPI. The packaged run checks Integration v1
-  connection, all five feature modules, operator controls, IndexedDB backup, two dashboard tabs and persistent
+  connection, all five feature modules, operator controls, IndexedDB backup, two dashboard tabs, forced product-background suspension with zero dashboards, and persistent
   installation/storage after restart. The workflow also executes the 15 inherited P026 deterministic regressions.
   A separate fixture XPI proves platform assumptions; it is never merged into the product archive.
 
@@ -66,6 +67,12 @@ The exact tested PR integration commit was `caa9534d15897a3be9439d53f2e668e1f168
 The report recorded content-sandbox disabling **false**, default unload **30035 ms**, running with an open view
 (and with a view plus port), stopped with a background self-port alone, and all storage/alarm/sandbox checks PASS.
 
-The final harness also asserts the product background unloads with zero dashboards, bounds the protocol greeting,
-and gives the DOM-timer/old-alarm probes wider timing margins. Those refinements are awaiting final-head CI.
+The final harness bounds the protocol greeting and gives the DOM-timer/old-alarm probes wider timing margins.
+Run [37674702866](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37674702866) exposed an invalid test
+assumption: the product did not naturally idle within 30 seconds after closing the test dashboards. Unlike the
+minimal fixture, PersonaMonkey has proxy/webRequest and other event listeners. Firefox resets the idle timer on
+events/API calls; a short pref does not guarantee suspension of an active extension. The harness therefore uses
+Firefox's own `terminateBackground({disableResetIdleForTest:true,ignoreDevToolsAttached:true})` **only in CI** to
+force the product's real event-page suspension. The independent fixture continues proving natural default and
+short-pref unloads. No product keep-alive behavior is changed or assumed absent. Final-head CI is pending.
 Current state: **PR_OPEN**; no merged/accepted state claimed yet.

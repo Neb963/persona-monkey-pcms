@@ -61,8 +61,8 @@ try {
   await h.closePage(second); await h.closePage(tab);
   report.checks.packagedBaselineAndTwoTabs = true;
   await h.setIdleTimeout(500);
-  await waitFor(async () => (await h.extension(PRODUCT)).state === 'stopped', 'product background idle unload');
-  report.checks.productIdleUnloadWithZeroDashboards = true;
+  report.productUnload = await h.forceIdleUnload(PRODUCT);
+  report.checks.productForcedUnloadWithZeroDashboards = true;
   await h.resetIdleTimeout();
 
   // Build a separate fixture XPI. Never inject fixtures or privileged hooks into the product XPI.

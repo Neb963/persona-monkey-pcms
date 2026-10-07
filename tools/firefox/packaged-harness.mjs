@@ -77,6 +77,23 @@ export class PackagedFirefox {
   async resetIdleTimeout() {
     await this.client.script('Services.prefs.clearUserPref("extensions.background.idle.timeout");');
   }
+  async forceIdleUnload(id) {
+    // The product receives proxy/webRequest and other Firefox events even with
+    // every dashboard closed. A short idle pref alone cannot fence those resets.
+    // Use Firefox's own test hook to deterministically suspend the real context.
+    const result = await this.client.script(`${extensionLookup}
+      const done = arguments[arguments.length - 1];
+      if (extension.persistentBackground) throw new Error('Expected a non-persistent background');
+      (async () => {
+        if (extension.backgroundState !== 'stopped') {
+          await extension.terminateBackground({disableResetIdleForTest:true,ignoreDevToolsAttached:true});
+        }
+        return {state:extension.backgroundState, mode:'firefox-test-hook'};
+      })().then(done, error => done({error:String(error)}));`, [id], { async: true });
+    if (result.error) throw new Error(result.error);
+    if (result.state !== 'stopped') throw new Error('Firefox did not suspend the event page');
+    return result;
+  }
   async openPage(id, path) {
     const extension = await this.extension(id);
     await this.client.command('Marionette:SetContext', { value: 'content' });
