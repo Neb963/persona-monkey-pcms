@@ -55,7 +55,8 @@ export function createPcmsBackgroundEntry({
   }
 
   function onAlarm(alarm){
-    if(typeof alarm?.name==="string"&&alarm.name.startsWith(PCMS_ALARM_PREFIX)) wake();
+    if(typeof alarm?.name!=="string"||!alarm.name.startsWith(PCMS_ALARM_PREFIX)) return;
+    void host().then((current)=>typeof current.handleAlarm==="function"?current.handleAlarm(alarm):current.wake()).catch(()=>{});
   }
 
   function install(){

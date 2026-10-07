@@ -264,7 +264,7 @@ Merge wave: 12
 - [x] T028.3 — T028.3 UI client protocol, revision signal, status summary; dashboard becomes a client
 
 ## P029 — Durable PCMS timers woken by extension alarms
-Status: **READY**  
+Status: **PR_OPEN**  
 Depends on: P028  
 Merge wave: 13
 
