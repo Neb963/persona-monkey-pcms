@@ -291,7 +291,7 @@ Merge wave: 14
 - [ ] T031.3 — T031.3 Live update/disable/enable/rollback/remove/purge and packaged end-to-end proof
 
 ## P032 — PCMS dashboard shell v2 as UI client
-Status: **READY**  
+Status: **CLAIMED**  
 Depends on: P028  
 Merge wave: 13
 
