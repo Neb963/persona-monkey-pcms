@@ -1,6 +1,7 @@
 import { installPcmsNamespace } from "../core/bootstrap.js";
 import { parsePcmsDeepLink, pcmsRouteHref, resolvePcmsDeepLink } from "./deep-links.js";
 import { startPcmsLiveRuntime } from "./live-runtime.js";
+import { startPcmsRuntimeWithRetry } from "./startup-retry.js";
 import { createPcmsModuleProjectionService } from "./module-projections.js";
 import { bindPcmsLiveControls } from "./live-controls.js";
 
@@ -310,7 +311,7 @@ async function bootPcmsApp() {
 
   const liveStatus=document.getElementById("brokerLiveStatus");
   try {
-    const runtime=await startPcmsLiveRuntime();
+    const runtime=await startPcmsRuntimeWithRetry({startRuntime:startPcmsLiveRuntime});
     liveStatus.textContent="Connected · rev "+runtime.brokerRevision;
     liveStatus.dataset.state="connected";
     const moduleProjectionService=createPcmsModuleProjectionService({runtime});
