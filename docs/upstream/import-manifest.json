@@ -1831,9 +1831,9 @@
     {
       "destinationPath": "extension/manifest.json",
       "upstreamBlobSha": "d24bea98aaae52bd0c4776bfdefc7f47b6f19bc6",
-      "derivativeBlobSha": "a95d5418d081f61db75a1a679bc9f3c752913251",
-      "derivativeSize": 1518,
-      "reason": "P025 corrective release makes PersonaMonkey PCMS the primary installed product and routes Preferences to PCMS"
+      "derivativeBlobSha": "777a1dc01cdc7ac8a98c863160b4f6c308591e90",
+      "derivativeSize": 1988,
+      "reason": "P025 corrective release makes PersonaMonkey PCMS the primary installed product and routes Preferences to PCMS; P030 declares the controller and module-UI sandbox pages and their sandbox CSP (ADR-003)"
     },
     {
       "destinationPath": "extension/popup/popup.html",

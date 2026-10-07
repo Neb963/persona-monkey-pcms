@@ -255,16 +255,16 @@ Merge wave: 11
 - [x] T027.3 — T027.3 Baseline packaged regression and pinned-build platform facts
 
 ## P028 — Background-authoritative PCMS Core + UI client protocol
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P027  
 Merge wave: 12
 
-- [ ] T028.1 — T028.1 Background entry, PersonaMonkey-ready ordering, idempotent Core, in-process broker endpoint
-- [ ] T028.2 — T028.2 Cold-start/warm-wake recovery and durable HumanTask handoff for assisted provider steps
-- [ ] T028.3 — T028.3 UI client protocol, revision signal, status summary; dashboard becomes a client
+- [x] T028.1 — T028.1 Background entry, PersonaMonkey-ready ordering, idempotent Core, in-process broker endpoint
+- [x] T028.2 — T028.2 Cold-start/warm-wake recovery and durable HumanTask handoff for assisted provider steps
+- [x] T028.3 — T028.3 UI client protocol, revision signal, status summary; dashboard becomes a client
 
 ## P029 — Durable PCMS timers woken by extension alarms
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P028  
 Merge wave: 13
 
@@ -273,7 +273,7 @@ Merge wave: 13
 - [ ] T029.3 — T029.3 Background continuity proof with zero PCMS tabs and forced unloads
 
 ## P030 — Production sandbox pages + background-hosted controller frames
-Status: **BLOCKED**  
+Status: **PR_OPEN**  
 Depends on: P028  
 Merge wave: 13
 
@@ -291,7 +291,7 @@ Merge wave: 14
 - [ ] T031.3 — T031.3 Live update/disable/enable/rollback/remove/purge and packaged end-to-end proof
 
 ## P032 — PCMS dashboard shell v2 as UI client
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P028  
 Merge wave: 13
 

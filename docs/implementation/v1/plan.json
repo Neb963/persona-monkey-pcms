@@ -1176,7 +1176,7 @@
     {
       "id": "P028",
       "title": "Background-authoritative PCMS Core + UI client protocol",
-      "status": "PR_OPEN",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P027"
       ],
@@ -1238,7 +1238,7 @@
     {
       "id": "P029",
       "title": "Durable PCMS timers woken by extension alarms",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P028"
       ],
@@ -1280,7 +1280,7 @@
     {
       "id": "P030",
       "title": "Production sandbox pages + background-hosted controller frames",
-      "status": "BLOCKED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P028"
       ],
@@ -1295,7 +1295,9 @@
           "extension/pcms/runtime/**",
           "extension/pcms/background/sandbox/**",
           "tests/pcms/p030/**",
-          "docs/evidence/P030/**"
+          "docs/evidence/P030/**",
+          "package.json",
+          ".github/workflows/firefox.yml"
         ],
         "contractReads": [],
         "contractWrites": [],
@@ -1379,7 +1381,7 @@
     {
       "id": "P032",
       "title": "PCMS dashboard shell v2 as UI client",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P028"
       ],
