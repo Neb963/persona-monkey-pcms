@@ -43,6 +43,25 @@ jobs:
           FIREFOX_SMOKE_REPORT: ${{ runner.temp }}/firefox-smoke-report.json
         run: npm run firefox:smoke
 
+      - name: Verify P027 harness and inherited P026 regressions
+        run: npm run test:p027 && node --test tests/pcms/p026/*.test.mjs
+
+      - name: Install and drive packaged XPI, lifecycle and platform probes
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged
+          FIREFOX_PACKAGED_REPORT: ${{ runner.temp }}/firefox-packaged-report.json
+        run: npm run firefox:packaged
+
+      - name: Upload packaged evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-packaged-p027
+          path: ${{ runner.temp }}/firefox-packaged-report.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload deterministic smoke report
         if: always()
         uses: actions/upload-artifact@v4
