@@ -127,7 +127,8 @@ test("A032-02 list is bounded, prioritizes unresolved outcomes and rejects stale
   await insert("ui-p032-malformed","WRONG");
   const listed=await h.client().runtime.uiReceipts.list();
   assert.equal(listed.receipts.length,PCMS_UI_MAX_RECEIPT_LIST);
-  assert.deepEqual(listed.receipts.slice(0,2).map((x)=>x.status),["PENDING","FAILED"]);
+  assert.deepEqual(listed.receipts.slice(0,2).map((x)=>x.status),["UNKNOWN","FAILED"],
+    "orphaned pending writes require reconciliation, not a false Running label");
   assert.equal(listed.receipts.some((x)=>/stale|future|malformed/.test(x.receiptId)),false);
   assert.equal(h.executed,0);
 });

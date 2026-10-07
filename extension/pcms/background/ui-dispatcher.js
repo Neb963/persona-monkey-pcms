@@ -73,14 +73,17 @@ export function createPcmsUiDispatcher({
       const recorded=Date.parse(value.recordedAt);
       if(!Number.isFinite(recorded)||!Number.isFinite(now)
           ||recorded>now+5*60*1000||now-recorded>PCMS_UI_RECEIPT_RETENTION_MS) continue;
+      // A P028 PENDING receipt with no matching in-flight command survived a
+      // previous Core context: the outcome is unknown, NOT still running.
+      const status=value.status==="PENDING"&&!inflight.has(value.receiptId)?"UNKNOWN":value.status;
       summaries.push(Object.freeze({
-        receiptId:value.receiptId,subject:value.subject,status:value.status,
+        receiptId:value.receiptId,subject:value.subject,status,
         recordedAt:value.recordedAt,
         completedAt:typeof value.completedAt==="string"&&Number.isFinite(Date.parse(value.completedAt))
           ?value.completedAt:null
       }));
     }
-    const rank={PENDING:0,FAILED:1,COMPLETED:2};
+    const rank={UNKNOWN:0,FAILED:1,PENDING:2,COMPLETED:3};
     summaries.sort((a,b)=>rank[a.status]-rank[b.status]
       ||Date.parse(b.recordedAt)-Date.parse(a.recordedAt)
       ||a.receiptId.localeCompare(b.receiptId));
