@@ -31,7 +31,7 @@ Command actually run with Node **v22.16.0**:
 node --test tests/pcms/p026/*.test.mjs
 ```
 
-Result: **10 tests passed, 0 failed**.
+Result: **11 tests passed, 0 failed**.
 
 Coverage includes:
 
@@ -45,6 +45,7 @@ Coverage includes:
 - clean restart remaining NORMAL;
 - static authority-boundary checks prohibiting raw browser/native/provider authority;
 - backup/restore/recovery controls.
+- Firefox ESR popup sizing regression: the toolbar popup body has a stable intrinsic width and no viewport-dependent `min()`/`100vw` sizing.
 
 ## Independent branch CI
 
@@ -55,15 +56,24 @@ Exact implementation/test checkpoint `8606eca5d08d1441465ae8f879aa1b01e283af9a` 
 
 The root workflows are independent regression/FDE evidence. They do not substitute for P026 LIVE acceptance.
 
+A live Firefox ESR operator report then exposed a toolbar-popup sizing defect: the popup collapsed to a narrow vertical strip while Firefox Developer Edition rendered it normally. The corrective implementation checkpoint `645b872ce595c94a6f058639025994e288b13600` replaces the circular viewport-relative body sizing with a fixed 370px preferred body width while retaining the existing narrow-layout media rules. The frozen upstream popup CSS is preserved under `docs/upstream/source/`, and the derivative is explicitly recorded in the import manifest.
+
+Corrective checkpoint CI:
+
+- pinned Firefox Developer Edition run **37612345475** — success;
+- repository verification run **37612345507** — success.
+
+The operator still needs to retest the corrected candidate in Firefox ESR; the deterministic FDE run does not substitute for that live ESR observation.
+
 ## P026 live candidate
 
-The accepted P025 XPI `e316e2fd6d52f359d865b9c396a7af9e47d9ea99337fc9de7330e24bb2e469e8` was used as the frozen package baseline. Exactly the ten P026 production files changed by this branch were overlaid with byte-exact branch blobs; no other packaged file differs from the accepted P025 XPI tree.
+The accepted P025 XPI `e316e2fd6d52f359d865b9c396a7af9e47d9ea99337fc9de7330e24bb2e469e8` remains the frozen package baseline. The original P026 live candidate was superseded after the Firefox ESR popup defect was observed. The corrected candidate contains the ten prior P026 production changes plus byte-exact branch blob `extension/popup/popup.css` (`726ab9deb6a44ec186e6731cb4834605b52fc80b`); no other packaged file changed from the prior P026 candidate.
 
 Candidate identity:
 
 - version: **1.2.0**;
 - Gecko ID: **persona-route-manager@local**;
-- candidate SHA-256: `76e05412af8157d8765cfb3e765a73ddb945a4697547a4961df05860e0eb95a5`.
+- candidate SHA-256: `b282a94cba816fc91a8453af393c009c5c1b4f100b61e9300544ab5dfd98b64e`.
 
 Packaging checks actually run:
 
@@ -74,7 +84,7 @@ Packaging checks actually run:
 - zero bare module specifiers were found in the packaged PCMS graph;
 - packaged `pcms-modules/**` contains no stale `../../extension/pcms/` import;
 - Node syntax checks passed for every changed P026 JavaScript file;
-- archive-tree comparison against accepted P025 found exactly ten changed/added files, matching the P026 production diff.
+- archive-tree comparison against the prior P026 candidate found exactly one changed packaged file (`popup/popup.css`); against accepted P025 the corrected candidate has the ten prior P026 production changes plus this popup CSS correction.
 
 This candidate has **not** yet been counted as LIVE evidence.
 
