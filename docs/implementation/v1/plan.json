@@ -1198,7 +1198,9 @@
           "docs/evidence/P028/**",
           "package.json",
           ".github/workflows/firefox.yml",
-          "tools/firefox/packaged.mjs"
+          "tools/firefox/packaged.mjs",
+          "extension/tests/background-routing-init.test.mjs",
+          "docs/upstream/source/extension/tests/background-routing-init.test.mjs"
         ],
         "contractReads": [],
         "contractWrites": [

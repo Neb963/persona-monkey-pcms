@@ -26,6 +26,7 @@ test("all 223 frozen upstream blobs remain exact and derivative overlays are exp
     "extension/background.js",
     "extension/lib/management-integration.js",
     "extension/lib/recovery-bootstrap.js",
+    "extension/tests/background-routing-init.test.mjs",
     "extension/manifest.json",
     "extension/popup/popup.html",
     "extension/popup/popup.css",

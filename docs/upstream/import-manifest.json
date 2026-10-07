@@ -1062,11 +1062,11 @@
     },
     {
       "sourcePath": "extension/tests/background-routing-init.test.mjs",
-      "destinationPath": "extension/tests/background-routing-init.test.mjs",
+      "destinationPath": "docs/upstream/source/extension/tests/background-routing-init.test.mjs",
       "sourceBlobSha": "dce269c4ccfc2e646758c48e950a9d20a52b608f",
       "mode": "100644",
       "size": 27576,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "extension/tests/background-smoke.test.mjs",
@@ -1862,6 +1862,13 @@
       "derivativeBlobSha": "2d1aa89a9eb903289f862b50f4cc5922f1d2542e",
       "derivativeSize": 5282,
       "reason": "P028 static PCMS background entry import after the fail-closed routing gate; Core work waits for PersonaMonkey bootstrap (ADR-002)"
+    },
+    {
+      "destinationPath": "extension/tests/background-routing-init.test.mjs",
+      "upstreamBlobSha": "dce269c4ccfc2e646758c48e950a9d20a52b608f",
+      "derivativeBlobSha": "77c1971ee5aa48317da978ee7a25f0c22b5bea8e",
+      "derivativeSize": 28222,
+      "reason": "P028 regression evidence: the PCMS background entry's synchronous message listener precedes PersonaMonkey's, after the routing guards"
     }
   ]
 }
