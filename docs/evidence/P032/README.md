@@ -1,11 +1,12 @@
 # P032 — PCMS dashboard shell v2 as UI client
 
-Evidence state: **CI_VERIFIED · PR #42 OPEN**
+Evidence state: **COMMITTED · inherited CI PASS · A032-02 BLOCKED · PR #42 DRAFT**
 
 - Claim: `CLM-P032-001`, epoch **1**, owner `gpt-5-6-sol`.
 - Claim base: `4d1dfb314fef2f64bf5e89c67f6060c8d897d899`.
 - Implementation branch: `agent/gpt-5-6-sol/p032-t032-1`.
-- Product/test checkpoint: `d86d9660581a1f6f18def357504ab168df866fd3`.
+- Original product/test checkpoint: `d86d9660581a1f6f18def357504ab168df866fd3`.
+- Bootstrap/unavailable-shell fix checkpoint: `d5f76d0adb31422ba0d9292d9f6afbc9b5067ad1`.
 - Accepted contract read: `pcms.ui-client/v1` at P028 checkpoint
   `401fa524225b35c45eaf239112974c27492d3bbc`; its current contract blob remains
   `4c33e91607f710cb52feb09b352d75cf87c5d8d1`.
@@ -31,6 +32,8 @@ Evidence state: **CI_VERIFIED · PR #42 OPEN**
 - Local action feedback is keyed per action/subject instead of overwriting one global `Working…` state.
 - Focused integration coverage proves the existing durable receipt is replayed consistently across independent
   clients and remains after those clients disappear; HumanTasks are likewise visible to a newly constructed client.
+- **Gap:** these checks verify Core persistence, not that the action tray can enumerate completed/failed receipts
+  created by another tab after a close/reopen. The accepted UI-client contract has no read-only receipt-list RPC.
 
 ### T032.3 — Diagnostics and multi-tab behavior
 
@@ -41,13 +44,15 @@ Evidence state: **CI_VERIFIED · PR #42 OPEN**
   UI operation timer.
 - Receipt and revision subscriptions are tab-local listeners only; closing a dashboard does not construct,
   own or keep alive Core.
+- Fixed a duplicate `bootPcmsApp()` invocation; exactly one dashboard client is now initialized per tab.
+- Added a read-only navigation/Diagnostics fallback when Core bootstrap is unavailable, disabling existing mutation forms.
 
 ## Acceptance mapping
 
 | Gate | Evidence in this checkpoint |
 | --- | --- |
 | A032-01 | `router-v2.js`; `routes.test.mjs`; `shell.test.mjs`; dashboard source boundary scan |
-| A032-02 | durable P028 receipts + P012 HumanTasks; `durability.test.mjs`; subject-scoped action tray; no global Working state |
+| A032-02 | **BLOCKED**: Core receipts and HumanTasks persist, but other tabs and reopened tabs cannot enumerate prior receipt records through `pcms.ui-client/v1`. `durability.test.mjs` records the pending cross-tab tray acceptance gate. |
 | A032-03 | cached/live Core presenter; Diagnostics page; revision subscription; no UI polling |
 
 ## Verification performed before PR
@@ -86,3 +91,42 @@ branch blobs did pass the pre-PR syntax/static invariant check described above.
 
 No successor phase was started. In particular, this checkpoint adds no P033 module contribution contract, no P034
 Accounts redesign, no P035 popup work, no timer ownership, no module lifecycle changes and no migration.
+
+## Post-PR adversarial review and blocker
+
+A further source audit found two errors not covered by the inherited packaged-XPI checks:
+
+1. `app.js` called `bootPcmsApp()` twice at its tail. This could duplicate UI listeners and control handlers.
+   Commit `d5f76d0adb31422ba0d9292d9f6afbc9b5067ad1` removes the second call and adds a regression assertion.
+2. The unavailable-Core failure path previously left `primaryNav` empty and Diagnostics hidden. The same commit
+   installs a read-only route shell, keeps Diagnostics accessible, and disables P026 mutation forms.
+
+After these corrections, inherited CI passed on the exact implementation-fix checkpoint:
+
+- repository `verify`: [run 37695873000](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37695873000) — **PASS**;
+- `firefox-developer-edition`: [run 37695873021](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37695873021) — **PASS**.
+
+Fourteen exact P032 test bodies (router, primitives, UI-client and shell) were also executed against branch source
+using a V8 sandbox with Node module/test/readFile assertion shims: **14 PASS, 0 FAIL**. This is narrower than a
+native Node test run and does not include `durability.test.mjs`. The checked source is the branch as of
+`d5f76d0adb31422ba0d9292d9f6afbc9b5067ad1`.
+
+**Unresolved A032-02 acceptance requirement:** a two-client simulation using the actual
+`createPcmsUiClient` implementation and a shared transport produced the following observations:
+- tab A command receipt callback: **1**;
+- tab B revision callback: **1**, receipt callback: **0**;
+- all tabs closed, tab C reopened: receipt callback: **0**;
+- background durable receipt record: **1**.
+
+The client only receives receipt projections attached to *its own command responses*. The accepted P028
+`pcms.ui-client/v1` operation allow-list exposes no read-only receipt enumeration or lookup. A stored Core
+receipt cannot therefore be reconstructed into the action tray after a different tab's command or after
+all tabs close. A032-02's full two-tab/reopen acceptance is **not demonstrated and must not be marked accepted**.
+
+**Governance blocker:** supplying a bounded, secret-safe Core receipt-list/read RPC needs contract and background
+dispatcher edits (currently owned by P028, outside P032's `extension/pcms/app/**` write scope), plus
+independent tests proving cross-tab/reopen consistency. P032's claim has no contract writes. Do not bypass this
+by reading raw Core storage, creating a dashboard-owned receipt database, or broadening the claim silently.
+
+**Disposition:** keep PR #42 **draft**, claim epoch 1 **ACTIVE**, and P032 **not ACCEPTED** pending an explicit
+contract/ownership allocation. No successor phase was touched or started.

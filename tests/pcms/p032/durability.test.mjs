@@ -85,3 +85,9 @@ test("A032-02 HumanTasks remain durable and consistent when a new dashboard clie
   assert.deepEqual(attention.map((row)=>row.value.taskId),["p032-human-task"]);
   assert.equal(attention[0].value.title,"Review provider state");
 });
+
+ 
+// Acceptance blocker: pending read-only receipt enumeration on the P028 UI-client contract.
+// Tests above prove Core persistence/replay, not cross-tab tray visibility after all tabs close.
+// This task is deliberately tracked as TODO rather than declaring A032-02 complete.
+test.todo("A032-02: a second/reopened dashboard must list durable Core command receipts without replaying commands");
