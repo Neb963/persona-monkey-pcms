@@ -23,10 +23,19 @@ jobs:
         with:
           node-version: "24"
 
+      # Two P030 PR runs hung here (apt mirror) until cancelled: skip apt when the runner
+      # image already has the libraries, bound every apt call, retry, and fail fast.
       - name: Install Firefox runtime libraries
+        timeout-minutes: 6
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-0 libdbus-glib-1-2 libasound2t64 libx11-xcb1 libxt6
+          packages="libgtk-3-0 libdbus-glib-1-2 libasound2t64 libx11-xcb1 libxt6"
+          if dpkg -s $packages >/dev/null 2>&1; then echo "Firefox runtime libraries already installed"; exit 0; fi
+          apt_opts="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30"
+          for attempt in 1 2 3; do
+            if sudo timeout 150 apt-get $apt_opts update && sudo timeout 150 apt-get $apt_opts install -y $packages; then exit 0; fi
+            echo "apt attempt $attempt failed; retrying"; sleep 5
+          done
+          exit 1
 
       - name: Verify Firefox harness contracts
         run: npm run test:firefox
