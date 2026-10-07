@@ -46,3 +46,27 @@ test("A026-02 recovery controls expose backup, restore hold, and explicit releas
   assert.match(controls,/applyStagedRestore/);
   assert.match(controls,/reconcileAndRelease/);
 });
+
+
+test("A026-01 account binding UI exposes live Personas and visible action feedback",async()=>{
+  const [html,css,controls,runtime]=await Promise.all([
+    readFile("extension/pcms/app/index.html","utf8"),
+    readFile("extension/pcms/app/app.css","utf8"),
+    readFile(LIVE_CONTROLS,"utf8"),
+    readFile("extension/pcms/app/live-runtime.js","utf8")
+  ]);
+  const statusIndex=html.indexOf('id="liveActionStatus"');
+  const mainIndex=html.indexOf('<main class="content">');
+  assert.ok(statusIndex>0&&statusIndex<mainIndex,"live action feedback must stay visible outside route-specific views");
+  assert.equal((html.match(/id="accountCreatePersonaUid"/g)||[]).length,1);
+  assert.equal((html.match(/id="accountRebindPersonaUid"/g)||[]).length,1);
+  const provisioning=html.slice(html.indexOf('id="provisioningLiveForm"'),html.indexOf("</form>",html.indexOf('id="provisioningLiveForm"')));
+  assert.doesNotMatch(provisioning,/id="accountCreatePersonaUid"/);
+  assert.match(html,/id="accountCreatePersonaUid" name="personaUid" required/);
+  assert.match(html,/id="accountRebindPersonaUid" name="personaUid" required/);
+  assert.match(runtime,/command:"persona\.list"/);
+  assert.match(runtime,/page:Object\.freeze\(\{size:100/);
+  assert.match(controls,/runtime\.personaDirectory\.list\(\)/);
+  assert.match(controls,/persona\.name\+" · "\+persona\.cookieStoreId/);
+  assert.match(css,/\.live-form input, \.live-form textarea, \.live-form select/);
+});
