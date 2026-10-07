@@ -426,6 +426,55 @@ export function mountPcmsApp({
   });
 }
 
+// Core failure must never leave the dashboard with an empty, inaccessible navigation.
+// This is a tab-local read-only shell; it does not attempt background recovery or work.
+export function mountUnavailablePcmsShell({
+  documentRef=globalThis.document,
+  windowRef=globalThis.window
+}={}) {
+  const nav=section(documentRef,"primaryNav");
+  const routes=[
+    ["Overview","#/overview"],
+    ["Attention","#/attention"],
+    ["Accounts","#/accounts"],
+    ["Generators","#/generators"],
+    ["Modules","#/settings/modules"],
+    ["Activity","#/activity"],
+    ["Diagnostics","#/settings/diagnostics"]
+  ];
+  clear(nav);
+  for(const [label,href] of routes){
+    const link=element(documentRef,"a","nav-link");
+    link.href=href;
+    link.textContent=label;
+    nav.appendChild(link);
+  }
+  // The page can be reloaded while Core is unavailable; no inherited P026
+  // mutation form should remain actionable without a bound UI client.
+  for(const form of documentRef.querySelectorAll(".live-form, #restoreApplyForm, #recoveryReleaseForm")){
+    for(const control of form.querySelectorAll("button, input, select, textarea")) control.disabled=true;
+  }
+  function showRoute(){
+    const resolved=resolvePcmsRouteV2(windowRef.location.hash,{accountIds:[],attentionIds:[]});
+    const route=resolved.route;
+    if(!resolved.valid||resolved.canonicalized) windowRef.history.replaceState(null,"",route.href);
+    const diagnostics=route.route==="settings"&&route.section==="diagnostics";
+    for(const id of ["viewOverview","viewModules","viewAttention","viewAccounts","viewSearch","viewDiagnostics","viewPlaceholder"]){
+      section(documentRef,id).hidden=id!==(diagnostics?"viewDiagnostics":"viewPlaceholder");
+    }
+    section(documentRef,"placeholderHeading").textContent="PCMS Core unavailable";
+    section(documentRef,"placeholderBody").textContent=
+      "Background Core is unavailable. Open Settings → Diagnostics for the last known technical status.";
+    for(const link of nav.children){
+      if(link.getAttribute("href")===route.href) link.setAttribute("aria-current","page");
+      else link.removeAttribute("aria-current");
+    }
+  }
+  windowRef.addEventListener("hashchange",showRoute);
+  showRoute();
+  return Object.freeze({destroy(){windowRef.removeEventListener("hashchange",showRoute);}});
+}
+
 async function bootPcmsApp() {
   const pcms=installPcmsNamespace();
   document.getElementById("namespaceVersion").textContent="v"+pcms.version;
@@ -493,7 +542,9 @@ async function bootPcmsApp() {
     document.getElementById("coreHostStatus").dataset.state="error";
     document.getElementById("notificationStatus").textContent="PCMS Core is unavailable. Open Diagnostics for technical status.";
     document.getElementById("notificationStatus").dataset.state="error";
+    const unavailable=mountUnavailablePcmsShell();
+    window.addEventListener("unload",unavailable.destroy,{once:true});
   }
 }
 
-void bootPcmsApp();void bootPcmsApp();
+void bootPcmsApp();

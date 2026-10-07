@@ -52,3 +52,13 @@ test("A032-03 shell refresh is revision-driven and does not drive operations wit
   assert.match(app,/presentPcmsCoreStatus/);
   assert.doesNotMatch(app,/setInterval\s*\(/);
 });
+
+test("A032-03 dashboard bootstrap is single-instance and unavailable Core retains Diagnostics navigation",async()=>{
+  const app=await readFile("extension/pcms/app/app.js","utf8");
+  assert.equal((app.match(/void bootPcmsApp\(\);/g)||[]).length,1,
+    "duplicate boot registers multiple UI clients and listeners");
+  assert.match(app,/mountUnavailablePcmsShell/);
+  assert.match(app,/const unavailable=mountUnavailablePcmsShell\(\)/);
+  assert.match(app,/viewDiagnostics/);
+  assert.match(app,/control\.disabled=true/);
+});
