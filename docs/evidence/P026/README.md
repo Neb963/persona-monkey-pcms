@@ -75,6 +75,14 @@ Corrective checkpoint CI:
 
 The account binding interaction still requires operator retest in the normal non-Marionette Firefox ESR session before it counts as LIVE acceptance.
 
+Live operator follow-up in normal Firefox ESR confirmed:
+
+- Accounts binding now works with the managed-Persona selector; a bound account is created and projected in PCMS.
+- A representative Deployer mutation completed end-to-end on real Perchance: PCMS targeted the bound account/Persona, the operator performed the provider save, reloaded Perchance to prove the server-side change persisted, and only then marked the operation APPLIED.
+- Current usability debt: several live controls still require manually typing durable identifiers such as Account ID rather than selecting from existing PCMS projections. This is acceptable for P026 acceptance testing but should be addressed in the next UI/modules/workflow refinement milestone.
+
+This is positive A026-01 live evidence, but the gate remains pending until the remaining representative account-B/uncertain-path checks are completed.
+
 ## P026 live candidate
 
 The accepted P025 XPI `e316e2fd6d52f359d865b9c396a7af9e47d9ea99337fc9de7330e24bb2e469e8` remains the frozen package baseline. The original P026 live candidate was superseded after the Firefox ESR popup defect was observed. The corrected candidate contains the ten prior P026 production changes plus byte-exact branch blob `extension/popup/popup.css` (`726ab9deb6a44ec186e6731cb4834605b52fc80b`); no other packaged file changed from the prior P026 candidate.
