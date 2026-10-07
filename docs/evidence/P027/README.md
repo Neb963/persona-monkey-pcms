@@ -57,4 +57,15 @@ Primary platform references:
 - https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/sandbox
 - https://firefox-source-docs.mozilla.org/testing/marionette/Protocol.html
 
-Current state: implementation verification in progress; no hosted acceptance claimed yet.
+## Independent CI checkpoint
+
+PR #36 head `7b4f96736010c918468ec5d5b0929b958f77d995` passed repository verification
+[run 37674154414](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37674154414) and packaged Firefox
+[run 37674153753](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37674153753).
+The exact tested PR integration commit was `caa9534d15897a3be9439d53f2e668e1f168dd41`.
+The report recorded content-sandbox disabling **false**, default unload **30035 ms**, running with an open view
+(and with a view plus port), stopped with a background self-port alone, and all storage/alarm/sandbox checks PASS.
+
+The final harness also asserts the product background unloads with zero dashboards, bounds the protocol greeting,
+and gives the DOM-timer/old-alarm probes wider timing margins. Those refinements are awaiting final-head CI.
+Current state: **PR_OPEN**; no merged/accepted state claimed yet.

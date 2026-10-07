@@ -70,7 +70,9 @@ export async function connectMarionette(port, { timeout = 30_000 } = {}) {
       const socket = net.createConnection({ host: '127.0.0.1', port });
       await new Promise((resolve, reject) => { socket.once('connect', resolve); socket.once('error', reject); });
       const client = new Marionette(socket, timeout);
-      const hello = await client.greeting;
+      let hello;
+      const timer = setTimeout(() => socket.destroy(new Error('Marionette greeting timed out')), timeout);
+      try { hello = await client.greeting; } finally { clearTimeout(timer); }
       if (hello.marionetteProtocol !== 3) { client.close(); throw new Error('Unsupported Marionette protocol'); }
       await client.command('WebDriver:NewSession', { capabilities: { alwaysMatch: { acceptInsecureCerts: false } } });
       return client;

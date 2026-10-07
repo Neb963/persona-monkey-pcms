@@ -60,6 +60,10 @@ try {
   const second = await dashboard();
   await h.closePage(second); await h.closePage(tab);
   report.checks.packagedBaselineAndTwoTabs = true;
+  await h.setIdleTimeout(500);
+  await waitFor(async () => (await h.extension(PRODUCT)).state === 'stopped', 'product background idle unload');
+  report.checks.productIdleUnloadWithZeroDashboards = true;
+  await h.resetIdleTimeout();
 
   // Build a separate fixture XPI. Never inject fixtures or privileged hooks into the product XPI.
   const fixtureRoot = resolve('tests/pcms/p027/platform-fixture');
@@ -98,7 +102,7 @@ try {
   assert.equal(timers.alarms.filter(alarm => alarm.name === 'p027.wake').length, 1);
   await h.closePage(tab);
   await waitFor(async () => (await h.extension(PROBE)).state === 'stopped', 'idle unload before DOM timer');
-  await sleep(6000);
+  await sleep(11000);
   tab = await h.openPage(PROBE, 'page.html');
   const afterTimers = await page('return api.storage.local.get(null);');
   assert.equal(afterTimers.domTimerFired, undefined);

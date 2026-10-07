@@ -19,5 +19,7 @@ test('A027-03 hosted acceptance drives a separate probe and the unmodified produ
   assert.doesNotMatch(workflow, /MOZ_DISABLE_CONTENT_SANDBOX/);
   const manifest = JSON.parse(await readFile('extension/manifest.json','utf8'));
   assert.equal(manifest.browser_specific_settings.gecko.strict_min_version, '153.0');
-  assert.equal(manifest.sandbox, undefined, 'production sandbox wiring belongs to P030');
+  const fixture = JSON.parse(await readFile('tests/pcms/p027/platform-fixture/manifest.json','utf8'));
+  assert.notEqual(fixture.browser_specific_settings.gecko.id, manifest.browser_specific_settings.gecko.id);
+  assert.deepEqual(fixture.sandbox.pages, ['sandbox.html']);
 });

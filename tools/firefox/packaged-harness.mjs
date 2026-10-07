@@ -74,6 +74,9 @@ export class PackagedFirefox {
   async setIdleTimeout(ms) {
     await this.client.script('Services.prefs.setIntPref("extensions.background.idle.timeout", arguments[0]);', [ms]);
   }
+  async resetIdleTimeout() {
+    await this.client.script('Services.prefs.clearUserPref("extensions.background.idle.timeout");');
+  }
   async openPage(id, path) {
     const extension = await this.extension(id);
     await this.client.command('Marionette:SetContext', { value: 'content' });

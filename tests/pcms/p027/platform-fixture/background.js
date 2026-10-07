@@ -22,8 +22,8 @@ async function handle(message) {
       return bootId;
     case 'portOnly': selfPort = browser.runtime.connect({name:'p027.self'}); return true;
     case 'timers':
-      setTimeout(() => browser.storage.local.set({ domTimerFired: true }), 5000);
-      await browser.alarms.create('p027.wake', { when: Date.now() + 1200 });
+      setTimeout(() => browser.storage.local.set({ domTimerFired: true }), 10000);
+      await browser.alarms.create('p027.wake', { when: Date.now() + 3600000 });
       await browser.alarms.create('p027.wake', { when: Date.now() + 4000 });
       await browser.alarms.create('p027.session-only', { when: Date.now() + 3600000 });
       return { bootId, alarms: await browser.alarms.getAll() };

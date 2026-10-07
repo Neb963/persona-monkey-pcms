@@ -246,7 +246,7 @@ Merge wave: 10
 - [x] T026.3 — T026.3 final human acceptance
 
 ## P027 — Packaged-XPI Firefox harness + browser pin >=154
-Status: **IN_PROGRESS**  
+Status: **PR_OPEN**  
 Depends on: P026  
 Merge wave: 11
 

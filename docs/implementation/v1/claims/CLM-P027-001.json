@@ -4,7 +4,7 @@
   "phaseId": "P027",
   "taskId": "T027.1",
   "claimEpoch": 1,
-  "state": "ACTIVE",
+  "state": "PR_OPEN",
   "owner": {
     "agentId": "codex"
   },
@@ -40,5 +40,6 @@
     "A027-01",
     "A027-02",
     "A027-03"
-  ]
+  ],
+  "lastCheckpointSha": "7b4f96736010c918468ec5d5b0929b958f77d995"
 }

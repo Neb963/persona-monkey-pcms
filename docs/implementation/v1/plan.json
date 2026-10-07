@@ -1124,7 +1124,7 @@
     {
       "id": "P027",
       "title": "Packaged-XPI Firefox harness + browser pin >=154",
-      "status": "IN_PROGRESS",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P026"
       ],
