@@ -25,6 +25,8 @@ test("A030-01 pinned Developer Edition is AVAILABLE; ESR 153 reports UNAVAILABLE
   const pinned = evaluateModuleRuntimeFloor({ browserInfo: firefox(pin.version), manifest });
   assert.equal(pinned.state, MODULE_RUNTIME_AVAILABILITY.AVAILABLE);
   assert.equal(pinned.browser.major, 154);
+  // Regression from CI: the pinned 154.0b10 build reports getBrowserInfo().version as "154.0".
+  assert.equal(evaluateModuleRuntimeFloor({ browserInfo: firefox("154.0"), manifest }).state, MODULE_RUNTIME_AVAILABILITY.AVAILABLE);
 
   for (const version of ["153.0", "153.3.0esr", "128.14.0esr"]) {
     const old = evaluateModuleRuntimeFloor({ browserInfo: firefox(version), manifest });

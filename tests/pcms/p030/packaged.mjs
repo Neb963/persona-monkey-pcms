@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileText, loadBrowserPin, sha256File, writeJson } from '../../../tools/firefox/lib.mjs';
 import { PackagedFirefox, waitFor } from '../../../tools/firefox/packaged-harness.mjs';
+import { evaluateModuleRuntimeFloor, parseFirefoxMajor } from '../../../extension/pcms/runtime/browser-floor.js';
 
 const PRODUCT = 'persona-route-manager@local';
 const root = resolve(process.env.FIREFOX_PACKAGED_DIR || join(tmpdir(), 'pcms-firefox-p030'));
@@ -141,7 +142,12 @@ try {
 
   const platform = await page(`return { info: await api.runtime.getBrowserInfo(), manifest: api.runtime.getManifest() };`);
   report.facts.browser = { name: platform.info.name, version: platform.info.version };
-  assert.equal(platform.info.version, pin.version);
+  // The pinned 154.0b10 build reports runtime.getBrowserInfo().version as "154.0" (CI observation):
+  // the floor compares the major version only.
+  assert.equal(platform.info.name, 'Firefox');
+  assert.equal(parseFirefoxMajor(platform.info.version), parseFirefoxMajor(pin.version));
+  assert.equal(evaluateModuleRuntimeFloor({ browserInfo: platform.info, manifest: platform.manifest }).state, 'AVAILABLE');
+  report.checks.floorAvailableInPinnedBuild = true;
   assert.deepEqual(platform.manifest.sandbox?.pages, manifest.sandbox.pages, 'pinned build accepts the manifest sandbox key');
   report.checks.pinnedBuildAcceptsSandboxManifest = true;
 
