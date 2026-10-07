@@ -38,10 +38,19 @@ async function page(code,args=[]){
 }
 async function timerRow(){
   return page(`
-    const {createPcmsStorageBroker}=await import(api.runtime.getURL("pcms/storage/storage-broker.js"));
-    const broker=createPcmsStorageBroker();await broker.open();
-    try{return await broker.namespace("core.timers").get(arguments[0]);}
-    finally{broker.close();}
+    const db=await new Promise((resolve,reject)=>{
+      const request=window.wrappedJSObject.indexedDB.open("persona-monkey-pcms",1);
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>reject(request.error||new Error("PCMS IndexedDB open failed"));
+    });
+    try{
+      return await new Promise((resolve,reject)=>{
+        const tx=db.transaction("records","readonly");
+        const request=tx.objectStore("records").get("core.timers\\u0000"+arguments[0]);
+        request.onsuccess=()=>resolve(request.result||null);
+        request.onerror=()=>reject(request.error||new Error("PCMS timer probe read failed"));
+      });
+    }finally{db.close();}
   `,[PCMS_CONTINUITY_FIXTURE_TIMER_ID]);
 }
 async function alarms(){return page("return api.alarms.getAll();");}
