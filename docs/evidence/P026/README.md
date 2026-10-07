@@ -4,7 +4,7 @@ Phase state: **ACCEPTED**.
 
 Final pre-merge implementation checkpoint: `edd699e89d82b9344b4abc05208aeee458d36086`.
 
-Operator LIVE evidence now satisfies A026-01, A026-02, and A026-03. The phase is not yet marked ACCEPTED here because the accepted-state transition is performed only after PR merge and merged-main verification.
+Operator LIVE evidence satisfies A026-01, A026-02, and A026-03. PR integration, merged-main verification, and the final governance transition have also completed.
 
 ## Implemented scope
 
