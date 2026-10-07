@@ -46,6 +46,7 @@ export function createPcmsSessionSignals({sessionStore}={}){
 export function createPcmsCoreHost({
   personaMonkeyReady,
   createCore,
+  createAlarmCoordinator=null,
   sessionStore,
   runtimeId,
   extensionBaseUrl,
@@ -54,6 +55,7 @@ export function createPcmsCoreHost({
 }={}){
   if(typeof personaMonkeyReady!=="function") throw new TypeError("PCMS Core host requires the PersonaMonkey bootstrap");
   if(typeof createCore!=="function") throw new TypeError("PCMS Core host requires a Core factory");
+  if(createAlarmCoordinator!==null&&typeof createAlarmCoordinator!=="function") throw new TypeError("PCMS Core host alarm coordinator is invalid");
   const signals=createPcmsSessionSignals({sessionStore});
 
   let corePromise=null;
@@ -62,6 +64,7 @@ export function createPcmsCoreHost({
   let reason=null;
   let wake=null;
   let recovery=null;
+  let alarmCoordinator=null;
   let constructed=0;
 
   async function summary(){
@@ -127,11 +130,18 @@ export function createPcmsCoreHost({
       const marker=await sessionStore.get(PCMS_CORE_SESSION_KEY);
       wake=marker&&typeof marker.sessionId==="string"?"WARM":"COLD";
       recovery=await built.initialize({wake});
+      if(createAlarmCoordinator){
+        alarmCoordinator=createAlarmCoordinator(built);
+        built.bindTimerAlarmRearm?.(()=>alarmCoordinator.armNext());
+        await alarmCoordinator.start({wake});
+      }
       if(wake==="COLD"){
         await sessionStore.set(PCMS_CORE_SESSION_KEY,Object.freeze({sessionId:newSessionId(),startedAt:new Date(clock()).toISOString()}));
       }
     }catch(error){
+      try{built?.bindTimerAlarmRearm?.(null);}catch{}
       try{built?.close?.();}catch{}
+      alarmCoordinator=null;
       state=PCMS_CORE_STATES.UNAVAILABLE;
       reason="core-initialization-failed";
       throw error;
@@ -163,6 +173,16 @@ export function createPcmsCoreHost({
     return Object.freeze({...current,constructedCores:constructed});
   }
 
+  async function handleAlarm(alarm){
+    const wasRunning=core!==null;
+    await ensurePcmsCore();
+    if(wasRunning&&alarmCoordinator){
+      await alarmCoordinator.handleAlarm(alarm?.name,{wake:"WARM"});
+      await publish(["core"]);
+    }
+    return true;
+  }
+
   const dispatcher=createPcmsUiDispatcher({
     ensureCore:ensurePcmsCore,
     readStatus,
@@ -175,6 +195,7 @@ export function createPcmsCoreHost({
   return Object.freeze({
     ensurePcmsCore,
     handleUiMessage:(message,sender)=>dispatcher.handle(message,sender),
+    handleAlarm,
     wake(){return ensurePcmsCore().then(()=>true,()=>false);},
     readStatus,
     get state(){return state;}
@@ -191,16 +212,22 @@ function createStorageSessionStore(area){
 
 // Firefox binding: in-process Persona Broker endpoint, storage.session, real feature modules.
 export async function createFirefoxPcmsCoreHost({personaMonkeyReady,browserRef=globalThis.browser}={}){
-  const [{createPcmsInternalBrokerEndpoint},{createBackgroundPcmsCore},{PCMS_BACKGROUND_FEATURE_FACTORIES}]=await Promise.all([
+  const [{createPcmsInternalBrokerEndpoint},{createBackgroundPcmsCore},{PCMS_BACKGROUND_FEATURE_FACTORIES},{createPcmsAlarmCoordinator}]=await Promise.all([
     import("../../lib/pcms-internal-broker-endpoint.js"),
     import("./core-factory.js"),
-    import("./feature-factories.js")
+    import("./feature-factories.js"),
+    import("./alarms/coordinator.js")
   ]);
   return createPcmsCoreHost({
     personaMonkeyReady,
     createCore:()=>createBackgroundPcmsCore({
       transport:createPcmsInternalBrokerEndpoint(),
       featureFactories:PCMS_BACKGROUND_FEATURE_FACTORIES
+    }),
+    createAlarmCoordinator:(core)=>createPcmsAlarmCoordinator({
+      alarms:browserRef.alarms,
+      timers:core.timers,
+      declareSchedules:core.declareTimerSchedules
     }),
     sessionStore:createStorageSessionStore(browserRef.storage.session),
     runtimeId:browserRef.runtime.id,
