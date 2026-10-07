@@ -16,11 +16,15 @@ Build the quickest maintainable PCMS by reusing PersonaMonkey's proven Firefox/P
 8. UI/search/statistics are projections, not operational authority.
 9. Restore enters recovery hold before mutation resumes.
 10. Runtime-installable modules do not require rebuilding the whole extension.
+11. PCMS operational authority lives in the extension background context; it does not depend on any dashboard tab being open (ADR-002).
+12. Dashboard pages and the popup are UI clients; any number may be open, and opening or closing them never starts, stops or recovers Core (ADR-002).
+13. Installing, updating, disabling, re-enabling, rolling back or removing a runtime module never requires an XPI rebuild, manifest edit, extension reload, reinstall or Firefox restart (ADR-003).
+14. Correctness never depends on ephemeral background memory surviving an event-page unload; durable state plus idempotent re-initialisation is authoritative (ADR-002).
 
 ## Deliberate non-goals for V1
 
 - no global workflow language;
-- no universal scheduler/queue framework;
+- no universal scheduler/queue framework (the durable Core timer service woken by `browser.alarms` is the only timer authority);
 - no generic resource-lock manager;
 - no second PCMS userscript/browser-execution runtime;
 - no Chromium product target;

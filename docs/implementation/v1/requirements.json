@@ -68,12 +68,32 @@
     },
     {
       "id": "R-014",
-      "text": "GitHub Actions is the independent verification authority for P001-P024; P025-P026 are final live acceptance.",
+      "text": "GitHub Actions is the independent verification authority for every non-live phase; P025-P026 were the final live acceptance of the original v1 roadmap, and in the extended roadmap only the final two phases (executionModel.finalLivePhases) require live acceptance.",
       "status": "ACCEPTED"
     },
     {
       "id": "R-015",
       "text": "Parallel implementation is permitted only for mechanically non-conflicting claims with epoch fencing.",
+      "status": "ACCEPTED"
+    },
+    {
+      "id": "R-016",
+      "text": "PCMS operational authority runs in the extension background context; closing every PCMS dashboard tab does not stop schedules, timers, module work, scans, reconciliation, recovery handling or eligible unattended provider work (ADR-002).",
+      "status": "ACCEPTED"
+    },
+    {
+      "id": "R-017",
+      "text": "PCMS dashboards and the popup are UI clients; any number may be open simultaneously and opening or closing them never instantiates a competing Core, runs startup recovery, changes RemoteOperation state or enters RECOVERY_HOLD (ADR-002).",
+      "status": "ACCEPTED"
+    },
+    {
+      "id": "R-018",
+      "text": "Runtime modules installed through PCMS execute immediately; install, update, disable, re-enable, rollback and removal never require an XPI rebuild, manifest edit, extension reload, reinstall or Firefox restart, while package identity, authority envelopes, bounded RPC and generation fencing remain enforced (ADR-003).",
+      "status": "ACCEPTED"
+    },
+    {
+      "id": "R-019",
+      "text": "Background correctness never depends on ephemeral event-page memory; durable state, idempotent re-initialisation, alarms recreated from durable timers and bounded catch-up are authoritative (ADR-002).",
       "status": "ACCEPTED"
     }
   ]

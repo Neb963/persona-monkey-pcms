@@ -245,3 +245,165 @@ Merge wave: 10
 - [x] T026.2 — T026.2 restore/update/recovery
 - [x] T026.3 — T026.3 final human acceptance
 
+## P027 — Packaged-XPI Firefox harness + browser pin >=154
+Status: **READY**  
+Depends on: P026  
+Merge wave: 11
+
+- [ ] T027.1 — T027.1 Pin exact Firefox Developer Edition build >=154
+- [ ] T027.2 — T027.2 Packaged-XPI install/drive harness (tabs, idle unload, profile restart)
+- [ ] T027.3 — T027.3 Baseline packaged regression and pinned-build platform facts
+
+## P028 — Background-authoritative PCMS Core + UI client protocol
+Status: **BLOCKED**  
+Depends on: P027  
+Merge wave: 12
+
+- [ ] T028.1 — T028.1 Background entry, PersonaMonkey-ready ordering, idempotent Core, in-process broker endpoint
+- [ ] T028.2 — T028.2 Cold-start/warm-wake recovery and durable HumanTask handoff for assisted provider steps
+- [ ] T028.3 — T028.3 UI client protocol, revision signal, status summary; dashboard becomes a client
+
+## P029 — Durable PCMS timers woken by extension alarms
+Status: **BLOCKED**  
+Depends on: P028  
+Merge wave: 13
+
+- [ ] T029.1 — T029.1 Alarm mapping (next-due + heartbeat) and cold-start recreation
+- [ ] T029.2 — T029.2 Due pass, interrupted-timer recovery, declared schedules (timers.ensure), bounded work steps
+- [ ] T029.3 — T029.3 Background continuity proof with zero PCMS tabs and forced unloads
+
+## P030 — Production sandbox pages + background-hosted controller frames
+Status: **BLOCKED**  
+Depends on: P028  
+Merge wave: 13
+
+- [ ] T030.1 — T030.1 Declare sandbox pages/CSP in the production manifest; browser-floor detection
+- [ ] T030.2 — T030.2 Background frame factory and frame lifecycle bound to generations
+- [ ] T030.3 — T030.3 Packaged proof that runtime-supplied controller source executes in a real sandbox page
+
+## P031 — Runtime module lifecycle live in production
+Status: **BLOCKED**  
+Depends on: P029, P030  
+Merge wave: 14
+
+- [ ] T031.1 — T031.1 Install/approve/admit/activate via UI client commands; module supervisor with lazy rehydration
+- [ ] T031.2 — T031.2 Capability set v1 (module storage, timers, attention, audit, read projections, provider via ProviderGate)
+- [ ] T031.3 — T031.3 Live update/disable/enable/rollback/remove/purge and packaged end-to-end proof
+
+## P032 — PCMS dashboard shell v2 as UI client
+Status: **BLOCKED**  
+Depends on: P028  
+Merge wave: 13
+
+- [ ] T032.1 — T032.1 Shell, tokens, primitives, router v2 with legacy routes
+- [ ] T032.2 — T032.2 Core status, durable receipts and Attention v2 over durable HumanTasks
+- [ ] T032.3 — T032.3 Diagnostics page and multi-tab behaviour
+
+## P033 — Module UI contribution contract v1 for built-in and runtime modules
+Status: **BLOCKED**  
+Depends on: P031, P032  
+Merge wave: 15
+
+- [ ] T033.1 — T033.1 Contribution validator and Core merge points (nav, overview, search, conditions, settings, activity)
+- [ ] T033.2 — T033.2 Runtime-module contributions via core.ui.publish and the sandboxed module page surface
+- [ ] T033.3 — T033.3 Statistics pilot and fixture runtime-module UI proof, including lifecycle presentation states
+
+## P034 — Accounts UX with Persona/account pickers
+Status: **BLOCKED**  
+Depends on: P032  
+Merge wave: 14
+
+- [ ] T034.1 — T034.1 Accounts table and detail
+- [ ] T034.2 — T034.2 Add-account dialog with generated IDs and shared EntityPicker
+- [ ] T034.3 — T034.3 Guarded rebind and visible-row route/session state
+
+## P035 — Toolbar popup PCMS status block
+Status: **BLOCKED**  
+Depends on: P028, P032  
+Merge wave: 14
+
+- [ ] T035.1 — T035.1 Read the non-secret storage.session status summary
+- [ ] T035.2 — T035.2 PCMS line and account-for-active-Persona deep link
+- [ ] T035.3 — T035.3 ESR sizing regression extension
+
+## P036 — Deployer v2 domain, Perchance contract v2 and Generators views
+Status: **BLOCKED**  
+Depends on: P033, P034  
+Merge wave: 16
+
+- [ ] T036.1 — T036.1 Deployer state v2 migration and status derivation
+- [ ] T036.2 — T036.2 Perchance driver v2 (code/HTML/thumbnail/listing) with GeneratorListing adapter mapping and emulator
+- [ ] T036.3 — T036.3 Generator index, Generators list/detail and assisted manual deploy
+
+## P037 — Generator repository provider, manual scan and assisted repository deployments
+Status: **BLOCKED**  
+Depends on: P036  
+Merge wave: 17
+
+- [ ] T037.1 — T037.1 Repository provider boundary, GitHub implementation and fixture provider
+- [ ] T037.2 — T037.2 Repository format validation, payload identity, release ledger and snapshot
+- [ ] T037.3 — T037.3 Snapshot application to Deployer, account-folder linking, adoption and Deployer page
+
+## P038 — Scheduled background repository synchronization
+Status: **BLOCKED**  
+Depends on: P037, P029  
+Merge wave: 18
+
+- [ ] T038.1 — T038.1 Deployer repository-sync service on declared schedules
+- [ ] T038.2 — T038.2 Cadence, backoff, rate-limit and offline handling
+- [ ] T038.3 — T038.3 Interrupted-scan recovery and packaged continuity proof
+
+## P039 — Perchance observation, verification and drift (capability-gated)
+Status: **BLOCKED**  
+Depends on: P038  
+Merge wave: 19
+
+- [ ] T039.1 — T039.1 generator.observe contract and PersonaMonkey execution-artifact read driver (fixture page)
+- [ ] T039.2 — T039.2 Post-apply baseline, bounded background verification sweep
+- [ ] T039.3 — T039.3 Drift detection, comparison and operator choices
+
+## P040 — Refresher, Explorer and Provisioning background services and UI migration
+Status: **BLOCKED**  
+Depends on: P033, P036, P029  
+Merge wave: 17
+
+- [ ] T040.1 — T040.1 Refresher background schedules and content from Deployer confirmed release
+- [ ] T040.2 — T040.2 Explorer and Provisioning contribution UIs with pickers and SecretRef creation
+- [ ] T040.3 — T040.3 Removal of P026 legacy operator forms with superseding assertions
+
+## P041 — Backup/restore and module management UX
+Status: **BLOCKED**  
+Depends on: P033, P031  
+Merge wave: 16
+
+- [ ] T041.1 — T041.1 File-based backup and previewed restore with typed confirmation
+- [ ] T041.2 — T041.2 Recovery checklist with per-item reconciliation
+- [ ] T041.3 — T041.3 Modules page driving live install/review/update/rollback/remove/purge
+
+## P042 — Unattended Perchance automation via PersonaMonkey execution artifacts (gated)
+Status: **BLOCKED**  
+Depends on: P039  
+Merge wave: 20
+
+- [ ] T042.1 — T042.1 Unattended generator.update v2 (and optional create) as PersonaMonkey execution artifacts under control lease
+- [ ] T042.2 — T042.2 Automatic-mode gates, eligibility and bounded serial background pass
+- [ ] T042.3 — T042.3 Emulator/FDE fixture end-to-end deploy-verify proof
+
+## P043 — Live acceptance 3 — background continuity, runtime modules, repository/provider compatibility
+Status: **BLOCKED**  
+Depends on: P035, P038, P040, P041, P042  
+Merge wave: 21
+
+- [ ] T043.1 — T043.1 Operator-installed background continuity
+- [ ] T043.2 — T043.2 Live runtime-module lifecycle without reload
+- [ ] T043.3 — T043.3 Real repository and Perchance read/listing compatibility capture
+
+## P044 — Live acceptance 4 — representative mutations, drift, unattended operation, recovery, final human acceptance
+Status: **BLOCKED**  
+Depends on: P043  
+Merge wave: 22
+
+- [ ] T044.1 — T044.1 Assisted and unattended deployments verified on real Perchance
+- [ ] T044.2 — T044.2 Induced drift, uncertain reconciliation, restore/hold/release
+- [ ] T044.3 — T044.3 Final human acceptance
+
