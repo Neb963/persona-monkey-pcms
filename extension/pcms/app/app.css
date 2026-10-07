@@ -7,7 +7,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
 a { color: inherit; }
-button, input, textarea { font: inherit; }
+button, input, textarea, select { font: inherit; }
 .app-shell { width: min(1120px, 100%); margin: 0 auto; padding: 28px clamp(18px, 4vw, 42px) 36px; }
 .topbar { display: flex; justify-content: space-between; gap: 28px; align-items: end; border-bottom: 1px solid light-dark(#d9dee7,#303744); padding-bottom: 20px; }
 .eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: light-dark(#596579,#aab4c4); }
@@ -78,10 +78,11 @@ footer { margin-top: 44px; border-top: 1px solid light-dark(#d9dee7,#303744); pa
 }
 
 .live-operations { margin-top:14px; }
+.global-action-status { min-height:18px; margin:0 0 4px; }
 .live-form { display:grid; gap:9px; margin-top:14px; padding-top:14px; border-top:1px solid light-dark(#e1e5ec,#2c3440); }
 .live-form h3 { margin:0; }
 .live-form label { display:grid; gap:5px; font-size:12px; font-weight:700; color:light-dark(#596579,#b7c0cf); }
-.live-form input, .live-form textarea, #backupPayload, .operator-source {
+.live-form input, .live-form textarea, .live-form select, #backupPayload, .operator-source {
   width:100%; border:1px solid light-dark(#cbd2dd,#3a4351); border-radius:8px; padding:8px 10px;
   background:light-dark(#fff,#10151c); color:inherit;
 }
