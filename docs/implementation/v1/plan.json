@@ -1238,7 +1238,7 @@
     {
       "id": "P029",
       "title": "Durable PCMS timers woken by extension alarms",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P028"
       ],
@@ -1248,13 +1248,23 @@
           "extension/pcms/services/**",
           "extension/pcms/background/alarms/**",
           "tests/pcms/p029/**",
-          "docs/evidence/P029/**"
+          "docs/evidence/P029/**",
+          "extension/pcms/background/core-factory.js",
+          "extension/pcms/background/core-host.js",
+          "extension/pcms/background/entry.js",
+          "package.json",
+          ".github/workflows/firefox.yml"
         ],
         "contractReads": [],
         "contractWrites": [
           "pcms.timers.ensure/v1"
         ],
-        "resources": [],
+        "resources": [
+          {
+            "key": "ci-workflows",
+            "mode": "exclusive"
+          }
+        ],
         "migrationSlots": []
       },
       "tasks": [
