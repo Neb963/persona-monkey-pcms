@@ -1090,7 +1090,11 @@
         "writePaths": [
           "extension/pcms/**",
           "tests/pcms/**",
-          "docs/evidence/**"
+          "docs/evidence/**",
+          "extension/popup/popup.css",
+          "tests/upstream/import-integrity.test.mjs",
+          "docs/upstream/import-manifest.json",
+          "docs/upstream/source/extension/popup/popup.css"
         ],
         "contractReads": [],
         "contractWrites": [],

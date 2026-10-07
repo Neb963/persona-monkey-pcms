@@ -13,7 +13,11 @@
   "writePaths": [
     "extension/pcms/**",
     "tests/pcms/**",
-    "docs/evidence/**"
+    "docs/evidence/**",
+    "extension/popup/popup.css",
+    "tests/upstream/import-integrity.test.mjs",
+    "docs/upstream/import-manifest.json",
+    "docs/upstream/source/extension/popup/popup.css"
   ],
   "contractReads": [],
   "contractWrites": [],
@@ -24,5 +28,5 @@
     "A026-02",
     "A026-03"
   ],
-  "lastCheckpointSha": "9a42004a7c6fda065eff6c947d3ec055e9403d91"
+  "lastCheckpointSha": "3c0c54c9a075586a4bdbec5a008dec64e796e4f5"
 }
