@@ -42,6 +42,7 @@
             <div><dt>Broker commands</dt><dd id="commandCount">—</dd></div>
             <div><dt>Broker implementation</dt><dd id="brokerImplementation">—</dd></div>
             <div><dt>Live Integration v1</dt><dd id="brokerLiveStatus">Connecting…</dd></div>
+            <div><dt>Core host</dt><dd id="coreHostStatus">Background · connecting…</dd></div>
           </dl>
         </section>
 
@@ -140,6 +141,18 @@
         </div>
         <div id="attentionList" class="item-list"></div>
         <p id="attentionEmpty" class="empty-state">No open HumanTasks.</p>
+        <section id="handoffDetail" class="handoff-detail" hidden aria-labelledby="handoffTitle">
+          <h3 id="handoffTitle">Waiting for your confirmation</h3>
+          <p id="handoffInstructions"></p>
+          <code id="handoffHash" class="operator-hash"></code>
+          <label id="handoffSourceLabel" hidden>Desired source
+            <textarea id="handoffSource" class="operator-source" rows="12" readonly></textarea>
+          </label>
+          <div class="operator-actions">
+            <button type="button" id="handoffCopy" hidden>Copy source</button>
+            <button type="button" id="handoffClose">Close</button>
+          </div>
+        </section>
       </section>
 
       <section id="viewAccounts" hidden aria-labelledby="accountsHeading">

@@ -68,10 +68,13 @@ import { PCMS_EVENTS_PORT, PCMS_REQUEST_TYPE } from "./lib/pcms-protocol.js";
 import { createIntegrationOperationStore, createManagementIntegration } from "./lib/management-integration.js";
 import { normalizeIntegrationPolicy } from "./lib/management-integration-protocol.js";
 import { installRoutingHandlers } from "./lib/routing-gate.js";
+import { registerPcmsInternalBrokerHandler } from "./lib/pcms-internal-broker-endpoint.js";
 
 const extensionBaseUrl = browser.runtime.getURL("");
 const PCMS_PERSONA_BROKER_REQUEST_TYPE = "PCMS_PERSONA_BROKER_REQUEST";
 const PCMS_PERSONA_BROKER_EVENTS_PORT = "PCMS_PERSONA_BROKER_EVENTS";
+// Answered by the background-hosted PCMS Core entry (ADR-002), never here.
+const PCMS_UI_REQUEST_TYPE = "PCMS_UI_REQUEST";
 let initPromise = null;
 let lastRoutingFailureEventAt = 0;
 const securityState = {
@@ -831,6 +834,15 @@ const managementIntegration = createManagementIntegration({
   })
 });
 
+// ADR-002: the background-hosted PCMS Core reaches the same Integration-v1
+// dispatcher in process. Requests wait for PersonaMonkey's fail-closed
+// initialization exactly as the extension-page message path does.
+registerPcmsInternalBrokerHandler({
+  ready: () => initialize(),
+  handleRequest: (request) => managementIntegration.handleInternalRequest(request),
+  attachEvents: (port) => managementIntegration.attachInternalPort(port)
+});
+
 function localMutationFence(profileIds, operation, mode = "block", options = {}) {
   return managementIntegration.withLocalMutationFence({
     targetPersonaUids: typeof profileIds === "function"
@@ -1073,7 +1085,13 @@ browser.runtime.onMessageExternal?.addListener(async (message, sender) => {
   return managementIntegration.handleExternalRequest(message, sender);
 });
 
-browser.runtime.onMessage.addListener(async (message, sender) => {
+browser.runtime.onMessage.addListener((message, sender) => {
+  // Leave PCMS UI requests to the PCMS background entry's listener.
+  if (message?.type === PCMS_UI_REQUEST_TYPE) return undefined;
+  return handleRuntimeMessage(message, sender);
+});
+
+async function handleRuntimeMessage(message, sender) {
   await initialize();
 
   // Content scripts receive only these two narrow, purpose-built signals.
@@ -1346,7 +1364,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
     });
     default: throw new Error(`Unknown message type: ${message?.type}`);
   }
-});
+}
 
 browser.runtime.onInstalled.addListener(() => { void initialize().catch(() => {}); });
 try {

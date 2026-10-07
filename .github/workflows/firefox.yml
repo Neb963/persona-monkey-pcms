@@ -46,6 +46,9 @@ jobs:
       - name: Verify P027 harness and inherited P026 regressions
         run: npm run test:p027 && node --test tests/pcms/p026/*.test.mjs
 
+      - name: Verify P028 background Core, wake recovery and UI client protocol
+        run: npm run test:p028 && node extension/tests/background-routing-init.test.mjs
+
       - name: Install and drive packaged XPI, lifecycle and platform probes
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}

@@ -30,6 +30,11 @@ async function page(code, args = []) {
   return result.value;
 }
 const probe = (action) => page('return api.runtime.sendMessage({type:"p027",action:arguments[0]});', [action]);
+// P028 (pcms.ui-client/v1): the same requests a dashboard sends, from the current extension page.
+const uiQuery = (name, args = []) => page(`return api.runtime.sendMessage({type:'PCMS_UI_REQUEST',version:1,
+  requestId:'ci-'+Date.now(),kind:'query',name:arguments[0],params:{args:arguments[1]}});`, [name, args]);
+const sessionValue = (key) => page('return api.storage.session.get(arguments[0]).then(v => v[arguments[0]] ?? null);', [key]);
+const switchTo = (handle) => h.client.command('WebDriver:SwitchToWindow', { handle });
 async function dashboard() {
   const handle = await h.openPage(PRODUCT, 'pcms/app/index.html');
   await waitFor(() => h.pageScript('return document.getElementById("brokerLiveStatus")?.dataset.state === "connected"'), 'packaged PCMS connects');
@@ -57,13 +62,60 @@ try {
   assert.equal(await h.pageScript('try { JSON.parse(document.getElementById("backupPayload").value); return true; } catch { return false; }'), true);
   report.checks.packagedIndexedDbBackup = true;
   await page('await api.storage.local.set({p027CiMarker:"installed-once"});');
+
+  // P028: Core runs in the background; each dashboard is only a client of it.
+  report.p028 = {};
+  const firstCore = await uiQuery('core.status');
+  assert.equal(firstCore.ok, true);
+  assert.equal(firstCore.result.state, 'RUNNING');
+  assert.equal(firstCore.result.constructedCores, 1);
+  assert.equal(firstCore.result.recoveryState, 'NORMAL');
+  report.p028.firstWake = firstCore.result.wake;
+  const coreSession = await sessionValue('pcms.core.session');
+  assert.match(coreSession.sessionId, /^[0-9a-f]{32}$/);
+  assert.equal((await sessionValue('pcms.status.v1')).state, 'RUNNING');
+  await waitFor(() => h.pageScript('return Number(document.body.dataset.pcmsRevision || 0) > 0;'), 'dashboard receives the storage.session revision signal');
+  const tabRevision = await h.pageScript('return Number(document.body.dataset.pcmsRevision);');
+
   const second = await dashboard();
+  const secondCore = await uiQuery('core.status');
+  assert.equal(secondCore.result.constructedCores, 1, 'a second dashboard never constructs another Core');
+  assert.equal(secondCore.result.recoveryState, 'NORMAL', 'a second dashboard never triggers recovery');
+  assert.deepEqual(await sessionValue('pcms.core.session'), coreSession);
+  await h.pageScript('document.querySelector("#backupCreateForm input[name=backupId]").value = "p028-second-tab"; document.getElementById("backupCreateForm").requestSubmit();');
+  await waitFor(() => h.pageScript('return document.getElementById("backupPayload").value.includes("p028-second-tab");'), 'second-tab command');
+  await switchTo(tab);
+  await waitFor(() => h.pageScript('return Number(document.body.dataset.pcmsRevision) > arguments[0];', [tabRevision]),
+    'first dashboard refreshes on the other tab\'s command');
+  report.checks.p028TwoDashboardsAreClientsOfOneCore = true;
+
+  const rejected = await h.openPage(PRODUCT, 'popup/popup.html');
+  const fromPopup = await uiQuery('core.status');
+  assert.equal(fromPopup.ok, false);
+  assert.equal(fromPopup.error.code, 'PCMS_UI_SENDER_REJECTED');
+  await h.closePage(rejected);
+  report.checks.p028UiRequestSenderValidated = true;
+
   await h.closePage(second); await h.closePage(tab);
   report.checks.packagedBaselineAndTwoTabs = true;
   await h.setIdleTimeout(500);
   report.productUnload = await h.forceIdleUnload(PRODUCT);
   report.checks.productForcedUnloadWithZeroDashboards = true;
   await h.resetIdleTimeout();
+
+  // Wake the event page with zero PCMS tabs open (a PersonaMonkey page): Core starts
+  // on its own and classifies the wake as warm because storage.session survived.
+  const beforeWake = Date.now();
+  const popup = await h.openPage(PRODUCT, 'popup/popup.html');
+  const warmStatus = await waitFor(async () => {
+    const status = await sessionValue('pcms.status.v1');
+    return status?.state === 'RUNNING' && status.wake === 'WARM' && Date.parse(status.asOf) >= beforeWake - 1000 ? status : null;
+  }, 'Core starts after a wake with zero PCMS dashboards');
+  assert.equal(warmStatus.recoveryState, 'NORMAL', 'an idle unload alone never enters RECOVERY_HOLD');
+  assert.deepEqual(await sessionValue('pcms.core.session'), coreSession);
+  await h.closePage(popup);
+  report.p028.warmWake = { recoveryState: warmStatus.recoveryState, counts: warmStatus.counts };
+  report.checks.p028CoreStartsWithoutDashboardAndWarmWake = true;
 
   // Build a separate fixture XPI. Never inject fixtures or privileged hooks into the product XPI.
   const fixtureRoot = resolve('tests/pcms/p027/platform-fixture');
@@ -148,6 +200,10 @@ try {
   assert.equal((await h.extension(PRODUCT)).id, PRODUCT);
   tab = await dashboard();
   assert.equal((await page('return api.storage.local.get("p027CiMarker");')).p027CiMarker, 'installed-once');
+  const restartedCore = await uiQuery('core.status');
+  assert.equal(restartedCore.result.wake, 'COLD', 'browser restart clears storage.session: cold start');
+  assert.notEqual((await sessionValue('pcms.core.session')).sessionId, coreSession.sessionId);
+  report.checks.p028ColdStartAfterRestart = true;
   await h.closePage(tab);
   tab = await h.openPage(PROBE, 'page.html');
   const restart = await probe('facts');

@@ -7,7 +7,13 @@ function setStatus(documentRef,message,state=""){
   node.textContent=message;
   node.dataset.state=state;
 }
-function errorMessage(error){return error?.code?error.code+": "+error.message:(error?.message||String(error));}
+function errorMessage(error){
+  // ADR-002 §9: an assisted provider step is handed off, so its outcome is not known yet.
+  if(typeof error?.code==="string"&&/PROVIDER_PROTOCOL$/.test(error.code)) {
+    return "Outcome not confirmed yet. If PCMS opened a confirmation in Attention, answer it there; PCMS will not replay the action.";
+  }
+  return error?.code?error.code+": "+error.message:(error?.message||String(error));
+}
 
 function personaOptionLabel(persona){return persona.name+" · "+persona.cookieStoreId;}
 
@@ -262,7 +268,49 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
   });
 
   const attention=documentRef.getElementById("attentionList");
+  const handoffDetail=documentRef.getElementById("handoffDetail");
+  function showHandoff(detail){
+    if(!handoffDetail)return;
+    documentRef.getElementById("handoffTitle").textContent=detail.title||"Waiting for your confirmation";
+    documentRef.getElementById("handoffInstructions").textContent=detail.instructions||"";
+    documentRef.getElementById("handoffHash").textContent=detail.sourceHash?"SHA-256: "+detail.sourceHash:"";
+    const source=documentRef.getElementById("handoffSource");
+    source.value=detail.source||"";
+    documentRef.getElementById("handoffSourceLabel").hidden=!detail.source;
+    documentRef.getElementById("handoffCopy").hidden=!detail.source;
+    handoffDetail.hidden=false;
+  }
+  on(documentRef.getElementById("handoffClose"),"click",()=>{if(handoffDetail)handoffDetail.hidden=true;});
+  on(documentRef.getElementById("handoffCopy"),"click",async()=>{
+    const source=documentRef.getElementById("handoffSource");
+    const copy=documentRef.getElementById("handoffCopy");
+    try{await globalThis.navigator?.clipboard?.writeText?.(source.value);copy.textContent="Copied";}
+    catch{source.focus();source.select();copy.textContent="Selected — press Ctrl+C";}
+  });
   on(attention,"click",async(event)=>{
+    const show=event.target.closest?.("[data-handoff-show]");
+    if(show){
+      event.preventDefault();
+      try{
+        const detail=await runtime.providerHandoff.describe(show.dataset.handoffShow);
+        if(!detail)throw new Error("This confirmation is no longer available");
+        showHandoff(detail);
+      }catch(error){setStatus(documentRef,errorMessage(error),"error");}
+      return;
+    }
+    const answer=event.target.closest?.("[data-handoff-task]");
+    if(answer){
+      event.preventDefault();
+      setStatus(documentRef,"Recording your answer…");
+      try{
+        const result=await runtime.providerHandoff.answer(answer.dataset.handoffTask,answer.dataset.handoffOutcome);
+        if(handoffDetail)handoffDetail.hidden=true;
+        setStatus(documentRef,"Answer recorded · operation "+String(result.operationState||"unknown"),"connected");
+        await refresh();
+        await renderRecovery();
+      }catch(error){setStatus(documentRef,errorMessage(error),"error");}
+      return;
+    }
     const button=event.target.closest?.("[data-resolve-task]");
     if(!button)return;
     event.preventDefault();
@@ -310,5 +358,8 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
   });
 
   renderRecovery().catch((error)=>setStatus(documentRef,errorMessage(error),"error"));
-  return Object.freeze({close(){for(const cleanup of cleanups)cleanup();}});
+  return Object.freeze({
+    refreshRecovery(){return renderRecovery().catch(()=>{});},
+    close(){for(const cleanup of cleanups)cleanup();}
+  });
 }

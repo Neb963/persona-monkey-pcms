@@ -19,7 +19,6 @@ function makeEvent(name, order) {
     removeListener(callback) { callbacks.delete(callback); },
     hasListener(callback) { return callbacks.has(callback); },
     first() { return callbacks.values().next().value; },
-    last() { return [...callbacks].at(-1); },
     async emit(value) {
       return Promise.all([...callbacks].map((callback) => callback(value)));
     }
@@ -339,13 +338,6 @@ async function runScenario(scenario) {
     const firstRead = harness.order.indexOf("storage.get:1");
     assert.ok(proxyRegistration >= 0 && proxyRegistration < firstRead);
     assert.ok(webRequestRegistration >= 0 && webRequestRegistration < firstRead);
-    // P028/ADR-002: the PCMS background entry registers its message listener during
-    // static evaluation, after the routing guards. PersonaMonkey's own listener is
-    // registered later by background.js and is therefore the last one.
-    const pcmsMessageRegistration = harness.order.indexOf("listener:runtime.onMessage");
-    assert.ok(pcmsMessageRegistration > webRequestRegistration && pcmsMessageRegistration < firstRead);
-    assert.equal(harness.events["runtime.onMessage"].addCalls, 1);
-    assert.equal(harness.events["runtime.onMessage"].first()({ type: "GET_SNAPSHOT" }, {}), undefined);
 
     if (scenario === "startup") {
       const early = {
@@ -385,9 +377,9 @@ async function runScenario(scenario) {
       }
       // A later guarded request retries bootstrap in the same background
       // context. Keep probing only while the full background has not loaded.
-      while (harness.events["runtime.onMessage"].addCalls < 2) {
+      while (harness.events["runtime.onMessage"].addCalls === 0) {
         const stillBlocked = await harness.events["proxy.onRequest"].first()(retryRequest);
-        if (harness.events["runtime.onMessage"].addCalls < 2) {
+        if (harness.events["runtime.onMessage"].addCalls === 0) {
           assert.deepEqual(stillBlocked, [{ ...BLACKHOLE_PROXY }, null]);
           await new Promise((resolve) => setTimeout(resolve, 5));
         }
@@ -419,7 +411,7 @@ async function runScenario(scenario) {
     if (scenario === "startup") {
       harness.allowFirstSet();
       const snapshot = await waitFor(
-        harness.events["runtime.onMessage"].last()({ type: "GET_SNAPSHOT" }, {
+        harness.events["runtime.onMessage"].first()({ type: "GET_SNAPSHOT" }, {
           id: "persona-route-manager@local",
           url: "moz-extension://persona-route-manager/options/options.html"
         }),
