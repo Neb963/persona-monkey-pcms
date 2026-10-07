@@ -58,6 +58,9 @@ jobs:
       - name: Verify P028 background Core, wake recovery and UI client protocol
         run: npm run test:p028 && node extension/tests/background-routing-init.test.mjs
 
+      - name: Verify P029 durable timers and alarm wake coordination
+        run: npm run test:p029
+
       - name: Verify P030 sandbox pages, browser floor and controller frame lifecycle
         run: npm run test:p030
 
@@ -67,6 +70,22 @@ jobs:
           FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged
           FIREFOX_PACKAGED_REPORT: ${{ runner.temp }}/firefox-packaged-report.json
         run: npm run firefox:packaged
+
+      - name: Prove P029 timers with zero PCMS tabs across unload and restart
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged
+          FIREFOX_P029_REPORT: ${{ runner.temp }}/firefox-p029-report.json
+        run: npm run firefox:packaged:p029
+
+      - name: Upload P029 packaged evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-packaged-p029
+          path: ${{ runner.temp }}/firefox-p029-report.json
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Execute runtime-supplied controller in a background sandbox frame of the packaged XPI
         env:

@@ -22,3 +22,12 @@ test("A029-02 P029 introduces no domain scheduler and its only declared product 
   assert.match(fixture,/timers\.ensure/);
   assert.doesNotMatch(fixture,/deployer|refresher|explorer|provisioning|perchance/i);
 });
+
+test("A029-03 required CI runs deterministic timer tests and the packaged pinned-FDE continuity proof",async()=>{
+  const pkg=JSON.parse(await readFile("package.json","utf8"));
+  const workflow=await readFile(".github/workflows/firefox.yml","utf8");
+  assert.equal(pkg.scripts["test:p029"],"node --test tests/pcms/p029/*.test.mjs");
+  assert.match(pkg.scripts["firefox:packaged:p029"],/tests\/pcms\/p029\/packaged\.mjs/);
+  assert.match(workflow,/npm run test:p029/);
+  assert.match(workflow,/npm run firefox:packaged:p029/);
+});
