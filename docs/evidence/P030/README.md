@@ -51,3 +51,23 @@ CI_VERIFIED on head `15b24dcae98d04cf2c8a5c7751868cac1baba82d` (PR #38):
   `firefox-packaged-p030` (id 11512980372).
 
 This commit only records evidence; CI on it re-confirms the same tree. Acceptance follows merged-main CI.
+
+## Final PR verification and merge
+
+Final head `dbc7c3fe2ddc03b4ae56344045e80b7c95b97a24` passed both independent workflows on
+[PR #38](https://github.com/Neb963/persona-monkey-pcms/pull/38): `verify` run
+[37689704055](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37689704055) and `firefox-developer-edition` run
+[37689704019](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37689704019). Main had not moved from claimed base
+`401fa524225b35c45eaf239112974c27492d3bbc`; the PR was merged at the operator's request as
+`7772db74a5caad9026996bb625e0460e12686c69`.
+
+## Merged-main verification and acceptance
+
+Exact merged-main commit `7772db74a5caad9026996bb625e0460e12686c69` passed:
+
+- [verify 37690202775](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37690202775);
+- [firefox-developer-edition 37690202761](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37690202761),
+  including the P030 unit and packaged XPI steps.
+
+**A030-01 PASS · A030-02 PASS · A030-03 PASS.** Phase P030 and claim CLM-P030-001, epoch 1, are **ACCEPTED** at the
+operator's instruction. P031 stays BLOCKED until P029 is accepted.
