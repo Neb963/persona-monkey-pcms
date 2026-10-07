@@ -39,7 +39,7 @@ async function page(code,args=[]){
 async function timerRow(){
   return page(`
     const db=await new Promise((resolve,reject)=>{
-      const request=window.wrappedJSObject.indexedDB.open("persona-monkey-pcms",1);
+      const request=indexedDB.open("persona-monkey-pcms",1);
       request.onsuccess=()=>resolve(request.result);
       request.onerror=()=>reject(request.error||new Error("PCMS IndexedDB open failed"));
     });
