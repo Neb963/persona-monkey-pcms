@@ -46,10 +46,11 @@ export function createPcmsAlarmCoordinator({
       .filter((row)=>row.value.state===TIMER_STATES.SCHEDULED)
       .sort((a,b)=>a.value.dueAt.localeCompare(b.value.dueAt)||a.value.timerId.localeCompare(b.value.timerId));
     let when=scheduled.length?Date.parse(scheduled[0].value.dueAt):null;
-    if(when!==null&&when<=now)when=now+50;
     if(continuationDelayMs!==null){
       const continuation=now+continuationDelayMs;
-      when=when===null?continuation:Math.min(when,continuation);
+      when=when===null||when<=now?continuation:Math.min(when,continuation);
+    }else if(when!==null&&when<=now){
+      when=now+50;
     }
     if(when===null){
       await Promise.resolve(alarms.clear(PCMS_TIMER_ALARM_NEXT));
