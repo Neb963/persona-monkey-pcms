@@ -1,6 +1,6 @@
 # P026 — Live acceptance 2
 
-Phase state: **MERGED — LIVE ACCEPTANCE PASSED; merged-main CI green**.
+Phase state: **ACCEPTED**.
 
 Final pre-merge implementation checkpoint: `edd699e89d82b9344b4abc05208aeee458d36086`.
 
@@ -159,4 +159,6 @@ No plaintext credential was required by the PCMS controls used for this acceptan
 
 PR #34 merged as `072e11083622bfbe47c3c8853df3ebbc00f38df6`. Merged-main verification passed: repository verify run **37654994485** and pinned Firefox Developer Edition run **37654994495** both succeeded.
 
-P026 is now durably **MERGED** with all three live gates passed. The remaining governance step is the final ACCEPTED transition.
+The merged-state governance checkpoint `ae032f3eb457d9d07a9092d5ff2611e87a97649b` also passed repository verify run **37655414399** and pinned Firefox Developer Edition run **37655414371**.
+
+All implementation, CI, merged-main verification, recovery evidence, and operator LIVE gates are satisfied. **P026 is ACCEPTED.**

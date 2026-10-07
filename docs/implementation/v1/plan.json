@@ -1081,7 +1081,7 @@
     {
       "id": "P026",
       "title": "Live acceptance 2 — representative mutations + recovery + final acceptance",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P025"
       ],
