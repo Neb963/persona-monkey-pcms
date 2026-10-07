@@ -1,10 +1,10 @@
 # P026 — Live acceptance 2
 
-Phase state: **LIVE ACCEPTANCE PENDING**.
+Phase state: **LIVE ACCEPTANCE PASSED — merge pending**.
 
-Implementation checkpoint: `8606eca5d08d1441465ae8f879aa1b01e283af9a`.
+Final pre-merge implementation checkpoint: `edd699e89d82b9344b4abc05208aeee458d36086`.
 
-This evidence record does not mark P026 or any A026 gate as PASS. The roadmap defines A026-01, A026-02, and A026-03 as LIVE acceptance gates; operator-environment evidence is still required.
+Operator LIVE evidence now satisfies A026-01, A026-02, and A026-03. The phase is not yet marked ACCEPTED here because the accepted-state transition is performed only after PR merge and merged-main verification.
 
 ## Implemented scope
 
@@ -83,45 +83,78 @@ Live operator follow-up in normal Firefox ESR confirmed:
 
 This is positive A026-01 live evidence, but the gate remains pending until the remaining representative account-B/uncertain-path checks are completed.
 
-## P026 live candidate
+## Final live correction — startup ordering
 
-The accepted P025 XPI `e316e2fd6d52f359d865b9c396a7af9e47d9ea99337fc9de7330e24bb2e469e8` remains the frozen package baseline. The original P026 live candidate was superseded after the Firefox ESR popup defect was observed. The corrected candidate contains the ten prior P026 production changes plus byte-exact branch blob `extension/popup/popup.css` (`726ab9deb6a44ec186e6731cb4834605b52fc80b`); no other packaged file changed from the prior P026 candidate.
+An earlier operator run had exposed a startup-order race: opening PCMS very early during Firefox startup could leave Live Integration v1 as Unavailable until a manual reload. The final production correction adds a bounded retry helper and keeps every failed attempt self-contained because `startPcmsLiveRuntime()` closes its failed Core instance before retry.
 
-Candidate identity:
+Final production checkpoint `edd699e89d82b9344b4abc05208aeee458d36086` is rebased/merged onto current main governance and passed:
+
+- repository verification run **37654386707** — success;
+- pinned Firefox Developer Edition run **37654386457** — success.
+
+The exact new startup regression was also executed locally against the exact helper blob and passed **2/2** cases: transient Integration unavailability recovers, and terminal failure remains bounded/preserved.
+
+## P026 final candidate
+
+The live-tested account-binding candidate was:
 
 - version: **1.2.0**;
-- Gecko ID: **persona-route-manager@local**;
-- candidate SHA-256: `b282a94cba816fc91a8453af393c009c5c1b4f100b61e9300544ab5dfd98b64e`.
+- Gecko ID: `persona-route-manager@local`;
+- SHA-256: `c92e3bf0a30250b3bef7482ee6b9020f8890e9d9bcdc5239c0dcc273c9ff21d5`.
 
-Packaging checks actually run:
+The final closeout candidate adds only the bounded startup-order correction to that live-tested package:
+
+- modified: `pcms/app/app.js`;
+- added: `pcms/app/startup-retry.js`;
+- exact repository Git blobs: app `6c646a03d9ccfba785f0eb8d46bda9804c38b609`, retry helper `8e063d211c096b9775df3cef544ac3300c065941`;
+- final SHA-256: `b8aa1dcc12bda4e0329a4436169d78bb061d05024baf6fe663def0952e533755`.
+
+Packaging verification actually performed for the final candidate:
 
 - two independent deterministic archive builds produced the same SHA-256;
 - ZIP integrity passed;
-- manifest version/Gecko ID passed;
-- all packaged `pcms/**` and `pcms-modules/**` JavaScript import edges resolve;
-- zero bare module specifiers were found in the packaged PCMS graph;
-- packaged `pcms-modules/**` contains no stale `../../extension/pcms/` import;
-- Node syntax checks passed for every changed P026 JavaScript file;
-- archive-tree comparison against the prior P026 candidate found exactly one changed packaged file (`popup/popup.css`); against accepted P025 the corrected candidate has the ten prior P026 production changes plus this popup CSS correction.
+- manifest version is **1.2.0** and Gecko ID is `persona-route-manager@local`;
+- all packaged `pcms/**` and `pcms-modules/**` JavaScript imports resolve;
+- zero bare module specifiers were found;
+- Node syntax checks passed for the changed startup files;
+- archive comparison against the live-tested binding candidate found exactly the two startup-order changes above.
 
-This candidate has **not** yet been counted as LIVE evidence.
+Earlier candidate hashes in this evidence are historical/superseded and are not the final closeout artifact.
 
-## Required LIVE acceptance
+## LIVE acceptance
 
-### A026-01 — representative mutations
+Operator acceptance was completed manually in normal Firefox ESR without Marionette/Firefox DevTools MCP. Direct Personas were intentionally used for the P026 provider checks because browser automation/Marionette triggered Cloudflare; protected Persona/Mullvad routing continuity had already passed and been accepted in P025.
 
-Pending operator evidence in real Firefox Developer Edition + PersonaMonkey/PCMS + Perchance. Exercise representative PCMS paths including at least one real provider mutation in a disposable/safe target, verify the bound Persona/routing is used, and verify the saved provider outcome before choosing Applied.
+### A026-01 — PASS — representative feature mutations
 
-Where practical, exercise an ambiguous/uncertain outcome and verify PCMS reconciles it rather than replaying the mutation.
+- Two real Perchance sessions were kept isolated in two dedicated Direct Personas.
+- PCMS account binding was exercised live. The first binding UI defect and duplicate-selector-id regression were found during acceptance, corrected, and re-tested successfully.
+- Representative Deployer mutations were completed against real Perchance on both account/Persona bindings.
+- The operator reloaded Perchance after saving to independently verify server persistence before selecting APPLIED in PCMS.
+- An intentionally uncertain deployment was re-submitted and PCMS entered the reconciliation dialog instead of blindly replaying the mutation. The known-unsaved outcome was resolved as NOT APPLIED.
+- Current ergonomics debt is explicitly accepted for this milestone: several module controls still require typing durable Account/generator identifiers rather than selecting projected objects.
 
-### A026-02 — restore/update/recovery
+### A026-02 — PASS — restore/recovery/no-replay
 
-Pending operator evidence. Create a PCMS backup, perform disposable state changes, apply restore, verify RECOVERY_HOLD blocks new mutations, reconcile outstanding state, and release the hold only after checks pass. A restart/recovery case should confirm unresolved mutation state is held and not blindly replayed.
+The operator completed the requested recovery sequence and reported it working:
 
-### A026-03 — final human acceptance
+- create PCMS backup;
+- make disposable state change;
+- apply restore and enter `RECOVERY_HOLD`;
+- verify a new provider mutation is blocked while held;
+- reconcile and release the hold back to `NORMAL`;
+- fully restart Firefox ESR using the same test profile and confirm the PCMS state/modules/accounts remain available and recovery returns cleanly.
 
-Pending operator confirmation that the combined product is usable and acceptable in the real environment, including Persona/Mullvad routing continuity, Perchance compatibility, recovery behavior, and absence of plaintext-secret leakage in normal UI/evidence.
+Deterministic recovery coverage additionally proves interrupted DISPATCHING operations become UNCERTAIN on restart and reconciliation/cancellation never redispatches a possibly successful provider mutation.
+
+### A026-03 — PASS — final human acceptance
+
+The operator confirmed the combined product is working and requested professional P026 closeout. The live pass established usable PCMS Accounts + real Perchance mutations + reconciliation + recovery in Firefox ESR. P025 remains the accepted evidence for standard/Mullvad Persona routing continuity and Perchance session compatibility; P026 deliberately used Direct routing to keep Cloudflare/VPN behavior out of the PCMS functional acceptance.
+
+No plaintext credential was required by the PCMS controls used for this acceptance. Provisioning remains SecretRef-only and CAPTCHA/provider verification remains explicit/manual. Known non-blocking UI debt (typed identifiers, module/workflow ergonomics) is deferred to the next refinement milestone rather than treated as a P026 correctness failure.
 
 ## Current disposition
 
-P026 remains claimed/in progress. Deterministic implementation and candidate preparation are complete enough for operator LIVE testing, but **A026-01 / A026-02 / A026-03 remain pending** until real live evidence is supplied.
+**A026-01 PASS · A026-02 PASS · A026-03 PASS.**
+
+P026 has completed implementation, deterministic verification, live operator acceptance and final-candidate preparation. The remaining closeout steps are repository integration: merge PR #34, verify merged-main CI, transition claim/phase state through MERGED to ACCEPTED, regenerate generated views, and stop.
