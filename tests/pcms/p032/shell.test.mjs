@@ -42,6 +42,9 @@ test("A032-02 no global Working state remains and accepted P026 control IDs surv
   assert.match(html,/id="actionTrayDurableList"/);
   assert.match(html,/id="actionTrayReceiptList"/);
   assert.match(html,/id="actionTrayLocalList"/);
+  const app=await readFile("extension/pcms/app/app.js","utf8");
+  assert.match(app,/runtime\.uiReceipts\.list\(\)/);
+  assert.match(app,/renderActionTray\(snapshot,receiptState\)/);
 });
 
 test("A032-03 shell refresh is revision-driven and does not drive operations with UI timers",async()=>{
