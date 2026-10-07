@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "claimId": "CLM-P028-001",
+  "phaseId": "P028",
+  "taskId": "T028.1",
+  "claimEpoch": 1,
+  "state": "ACTIVE",
+  "owner": {
+    "agentId": "gpt-5-6-sol"
+  },
+  "baseMainSha": "b74b839f732d918d7808621af86ba96beea4ac0a",
+  "branch": "agent/gpt-5-6-sol/p028-t028-1",
+  "writePaths": [
+    "extension/lib/recovery-bootstrap.js",
+    "extension/background.js",
+    "docs/upstream/source/extension/lib/recovery-bootstrap.js",
+    "docs/upstream/source/extension/background.js",
+    "docs/upstream/import-manifest.json",
+    "tests/upstream/import-integrity.test.mjs",
+    "extension/lib/pcms-internal-broker-endpoint.js",
+    "extension/pcms/background/**",
+    "extension/pcms/integration/**",
+    "extension/pcms/platform/**",
+    "extension/pcms/app/**",
+    "tests/pcms/p028/**",
+    "docs/evidence/P028/**",
+    "docs/implementation/v1/claims/CLM-P028-001.json",
+    "docs/implementation/v1/plan.json",
+    "ROADMAP.md",
+    "docs/progress/STATUS.md"
+  ],
+  "contractReads": [],
+  "contractWrites": [
+    "pcms.ui-client/v1",
+    "pcms.persona-broker.internal-endpoint/v1"
+  ],
+  "resources": [
+    {
+      "key": "pcms-background-entry",
+      "mode": "exclusive"
+    }
+  ],
+  "migrationSlots": [],
+  "acceptanceIds": [
+    "A028-01",
+    "A028-02",
+    "A028-03"
+  ],
+  "lastCheckpointSha": null
+}

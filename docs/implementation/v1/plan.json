@@ -1176,7 +1176,7 @@
     {
       "id": "P028",
       "title": "Background-authoritative PCMS Core + UI client protocol",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P027"
       ],
