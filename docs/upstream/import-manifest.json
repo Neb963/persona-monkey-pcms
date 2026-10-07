@@ -1038,11 +1038,11 @@
     },
     {
       "sourcePath": "extension/popup/popup.css",
-      "destinationPath": "extension/popup/popup.css",
+      "destinationPath": "docs/upstream/source/extension/popup/popup.css",
       "sourceBlobSha": "72d4e7d3e1014c85d9041bfc71599ff28f7beef7",
       "mode": "100644",
       "size": 5603,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "extension/popup/popup.html",
@@ -1848,6 +1848,13 @@
       "derivativeBlobSha": "48b6c20235c19f10db3221bbf2546800bb38e357",
       "derivativeSize": 6056,
       "reason": "P025 release packaging relocates accepted top-level PCMS feature-module imports into the XPI root and fails the build on broken packaged PCMS module edges"
+    },
+    {
+      "destinationPath": "extension/popup/popup.css",
+      "upstreamBlobSha": "72d4e7d3e1014c85d9041bfc71599ff28f7beef7",
+      "derivativeBlobSha": "726ab9deb6a44ec186e6731cb4834605b52fc80b",
+      "derivativeSize": 5808,
+      "reason": "P026 live Firefox ESR correction replaces viewport-relative popup sizing with a stable intrinsic body width"
     }
   ]
 }

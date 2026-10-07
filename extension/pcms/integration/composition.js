@@ -58,6 +58,7 @@ export function createPcmsModuleIntegration({
   moduleRuntime,
   featureFactories,
   provisioning,
+  operationContext=null,
   statisticsDefinitions=[],
   providerProbes=[],
   clock=()=>new Date().toISOString()
@@ -84,7 +85,7 @@ export function createPcmsModuleIntegration({
     personaResolver,
     clock
   });
-  const providerGateResolver=createAccountProviderGateResolver({accountsService:accounts,providerGate});
+  const providerGateResolver=createAccountProviderGateResolver({accountsService:accounts,providerGate,operationContext});
   const remoteOperationReader=createRemoteOperationReader({remoteOps});
 
   const deployer=factories.deployer({
@@ -114,7 +115,7 @@ export function createPcmsModuleIntegration({
     definitions:statisticsDefinitions
   });
 
-  const provisioningRemoteControl=createProvisioningRemoteControl({providerGate,remoteOps});
+  const provisioningRemoteControl=createProvisioningRemoteControl({providerGate,remoteOps,operationContext});
   const accountProvisioning=factories.provisioning({
     attemptStore:createKeyedStateStore({
       storageBroker,

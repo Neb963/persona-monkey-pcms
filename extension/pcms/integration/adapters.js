@@ -117,16 +117,28 @@ export function createPersonaResolverFromBroker({broker,requestIdFactory=null}={
   });
 }
 
-export function createAccountProviderGateResolver({accountsService,providerGate}={}) {
+export function createAccountProviderGateResolver({accountsService,providerGate,operationContext=null}={}) {
   const accounts=snapshotMethods(accountsService,["getAccount"],"Accounts service",{allowExtra:true});
   const gate=snapshotMethods(providerGate,["mutate","reconcile"],"ProviderGate",{allowExtra:true});
+  const context=operationContext===null?null:snapshotMethods(operationContext,["bind"],"Live operation context",{allowExtra:true});
   return Object.freeze({
     async get(accountId) {
       boundedId(accountId);
       let account;
       try { account=await accounts.getAccount(accountId); } catch { return null; }
       if(!account)return null;
-      return gate;
+      if(context===null)return gate;
+      return Object.freeze({
+        async mutate(input) {
+          await context.bind({
+            operation:input?.operation,
+            accountId:account.accountId,
+            personaUid:account.personaUid
+          });
+          return gate.mutate(input);
+        },
+        reconcile:gate.reconcile
+      });
     }
   });
 }
@@ -136,11 +148,21 @@ export function createRemoteOperationReader({remoteOps}={}) {
   return Object.freeze({async get(operationId){return ops.get(boundedId(operationId));}});
 }
 
-export function createProvisioningRemoteControl({providerGate,remoteOps}={}) {
+export function createProvisioningRemoteControl({providerGate,remoteOps,operationContext=null}={}) {
   const gate=snapshotMethods(providerGate,["mutate","reconcile"],"ProviderGate",{allowExtra:true});
   const ops=snapshotMethods(remoteOps,["get"],"RemoteOps",{allowExtra:true});
+  const context=operationContext===null?null:snapshotMethods(operationContext,["bind"],"Live operation context",{allowExtra:true});
   return Object.freeze({
-    mutate:gate.mutate,
+    async mutate(input) {
+      if(context!==null) {
+        await context.bind({
+          operation:input?.operation,
+          accountId:input?.dispatchInput?.accountId,
+          personaUid:input?.dispatchInput?.personaUid
+        });
+      }
+      return gate.mutate(input);
+    },
     reconcile:gate.reconcile,
     get:ops.get
   });
