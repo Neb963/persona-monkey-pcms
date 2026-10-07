@@ -65,6 +65,16 @@ Corrective checkpoint CI:
 
 The operator still needs to retest the corrected candidate in Firefox ESR; the deterministic FDE run does not substitute for that live ESR observation.
 
+
+A later live Firefox ESR operator pass exposed an Accounts binding usability defect. The original P026 controls rendered mutation feedback inside the Overview view, so an Accounts failure could appear as a dead button. The correction at branch checkpoint `a8eae5776214958c7dc630b93b3f654171f47667` keeps live-action feedback visible across routes and replaces manual account-binding `personaUid` entry with a bounded read-only `persona.list` selector showing the managed Persona name and current container projection. A first local test build also exposed a duplicate DOM id between Provisioning and Accounts; the published checkpoint regression requires the Accounts selector ids to be unique and keeps Provisioning's separate Persona UID field unchanged.
+
+Corrective checkpoint CI:
+
+- pinned Firefox Developer Edition run **37643918042** — success;
+- repository verification run **37643918045** — success.
+
+The account binding interaction still requires operator retest in the normal non-Marionette Firefox ESR session before it counts as LIVE acceptance.
+
 ## P026 live candidate
 
 The accepted P025 XPI `e316e2fd6d52f359d865b9c396a7af9e47d9ea99337fc9de7330e24bb2e469e8` remains the frozen package baseline. The original P026 live candidate was superseded after the Firefox ESR popup defect was observed. The corrected candidate contains the ten prior P026 production changes plus byte-exact branch blob `extension/popup/popup.css` (`726ab9deb6a44ec186e6731cb4834605b52fc80b`); no other packaged file changed from the prior P026 candidate.
