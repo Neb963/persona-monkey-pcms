@@ -84,7 +84,7 @@ try{
   await h.closePage(probe);
 
   report.firstUnload=await h.forceIdleUnload(PRODUCT);
-  assert.equal((await h.extension(PRODUCT)).state,"stopped");
+  assert.equal(report.firstUnload.state,"stopped","Firefox test hook must confirm suspension");
   await waitAlarmWake(first.value.dueAt,"P029 next-due alarm wakes unloaded background");
   probe=await openProbe();
   const fired=await waitFor(async()=>{
@@ -110,7 +110,7 @@ try{
   await h.closePage(probe);
 
   report.restartUnload=await h.forceIdleUnload(PRODUCT);
-  assert.equal((await h.extension(PRODUCT)).state,"stopped");
+  assert.equal(report.restartUnload.state,"stopped","Firefox test hook must confirm suspension after restart");
   await waitAlarmWake(restarted.value.dueAt,"P029 recreated alarm wakes after profile restart");
   probe=await openProbe();
   const firedAgain=await waitFor(async()=>{
