@@ -1,11 +1,17 @@
 // T030.3 packaged proof (A030-01 FDE, A030-02 FDE/PKG/SEC, A030-03 FDE).
 //
-// The product XPI is installed once into the exact pinned Developer Edition. From a
-// product extension page the harness reaches the real background page document
-// (runtime.getBackgroundPage) and frames the shipped pcms/sandbox/controller.html in
-// it, exactly as the P030 frame factory does. Controller source is generated here at
-// run time with a random nonce, so it cannot be part of the XPI. The harness plays the
-// P004 host side over a private MessagePort and grants no capability.
+// The product XPI is installed once into the exact pinned Developer Edition.
+// 1. From a product extension page the harness reaches the real background page
+//    document (runtime.getBackgroundPage) and frames both declared sandbox pages in it,
+//    exactly as the P030 frame factory does: each must load with an opaque origin.
+// 2. A background-hosted controller frame must ignore a bootstrap from a window that is
+//    not its parent (the P004 one-time parent bootstrap).
+// 3. Controller source generated here at run time (random nonce, so it cannot be in the
+//    XPI) executes in the shipped controller page. The harness page is the parent and
+//    plays the P004 host over a private MessagePort, granting no capability. Firefox
+//    attributes a postMessage to the calling realm, so only background-realm code can
+//    bootstrap a background-hosted frame; that product host path is P031's live wiring.
+// 4. An event-page unload discards every background-hosted frame.
 // Nothing is injected into the product XPI.
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
@@ -34,18 +40,20 @@ async function page(code, args = []) {
   const result = await h.pageScript(`const done = arguments[arguments.length - 1];
     (async () => { const api = window.wrappedJSObject.browser; const w = window.wrappedJSObject; ${code} })()
       .then(value => done({ok:true,value:JSON.parse(JSON.stringify(value ?? null))}),
-        error => done({ok:false,error:String(error && error.stack || error)}));`, args, { async: true });
+        error => done({ok:false,error:[error && error.name, error && error.message, error && error.stack, String(error)].filter(Boolean).join(' | ')}));`, args, { async: true });
   if (!result.ok) throw new Error(result.error);
   return result.value;
 }
 
 // Runs in a product extension page. arguments[0] = page path, arguments[1] = controller
-// source, arguments[2] = network URL that must stay unreachable.
-const FRAME_IN_BACKGROUND = `
-  const [pagePath, source, networkUrl] = [arguments[0], arguments[1], arguments[2]];
+// source (null: isolation only), arguments[2] = network URL that must stay unreachable,
+// arguments[3] = 'background' (frame the page in the real background document) or 'page'
+// (frame it in this extension page, which then acts as the P004 host).
+const FRAME_PROBE = `
+  const [pagePath, source, networkUrl, hostKind] = [arguments[0], arguments[1], arguments[2], arguments[3]];
   const bg = await api.runtime.getBackgroundPage();
-  const doc = bg.document;
-  const out = { backgroundUrl: String(bg.location.href), framesBefore: doc.querySelectorAll('iframe').length };
+  const doc = hostKind === 'background' ? bg.document : document;
+  const out = { hostKind, backgroundUrl: String(bg.location.href), framesBefore: doc.querySelectorAll('iframe').length };
   const frame = doc.createElement('iframe');
   frame.setAttribute('sandbox', 'allow-scripts');
   frame.setAttribute('hidden', '');
@@ -57,19 +65,41 @@ const FRAME_IN_BACKGROUND = `
     frame.setAttribute('src', api.runtime.getURL(pagePath));
     (doc.body || doc.documentElement).appendChild(frame);
   });
-  out.frameInBackgroundDocument = frame.ownerDocument === doc && doc.querySelectorAll('iframe').length === out.framesBefore + 1;
+  out.frameInHostDocument = frame.ownerDocument === doc && doc.querySelectorAll('iframe').length === out.framesBefore + 1;
   out.contentDocumentNull = frame.contentDocument === null;
   try { void frame.contentWindow.document.title; out.contentWindowDocumentThrows = false; }
   catch { out.contentWindowDocumentThrows = true; }
   if (!source) { frame.remove(); out.framesAfterRemove = doc.querySelectorAll('iframe').length; return out; }
+  if (hostKind === 'background') {
+    // P004 bootstrap rule: a controller accepts its port only from its parent window.
+    // This page is not the parent of a background-hosted frame, so it must be ignored.
+    const probe = new MessageChannel();
+    let answered = false;
+    probe.port1.addEventListener('message', () => { answered = true; });
+    probe.port1.start();
+    try {
+      frame.contentWindow.postMessage({ type: 'pcms.sandbox.bootstrap', version: 1, sessionId: 'p030-foreign' }, '*', [probe.port2]);
+      out.foreignBootstrapDelivery = 'posted';
+    } catch (error) {
+      out.foreignBootstrapDelivery = 'refused: ' + (error && (error.name + ' ' + error.message));
+    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    out.foreignBootstrapIgnored = !answered;
+    probe.port1.close();
+    frame.remove();
+    out.framesAfterRemove = doc.querySelectorAll('iframe').length;
+    return out;
+  }
 
   const sessionId = 'p030-' + Math.random().toString(16).slice(2);
-  const channel = new bg.MessageChannel();
+  let step = 'channel';
+  try {
+  const channel = new MessageChannel();
   const port = channel.port1;
   const pending = new Map();
   const capabilityCalls = [];
   let readyResolve; const ready = new Promise(resolve => { readyResolve = resolve; });
-  const send = (message) => port.postMessage(bg.JSON.parse(JSON.stringify(message)));
+  const send = (message) => port.postMessage(message);
   port.addEventListener('message', (event) => {
     const message = JSON.parse(JSON.stringify(event.data));
     if (message.sessionId !== sessionId) return;
@@ -90,15 +120,33 @@ const FRAME_IN_BACKGROUND = `
     pending.set(requestId, (message) => { clearTimeout(timer); resolve(message); });
     send({ version: 1, sessionId, type: 'request', requestId, method, params });
   });
-  frame.contentWindow.postMessage(bg.JSON.parse(JSON.stringify({ type: 'pcms.sandbox.bootstrap', version: 1, sessionId })),
-    '*', bg.Array.of(channel.port2));
+  step = 'bootstrap';
+  // Firefox 154 Xray behaviour for transfer lists is recorded, not assumed.
+  const bootstrap = { type: 'pcms.sandbox.bootstrap', version: 1, sessionId };
+  const attempts = [
+    ['sandbox-array', () => frame.contentWindow.postMessage(bootstrap, '*', [channel.port2])],
+    ['options-transfer', () => frame.contentWindow.postMessage(bootstrap, { targetOrigin: '*', transfer: [channel.port2] })]
+  ];
+  out.bootstrapAttempts = [];
+  for (const [name, attempt] of attempts) {
+    try { attempt(); out.bootstrapTransfer = name; break; }
+    catch (error) { out.bootstrapAttempts.push(name + ': ' + (error && (error.name + ' ' + error.message))); }
+  }
+  if (!out.bootstrapTransfer) throw new Error('bootstrap postMessage failed: ' + out.bootstrapAttempts.join('; '));
   await Promise.race([ready, new Promise((_, reject) => setTimeout(() => reject(new Error('controller bootstrap timeout')), 8000))]);
   out.bootstrapped = true;
+  step = 'controller.load';
   out.load = await request('controller.load', { source, initial: { networkUrl } });
+  step = 'controller.invoke';
   out.denied = await request('controller.invoke', { method: 'callUngranted', args: null });
   out.capabilityCalls = capabilityCalls.slice();
+  step = 'controller.dispose';
   out.dispose = await request('controller.dispose', {});
   port.close();
+  } catch (error) {
+    frame.remove();
+    throw new Error('P030 step ' + step + ' failed: ' + (error && (error.name + ' ' + error.message)) + ' ' + JSON.stringify(out));
+  }
   frame.remove();
   out.framesAfterRemove = doc.querySelectorAll('iframe').length;
   return out;
@@ -153,8 +201,8 @@ try {
 
   // A030-01 FDE: both declared pages load as opaque-origin frames of the background document.
   for (const pagePath of manifest.sandbox.pages) {
-    const isolated = await page(FRAME_IN_BACKGROUND, [pagePath, null, null]);
-    assert.equal(isolated.frameInBackgroundDocument, true, pagePath);
+    const isolated = await page(FRAME_PROBE, [pagePath, null, null, 'background']);
+    assert.equal(isolated.frameInHostDocument, true, pagePath);
     assert.equal(isolated.contentDocumentNull, true, pagePath);
     assert.equal(isolated.contentWindowDocumentThrows, true, pagePath);
     assert.equal(isolated.framesAfterRemove, isolated.framesBefore, pagePath);
@@ -162,16 +210,27 @@ try {
   }
   report.checks.declaredSandboxPagesAreIsolatedBackgroundFrames = true;
 
-  // A030-02: runtime-supplied controller source executes in a background-hosted sandbox frame.
+  // SEC: a background-hosted controller frame ignores a bootstrap from any window but its parent.
+  const foreign = await page(FRAME_PROBE, ['pcms/sandbox/controller.html', 'unused', null, 'background']);
+  assert.equal(foreign.frameInHostDocument, true);
+  assert.equal(foreign.contentDocumentNull, true);
+  assert.equal(foreign.foreignBootstrapIgnored, true);
+  report.facts.foreignBootstrap = foreign;
+  report.checks.backgroundFrameIgnoresNonParentBootstrap = true;
+
+  // A030-02: runtime-supplied controller source executes in the packaged sandbox page.
+  // Driving the P004 host from the background realm needs product host code there, which
+  // P031 wires (live activation); here this extension page is the parent and P004 host.
   let networkRequests = 0;
   server = createServer((_req, res) => { networkRequests++; res.end('unexpected'); });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const networkUrl = `http://127.0.0.1:${server.address().port}/must-be-blocked`;
   const nonce = randomBytes(16).toString('hex');
-  const run = await page(FRAME_IN_BACKGROUND, ['pcms/sandbox/controller.html', controllerSource(nonce), networkUrl]);
+  const run = await page(FRAME_PROBE, ['pcms/sandbox/controller.html', controllerSource(nonce), networkUrl, 'page']);
   report.facts.controllerRun = run;
   assert.ok(run.backgroundUrl.startsWith('moz-extension://'));
-  assert.equal(run.frameInBackgroundDocument, true);
+  assert.equal(run.hostKind, 'page');
+  assert.equal(run.frameInHostDocument, true);
   assert.equal(run.contentDocumentNull, true);
   assert.equal(run.bootstrapped, true);
   assert.equal(run.load.ok, true, JSON.stringify(run.load));
@@ -192,7 +251,7 @@ try {
   assert.deepEqual(run.capabilityCalls, ['module.storage.write']);
   assert.deepEqual(run.dispose.result, { disposed: true });
   assert.equal(run.framesAfterRemove, run.framesBefore);
-  report.checks.runtimeControllerExecutesInBackgroundSandboxFrame = true;
+  report.checks.runtimeControllerExecutesInPackagedSandboxPage = true;
   report.checks.ungrantedCapabilityDeniedAndNoAmbientAuthority = true;
   await new Promise(resolve => server.close(resolve)); server = null;
 
