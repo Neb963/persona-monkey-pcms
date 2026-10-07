@@ -49,12 +49,31 @@ jobs:
       - name: Verify P028 background Core, wake recovery and UI client protocol
         run: npm run test:p028 && node extension/tests/background-routing-init.test.mjs
 
+      - name: Verify P030 sandbox pages, browser floor and controller frame lifecycle
+        run: npm run test:p030
+
       - name: Install and drive packaged XPI, lifecycle and platform probes
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
           FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged
           FIREFOX_PACKAGED_REPORT: ${{ runner.temp }}/firefox-packaged-report.json
         run: npm run firefox:packaged
+
+      - name: Execute runtime-supplied controller in a background sandbox frame of the packaged XPI
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged
+          FIREFOX_P030_REPORT: ${{ runner.temp }}/firefox-p030-report.json
+        run: npm run firefox:packaged:p030
+
+      - name: Upload P030 packaged evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-packaged-p030
+          path: ${{ runner.temp }}/firefox-p030-report.json
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload packaged evidence
         if: always()

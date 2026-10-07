@@ -50,6 +50,15 @@
     "page": "pcms/app/index.html",
     "open_in_tab": true
   },
+  "sandbox": {
+    "pages": [
+      "pcms/sandbox/controller.html",
+      "pcms/sandbox/module-ui.html"
+    ]
+  },
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none'"
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "persona-route-manager@local",

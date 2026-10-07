@@ -20,6 +20,8 @@
     "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims && npm run test:firefox && npm run verify:upstream",
     "firefox:packaged": "node scripts/build-extension.mjs && node tools/firefox/packaged.mjs",
     "test:p027": "node --test tests/pcms/p027/*.test.mjs",
-    "test:p028": "node --test tests/pcms/p028/*.test.mjs"
+    "test:p028": "node --test tests/pcms/p028/*.test.mjs",
+    "test:p030": "node --test tests/pcms/p030/*.test.mjs",
+    "firefox:packaged:p030": "node scripts/build-extension.mjs && node tests/pcms/p030/packaged.mjs"
   }
 }

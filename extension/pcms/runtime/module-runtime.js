@@ -1,6 +1,7 @@
 import { createSandboxControllerHost } from "./sandbox-host.js";
 import { assertModuleId, assertModulePackageHash } from "../modules/package.js";
 import { MODULE_RUNTIME_ERROR_CODES, moduleRuntimeError } from "./errors.js";
+import { MODULE_RUNTIME_AVAILABILITY } from "./browser-floor.js";
 
 export const MODULE_RUNTIME_NAMESPACE = "core.module-runtime";
 export const MODULE_RUNTIME_SCHEMA_VERSION = 1;
@@ -96,6 +97,22 @@ function normalizeCapabilityHandlers(value) {
   return handlers;
 }
 
+// A frame factory may return the frame itself (caller-owned, as in P004/P011) or a
+// handle { frame, dispose } whose frame lifetime is bound to this generation (P030).
+function frameLease(produced) {
+  if (produced && typeof produced === "object" && produced.frame && typeof produced.dispose === "function") {
+    return { frame:produced.frame, release:() => produced.dispose() };
+  }
+  return { frame:produced || null, release:null };
+}
+
+function releaseFrame(runtime) {
+  const release = runtime.releaseFrame;
+  runtime.releaseFrame = null;
+  if (!release) return;
+  try { release(); } catch {}
+}
+
 function freezeContext(moduleId, generation, packageHash, assertCurrent) {
   return Object.freeze({ moduleId, generation, packageHash, assertCurrent });
 }
@@ -107,6 +124,7 @@ export function createModuleRuntimeBroker({
   sandboxHostFactory = createSandboxControllerHost,
   capabilities = {},
   recoveryHold = null,
+  support = null,
   maxMailboxDepth = 64
 } = {}) {
   if (!storageBroker || typeof storageBroker.namespace !== "function") {
@@ -128,6 +146,9 @@ export function createModuleRuntimeBroker({
   }
   if (recoveryHold !== null && typeof recoveryHold.getStatus !== "function") {
     throw new TypeError("Module runtime recovery hold is invalid");
+  }
+  if (support !== null && typeof support.getStatus !== "function") {
+    throw new TypeError("Module runtime support detection is invalid");
   }
 
   const capabilityHandlers = normalizeCapabilityHandlers(capabilities);
@@ -170,6 +191,22 @@ export function createModuleRuntimeBroker({
     if (!recoveryHold) return;
     const status = await recoveryHold.getStatus();
     if (status?.value?.state === "RECOVERY_HOLD") fail(MODULE_RUNTIME_ERROR_CODES.RECOVERY_HOLD);
+  }
+
+  async function getSupport() {
+    if (!support) return null;
+    let status;
+    try { status = await support.getStatus(); } catch { status = null; }
+    return status && typeof status === "object"
+      ? status
+      : Object.freeze({ state:MODULE_RUNTIME_AVAILABILITY.UNAVAILABLE, reason:"SUPPORT_UNKNOWN", message:null, browser:null });
+  }
+
+  async function assertRuntimeAvailable() {
+    const status = await getSupport();
+    if (status && status.state !== MODULE_RUNTIME_AVAILABILITY.AVAILABLE) {
+      fail(MODULE_RUNTIME_ERROR_CODES.RUNTIME_UNAVAILABLE);
+    }
   }
 
   function notifyQuiescent(runtime) {
@@ -260,6 +297,7 @@ export function createModuleRuntimeBroker({
     const id = assertModuleId(moduleId);
     const expected = validateExpectedRevision(expectedRevision);
     await assertRecoveryClear();
+    await assertRuntimeAvailable();
 
     const current = await read(id);
     if (current.revision !== expected) {
@@ -300,6 +338,7 @@ export function createModuleRuntimeBroker({
       generation,
       packageHash,
       host:null,
+      releaseFrame:null,
       accepting:true,
       queue:[],
       processing:false,
@@ -308,7 +347,11 @@ export function createModuleRuntimeBroker({
     };
 
     try {
-      const targetFrame = frame || await frameFactory?.({ moduleId:id, generation, packageHash });
+      const lease = frame
+        ? { frame, release:null }
+        : frameLease(await frameFactory?.({ moduleId:id, generation, packageHash }));
+      runtime.releaseFrame = lease.release;
+      const targetFrame = lease.frame;
       if (!targetFrame) throw new TypeError("Module runtime activation requires a sandbox frame");
       const host = sandboxHostFactory({
         frame:targetFrame,
@@ -333,6 +376,7 @@ export function createModuleRuntimeBroker({
       runtime.accepting = false;
       runtimes.delete(id);
       try { await runtime.host?.dispose(); } catch {}
+      releaseFrame(runtime);
       try {
         const latest = await read(id);
         if (latest.value.state === MODULE_RUNTIME_STATES.ACTIVE
@@ -368,7 +412,10 @@ export function createModuleRuntimeBroker({
     }
     runtime.accepting = false;
     await waitForQuiescent(runtime);
-    try { await runtime.host.dispose(); } finally { runtimes.delete(id); }
+    try { await runtime.host.dispose(); } finally {
+      releaseFrame(runtime);
+      runtimes.delete(id);
+    }
     return compareAndSwap(id, current.revision, {
       ...defaultValue(id),
       generation:current.value.generation + 1,
@@ -504,6 +551,7 @@ export function createModuleRuntimeBroker({
     recoverAll,
     getState:read,
     listStates,
-    assertGeneration
+    assertGeneration,
+    getSupport
   });
 }
