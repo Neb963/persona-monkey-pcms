@@ -70,3 +70,13 @@ test("A026-01 account binding UI exposes live Personas and visible action feedba
   assert.match(controls,/persona\.name\+" · "\+persona\.cookieStoreId/);
   assert.match(css,/\.live-form input, \.live-form textarea, \.live-form select/);
 });
+
+
+test("A026-03 PCMS app uses bounded startup retry instead of a one-shot live connection",async()=>{
+  const app=await readFile("extension/pcms/app/app.js","utf8");
+  const retry=await readFile("extension/pcms/app/startup-retry.js","utf8");
+  assert.match(app,/startPcmsRuntimeWithRetry\(\{startRuntime:startPcmsLiveRuntime\}\)/);
+  assert.match(retry,/PCMS_STARTUP_RETRY_DELAYS_MS/);
+  assert.match(retry,/delays\.length>16/);
+  assert.match(retry,/throw lastError/);
+});
