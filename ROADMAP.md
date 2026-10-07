@@ -273,13 +273,13 @@ Merge wave: 13
 - [ ] T029.3 — T029.3 Background continuity proof with zero PCMS tabs and forced unloads
 
 ## P030 — Production sandbox pages + background-hosted controller frames
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P028  
 Merge wave: 13
 
-- [ ] T030.1 — T030.1 Declare sandbox pages/CSP in the production manifest; browser-floor detection
-- [ ] T030.2 — T030.2 Background frame factory and frame lifecycle bound to generations
-- [ ] T030.3 — T030.3 Packaged proof that runtime-supplied controller source executes in a real sandbox page
+- [x] T030.1 — T030.1 Declare sandbox pages/CSP in the production manifest; browser-floor detection
+- [x] T030.2 — T030.2 Background frame factory and frame lifecycle bound to generations
+- [x] T030.3 — T030.3 Packaged proof that runtime-supplied controller source executes in a real sandbox page
 
 ## P031 — Runtime module lifecycle live in production
 Status: **BLOCKED**  
