@@ -1381,7 +1381,7 @@
     {
       "id": "P032",
       "title": "PCMS dashboard shell v2 as UI client",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P028"
       ],
