@@ -56,3 +56,24 @@ CI_VERIFIED on head `26335aebd7355f73bad5b8662133689f98b4756f` (PR #37):
   cold restart).
 
 This commit only records evidence; CI on it re-confirms the same tree.
+
+## Final PR verification and merge
+
+Final head `dac1e5bdd8983c02e02a90483f8b05e0af8579ee` passed both independent workflows on
+[PR #37](https://github.com/Neb963/persona-monkey-pcms/pull/37): `verify` job `repository` and
+`firefox-developer-edition` job `pinned-firefox` (run
+[37681791262](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37681791262)). The PR was mergeable against
+claimed base `cfa0d07d80cae66072bae3dc693615d6d48eea73` (main had not moved) and was merged at the operator's request as
+`401fa524225b35c45eaf239112974c27492d3bbc`.
+
+## Merged-main verification and acceptance
+
+Exact merged-main commit `401fa524225b35c45eaf239112974c27492d3bbc` passed:
+
+- [verify 37682185657](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37682185657);
+- [firefox-developer-edition 37682185713](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37682185713),
+  job **113000770442**, including "Verify P028 background Core, wake recovery and UI client protocol" and the packaged
+  XPI run with the P028 checks.
+
+**A028-01 PASS · A028-02 PASS · A028-03 PASS.** Phase P028 and claim CLM-P028-001, epoch 2, are **ACCEPTED** at the
+operator's instruction. P029, P030 and P032 become READY through their accepted dependency.
