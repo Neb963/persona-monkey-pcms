@@ -273,6 +273,9 @@ export function createPcmsLiveMutationIntegration({
       const context=await requireContext(operationContext,operationId);
       await openPersona(client,context,"https://perchance.org/"+encodeURIComponent(generatorId),operationId,"open");
       const choice=await operator.choose({
+        operationId,
+        phase:"dispatch",
+        subjectRef:context.targetRef,
         title:"Apply Perchance generator update",
         instructions:"PCMS opened the generator in its bound Persona. Copy the desired source below into the Perchance editor and save it. Resolve any stale-save warning explicitly. Choose Applied only after Perchance confirms the save.",
         source,
@@ -286,6 +289,9 @@ export function createPcmsLiveMutationIntegration({
       const context=await requireContext(operationContext,operationId);
       await openPersona(client,context,"https://perchance.org/"+encodeURIComponent(generatorId),operationId,"verify");
       const choice=await operator.choose({
+        operationId,
+        phase:"reconcile",
+        subjectRef:context.targetRef,
         title:"Reconcile Perchance generator update",
         instructions:"Inspect the server-saved generator in the bound Persona. Choose Applied only if the saved source matches the intended SHA-256. Choose Not applied only if you can prove the intended save did not happen; otherwise keep it Unknown.",
         source:null,
@@ -302,6 +308,9 @@ export function createPcmsLiveMutationIntegration({
       const context=await requireContext(operationContext,operation.operationId);
       await openPersona(client,context,"https://perchance.org/",operation.operationId,"open");
       const choice=await operator.choose({
+        operationId:operation.operationId,
+        phase:"dispatch",
+        subjectRef:context.targetRef,
         title:"Complete Perchance account provisioning",
         instructions:"Complete the provider action in this bound Persona, including login, email verification, or CAPTCHA if Perchance asks for it. PCMS does not bypass or solve CAPTCHA. Choose Applied only after the account/session is usable.",
         source:null,
@@ -315,6 +324,9 @@ export function createPcmsLiveMutationIntegration({
       const context=await requireContext(operationContext,operation.operationId);
       await openPersona(client,context,"https://perchance.org/",operation.operationId,"verify");
       const choice=await operator.choose({
+        operationId:operation.operationId,
+        phase:"reconcile",
+        subjectRef:context.targetRef,
         title:"Reconcile Perchance account provisioning",
         instructions:"Verify the provider account/session in this bound Persona. Choose Applied only when the intended provisioning is known complete; choose Not applied only when known absent; otherwise keep it Unknown.",
         source:null,

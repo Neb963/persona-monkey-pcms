@@ -185,7 +185,22 @@ export function mountPcmsApp({
         title:item.title,
         subtitle:item.priority+" · "+item.taskKind
       });
-      if(runtime?.humanTasks) {
+      if(item.taskKind==="provider.confirm-apply"&&runtime?.providerHandoff) {
+        // ADR-002 §9: the answer is submitted as reconciliation, from any tab, at any time.
+        const show=element(documentRef,"button","inline-action");
+        show.type="button";
+        show.dataset.handoffShow=item.taskId;
+        show.textContent="Show details";
+        list.appendChild(show);
+        for(const [outcome,label] of [["APPLIED","Applied"],["NOT_APPLIED","Not applied"],["UNKNOWN","Still unknown"]]) {
+          const answer=element(documentRef,"button","inline-action");
+          answer.type="button";
+          answer.dataset.handoffTask=item.taskId;
+          answer.dataset.handoffOutcome=outcome;
+          answer.textContent=label;
+          list.appendChild(answer);
+        }
+      } else if(runtime?.humanTasks) {
         const resolve=element(documentRef,"button","inline-action");
         resolve.type="button";
         resolve.dataset.resolveTask=item.taskId;
@@ -310,10 +325,14 @@ async function bootPcmsApp() {
   document.getElementById("brokerImplementation").textContent=pcms.broker.implementation;
 
   const liveStatus=document.getElementById("brokerLiveStatus");
+  const coreHostStatus=document.getElementById("coreHostStatus");
   try {
+    // The Core lives in the extension background; this tab is one of any number of clients.
     const runtime=await startPcmsRuntimeWithRetry({startRuntime:startPcmsLiveRuntime});
     liveStatus.textContent="Connected · rev "+runtime.brokerRevision;
     liveStatus.dataset.state="connected";
+    coreHostStatus.textContent="Background · "+runtime.coreStatus.state.toLowerCase()+" · "+String(runtime.coreStatus.wake||"").toLowerCase()+" wake";
+    coreHostStatus.dataset.state="connected";
     const moduleProjectionService=createPcmsModuleProjectionService({runtime});
     const app=mountPcmsApp({
       projectionService:runtime.uiProjection,
@@ -325,7 +344,17 @@ async function bootPcmsApp() {
       documentRef:document,
       refresh:app.refresh
     });
+    // Projections refresh on Core's storage.session revision signal, never on a timer.
+    let lastSeq=-1;
+    const unsubscribe=runtime.subscribe((revision)=>{
+      if(!Number.isSafeInteger(revision?.seq)||revision.seq<=lastSeq) return;
+      lastSeq=revision.seq;
+      document.body.dataset.pcmsRevision=String(revision.seq);
+      void app.refresh();
+      void controls.refreshRecovery();
+    });
     window.addEventListener("unload",()=>{
+      unsubscribe();
       controls.close();
       app.destroy();
       runtime.close();
@@ -333,6 +362,8 @@ async function bootPcmsApp() {
   } catch {
     liveStatus.textContent="Unavailable";
     liveStatus.dataset.state="error";
+    coreHostStatus.textContent="Background · unavailable";
+    coreHostStatus.dataset.state="error";
     document.getElementById("notificationStatus").textContent="PCMS could not connect to PersonaMonkey Integration v1.";
   }
 }

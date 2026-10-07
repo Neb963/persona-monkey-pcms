@@ -36,6 +36,35 @@ export async function recoverPcmsLiveStartup({remoteOps,recoveryHold,moduleRunti
   });
 }
 
+// ADR-002 §5: a warm wake (same browser session, new event-page context) can
+// only find DISPATCHING operations that the previous context left interrupted.
+// Those become UNCERTAIN under RECOVERY_HOLD exactly as on a cold start. Other
+// unresolved states were already fenced per target and do not by themselves
+// put PCMS into global hold, or every idle unload would hold PCMS.
+export async function recoverPcmsWarmWake({remoteOps,recoveryHold,moduleRuntime}={}) {
+  if(!remoteOps||typeof remoteOps.listUnresolved!=="function") throw new TypeError("Warm-wake recovery requires RemoteOps");
+  if(!recoveryHold||typeof recoveryHold.getStatus!=="function"||typeof recoveryHold.enterRecoveryHold!=="function") {
+    throw new TypeError("Warm-wake recovery requires recovery hold");
+  }
+  if(!moduleRuntime||typeof moduleRuntime.recoverAll!=="function") throw new TypeError("Warm-wake recovery requires module runtime");
+
+  const unresolved=await remoteOps.listUnresolved();
+  const interrupted=unresolved.some((row)=>row?.value?.state==="DISPATCHING");
+  let interruptedOperationIds=Object.freeze([]);
+  if(interrupted) {
+    const entered=await recoveryHold.enterRecoveryHold({reason:"warm-wake-interrupted-dispatch"});
+    interruptedOperationIds=entered.recoveredOperationIds;
+  }
+
+  const recoveredModuleIds=await moduleRuntime.recoverAll();
+  const holdAfter=await recoveryHold.getStatus();
+  return Object.freeze({
+    interruptedOperationIds,
+    recoveredModuleIds,
+    recoveryState:holdAfter.value.state
+  });
+}
+
 export function createPcmsLiveCore({
   personaBroker,
   featureFactories,
@@ -43,7 +72,9 @@ export function createPcmsLiveCore({
   statisticsDefinitions,
   providerProbes=[],
   liveMutationFactory=null,
-  clock=()=>new Date().toISOString()
+  clock=()=>new Date().toISOString(),
+  storageBroker:injectedStorageBroker=null,
+  auditJournal:injectedAuditJournal=null
 }={}) {
   if(!personaBroker||typeof personaBroker.request!=="function") throw new TypeError("PCMS live Core requires Persona Broker");
   if(!featureFactories||typeof featureFactories!=="object") throw new TypeError("PCMS live Core requires feature factories");
@@ -53,12 +84,13 @@ export function createPcmsLiveCore({
   if(liveMutationFactory!==null&&typeof liveMutationFactory!=="function") throw new TypeError("PCMS live mutation factory is invalid");
   if(typeof clock!=="function") throw new TypeError("PCMS live Core clock is invalid");
 
-  const storageBroker=createPcmsStorageBroker({clock});
-  const auditJournal=createPcmsAuditJournal({clock});
+  // Injection exists for deterministic Node tests over one shared durable store.
+  const storageBroker=injectedStorageBroker||createPcmsStorageBroker({clock});
+  const auditJournal=injectedAuditJournal||createPcmsAuditJournal({clock});
   const remoteOps=createRemoteOps({storageBroker,clock});
   const recoveryHold=createRecoveryHoldController({storageBroker,remoteOps,clock});
   const liveMutations=liveMutationFactory
-    ? liveMutationFactory({storageBroker,personaBroker,remoteOps,recoveryHold,clock})
+    ? liveMutationFactory({storageBroker,auditJournal,personaBroker,remoteOps,recoveryHold,clock})
     : null;
   const activeProviders=liveMutations?.providers||Object.freeze({});
   const activeProvisioning=liveMutations?.provisioning||provisioning;
@@ -89,11 +121,14 @@ export function createPcmsLiveCore({
     clock
   });
 
-  async function initialize() {
+  async function initialize({wake="COLD"}={}) {
+    if(wake!=="COLD"&&wake!=="WARM") throw new TypeError("PCMS live Core wake classification is invalid");
     await storageBroker.open();
     await auditJournal.open();
 
-    return recoverPcmsLiveStartup({remoteOps,recoveryHold,moduleRuntime});
+    return wake==="WARM"
+      ? recoverPcmsWarmWake({remoteOps,recoveryHold,moduleRuntime})
+      : recoverPcmsLiveStartup({remoteOps,recoveryHold,moduleRuntime});
   }
 
   function close() {

@@ -1,21 +1,14 @@
-import { createPersonaBroker } from "../core/persona-broker.js";
-import { createFirefoxPersonaBrokerTransport } from "../platform/firefox-persona-broker-transport.js";
-import { createPcmsLiveCore } from "../integration/live-core.js";
-import { createPcmsLiveMutationIntegration } from "../integration/live-mutations.js";
-import { createPcmsOperatorBridge } from "./operator-bridge.js";
-
-import { createAccountsService } from "/pcms-modules/p014/accounts.js";
-import { createDeployerService } from "/pcms-modules/p015/deployer.js";
-import { createExplorerService } from "/pcms-modules/p016/explorer.js";
-import { createRefresherService } from "/pcms-modules/p017/refresher.js";
-import { createStatisticsService } from "/pcms-modules/p018/statistics.js";
-import { createProvisioningService } from "/pcms-modules/p019/provisioning.js";
+// The dashboard is a UI client of the background-hosted PCMS Core (ADR-002 §1, §8).
+// This module constructs no Core service: every call goes through pcms.ui-client/v1.
+import { createPcmsUiClient } from "./ui-client.js";
+import { createFirefoxPcmsUiTransport } from "../platform/firefox-ui-client-transport.js";
 
 let requestSequence=0;
 let personaDirectorySequence=0;
 const PERSONA_UID_PATTERN=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function createLivePersonaDirectory(personaBroker) {
+// Read-only directory over the Persona Broker reads that Core proxies for UI clients.
+export function createLivePersonaDirectory(personaBroker) {
   return Object.freeze({
     async list() {
       const personas=[];
@@ -67,57 +60,12 @@ function createLivePersonaDirectory(personaBroker) {
 }
 
 
-const featureFactories=Object.freeze({
-  accounts:createAccountsService,
-  deployer:createDeployerService,
-  explorer:createExplorerService,
-  refresher:createRefresherService,
-  statistics:createStatisticsService,
-  provisioning:createProvisioningService
-});
-
-function unavailableMutation() {
-  throw new Error("PCMS provider mutation is unavailable until P026 live mutation acceptance");
-}
-
-const provisioning=Object.freeze({
-  sessionGuard:Object.freeze({
-    acquire:unavailableMutation,
-    validate:unavailableMutation,
-    release:unavailableMutation
-  }),
-  providerSession:Object.freeze({
-    preflight:unavailableMutation
-  })
-});
-
-const statisticsDefinitions=Object.freeze([Object.freeze({
-  metricId:"attention_opened",
-  label:"Attention opened",
-  eventType:"human-task.opened",
-  aggregation:"COUNT",
-  valuePath:null,
-  subjectKind:"human-task"
-})]);
-
-export async function startPcmsLiveRuntime() {
-  const transport=createFirefoxPersonaBrokerTransport();
-  const personaBroker=createPersonaBroker({transport});
-  const operator=createPcmsOperatorBridge();
-  const personaDirectory=createLivePersonaDirectory(personaBroker);
-  const core=createPcmsLiveCore({
-    personaBroker,
-    featureFactories,
-    provisioning,
-    statisticsDefinitions,
-    liveMutationFactory:({storageBroker})=>createPcmsLiveMutationIntegration({
-      storageBroker,
-      personaBroker,
-      operator
-    })
-  });
+export async function startPcmsLiveRuntime({transport=null}={}) {
+  const client=createPcmsUiClient({transport:transport||createFirefoxPcmsUiTransport()});
   try {
-    const recovery=await core.initialize();
+    const coreStatus=await client.status();
+    if(coreStatus?.state!=="RUNNING") throw new Error("PCMS Core is "+String(coreStatus?.state||"unavailable"));
+    const personaBroker=client.runtime.personaBroker;
     const response=await personaBroker.request(Object.freeze({
       requestId:"pcms-live-status-"+(++requestSequence),
       command:"system.status",
@@ -125,15 +73,17 @@ export async function startPcmsLiveRuntime() {
     }));
     if(!response.ok) throw new Error("Persona Broker status request failed");
     return Object.freeze({
-      ...core,
-      recovery,
+      ...client.runtime,
+      coreStatus,
       brokerStatus:response.result,
       brokerBootId:response.bootId,
       brokerRevision:response.revision,
-      personaDirectory
+      personaDirectory:createLivePersonaDirectory(personaBroker),
+      subscribe:client.subscribe,
+      close:client.close
     });
   } catch(error) {
-    core.close();
+    client.close();
     throw error;
   }
 }

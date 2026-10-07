@@ -1,10 +1,6 @@
 // Static evaluation installs fail-closed routing listeners before the first
 // asynchronous recovery read or dynamic import of the full background.
 import { setBootstrapRetry } from "./routing-gate.js";
-// ADR-002: the PCMS background entry registers its listeners synchronously
-// during static evaluation, after the fail-closed routing gate above. It starts
-// no Core work until PersonaMonkey's bootstrap below has completed.
-import { setPcmsPersonaMonkeyBootstrap } from "../pcms/background/entry.js";
 import { initializeRecoveryConsent, readRecoverySnapshot, restoreRecoveryPayload, writeRecoverySnapshot } from "./recovery-sync.js";
 import { makeDefaultState } from "./storage.js";
 
@@ -127,5 +123,4 @@ function bootstrap() {
 }
 
 setBootstrapRetry(bootstrap);
-setPcmsPersonaMonkeyBootstrap(bootstrap);
 void bootstrap().catch(() => {});

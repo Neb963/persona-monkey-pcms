@@ -94,11 +94,6 @@ footer { margin-top: 44px; border-top: 1px solid light-dark(#d9dee7,#303744); pa
 .operations-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:0 0 18px; }
 .operations-grid .live-form { border:1px solid light-dark(#d9dee7,#303744); border-radius:12px; padding:14px; margin:0; background:light-dark(#fff,#151a22); }
 .operator-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-.operator-dialog { width:min(760px,calc(100vw - 32px)); max-height:90vh; border:1px solid light-dark(#cbd2dd,#3a4351); border-radius:12px; padding:0; background:light-dark(#fff,#151a22); color:inherit; }
-.operator-dialog::backdrop { background:rgb(0 0 0 / .55); }
-.operator-dialog-body { display:grid; gap:12px; padding:18px; overflow:auto; max-height:88vh; }
-.operator-dialog-body p { margin:0; }
-.operator-dialog-body label { display:grid; gap:6px; font-size:12px; font-weight:700; }
 .operator-hash { overflow-wrap:anywhere; padding:8px; border-radius:7px; background:light-dark(#f2f4f8,#1c222c); }
 .inline-action { justify-self:start; margin:-3px 0 8px 12px; min-height:32px; font-size:12px; }
 #liveActionStatus[data-state="connected"], #recoveryStatus[data-state="connected"] { color:light-dark(#2a724f,#78d9aa); }
@@ -106,3 +101,6 @@ footer { margin-top: 44px; border-top: 1px solid light-dark(#d9dee7,#303744); pa
 @media (max-width:760px) {
   .operations-grid, .compact-form { grid-template-columns:1fr; }
 }
+.handoff-detail { display:grid; gap:10px; margin-top:14px; padding:14px; border:1px solid light-dark(#cbd2dd,#3a4351); border-radius:12px; }
+.handoff-detail h3, .handoff-detail p { margin:0; }
+.handoff-detail label { display:grid; gap:6px; font-size:12px; font-weight:700; }

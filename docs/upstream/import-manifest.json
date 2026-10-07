@@ -782,11 +782,11 @@
     },
     {
       "sourcePath": "extension/lib/recovery-bootstrap.js",
-      "destinationPath": "extension/lib/recovery-bootstrap.js",
+      "destinationPath": "docs/upstream/source/extension/lib/recovery-bootstrap.js",
       "sourceBlobSha": "69a1b535372e1d303415e80503d8b3c29afae051",
       "mode": "100644",
       "size": 4937,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "extension/lib/recovery-sync.js",
@@ -1817,9 +1817,9 @@
     {
       "destinationPath": "extension/background.js",
       "upstreamBlobSha": "4fbbe2125dd6f325acf1c31696af76b35e2ebef9",
-      "derivativeBlobSha": "36f36a19f451545fa7c9d73e5b99ccd41dea140e",
-      "derivativeSize": 60732,
-      "reason": "P025 same-extension PCMS bridge into the existing Integration-v1 dispatcher"
+      "derivativeBlobSha": "aeaf680d363b621bfe438197a9af44b3ecce1d13",
+      "derivativeSize": 61623,
+      "reason": "P025 same-extension PCMS bridge into the existing Integration-v1 dispatcher; P028 in-process internal Persona Broker endpoint registration and PCMS UI request hand-off to the PCMS background entry"
     },
     {
       "destinationPath": "extension/lib/management-integration.js",
@@ -1855,6 +1855,13 @@
       "derivativeBlobSha": "726ab9deb6a44ec186e6731cb4834605b52fc80b",
       "derivativeSize": 5808,
       "reason": "P026 live Firefox ESR correction replaces viewport-relative popup sizing with a stable intrinsic body width"
+    },
+    {
+      "destinationPath": "extension/lib/recovery-bootstrap.js",
+      "upstreamBlobSha": "69a1b535372e1d303415e80503d8b3c29afae051",
+      "derivativeBlobSha": "2d1aa89a9eb903289f862b50f4cc5922f1d2542e",
+      "derivativeSize": 5282,
+      "reason": "P028 static PCMS background entry import after the fail-closed routing gate; Core work waits for PersonaMonkey bootstrap (ADR-002)"
     }
   ]
 }
