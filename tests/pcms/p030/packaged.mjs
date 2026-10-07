@@ -163,13 +163,16 @@ function controllerSource(nonce) {
       try { await fetch(initial.networkUrl); facts.networkBlocked = false; } catch { facts.networkBlocked = true; }
       try { indexedDB.open('p030'); facts.indexedDbBlocked = false; } catch { facts.indexedDbBlocked = true; }
       try { void localStorage.length; facts.localStorageBlocked = false; } catch { facts.localStorageBlocked = true; }
-      facts.imageBlocked = await new Promise((resolve) => {
+      const loadImage = (src) => new Promise((resolve) => {
         const image = new Image();
-        const timer = setTimeout(() => resolve(true), 3000);
-        image.onload = () => { clearTimeout(timer); resolve(false); };
-        image.onerror = () => { clearTimeout(timer); resolve(true); };
-        image.src = new URL('../../icons/icon48.png', location.href).href;
+        const timer = setTimeout(() => resolve('timeout'), 3000);
+        image.onload = () => { clearTimeout(timer); resolve('loaded'); };
+        image.onerror = () => { clearTimeout(timer); resolve('blocked'); };
+        image.src = src;
       });
+      // One sandbox CSP serves both pages (ADR-003 §1 option 1): extension images load, remote ones never.
+      facts.extensionImage = await loadImage(new URL('../../icons/icon48.png', location.href).href);
+      facts.remoteImage = await loadImage(initial.networkUrl + '.png');
       return facts;
     },
     async callUngranted() {
@@ -246,7 +249,8 @@ try {
   assert.equal(networkRequests, 0);
   assert.equal(facts.indexedDbBlocked, true);
   assert.equal(facts.localStorageBlocked, true);
-  assert.equal(facts.imageBlocked, true, 'controller meta-CSP blocks images');
+  assert.equal(facts.remoteImage, 'blocked', 'the sandbox CSP blocks remote images');
+  assert.equal(facts.extensionImage, 'loaded', 'pinned build: the shared sandbox CSP governs the controller page');
   assert.deepEqual(run.denied.result, { denied: true, code: 'PCMS_SANDBOX_CAPABILITY_DENIED' });
   assert.deepEqual(run.capabilityCalls, ['module.storage.write']);
   assert.deepEqual(run.dispose.result, { disposed: true });

@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <!-- ADR-003 §1: MV3 has one content_security_policy.sandbox string shared with module-ui.html.
-       This meta policy tightens the controller page back to the P004 controller CSP (no styles, images or fonts). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none'">
+  <!-- ADR-003 §1 option 1: the single manifest content_security_policy.sandbox string governs both
+       sandbox pages. A tightening meta CSP is not used: the pinned Firefox 154 build did not enforce
+       one here (P030 CI observation), and the shared policy already denies network, frames, workers
+       and same-origin. -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PCMS Controller Sandbox</title>
 </head>

@@ -52,18 +52,21 @@ test("A030-01 SEC sandbox CSP grants no network, no same-origin and no nested br
   ]) assert.equal(assessSandboxCsp(unsafe), false, unsafe);
 });
 
-test("A030-01 SEC controller page meta-CSP restores the accepted P004 controller policy", async () => {
+test("A030-01 SEC one shared sandbox CSP (ADR-003 option 1) keeps every P004 network and frame denial", async () => {
   const html = await readFile("extension/pcms/sandbox/controller.html", "utf8");
-  const meta = /<meta http-equiv="Content-Security-Policy" content="([^"]+)">/.exec(html);
-  assert.ok(meta, "controller.html carries a tightening meta CSP");
-  assert.ok(html.indexOf(meta[0]) < html.indexOf("<script"), "meta CSP precedes every script");
-  const tightened = directives(meta[1]);
+  // Regression: the pinned build loaded an extension image despite an img-src 'none' meta CSP,
+  // so the controller page relies on the manifest policy alone and carries no misleading meta CSP.
+  assert.doesNotMatch(html, /http-equiv="Content-Security-Policy"/i);
+  const shared = directives(sandboxCsp);
   const p004 = directives(fragment.content_security_policy.sandbox);
-  // Every P004 fetch directive is enforced at least as strictly by manifest ∩ meta.
   for (const [name, sources] of p004) {
-    if (name === "sandbox") continue;
-    assert.deepEqual(tightened.get(name), sources, name);
+    if (["img-src", "style-src", "font-src"].includes(name)) continue;
+    assert.deepEqual(shared.get(name), sources, name);
   }
+  // Module UI needs styles, fonts and images; they come only from the extension itself.
+  assert.deepEqual(shared.get("img-src"), ["'self'", "data:"]);
+  assert.deepEqual(shared.get("style-src"), ["'self'"]);
+  assert.deepEqual(shared.get("font-src"), ["'self'"]);
   assert.deepEqual(fragment.sandbox.pages, [MODULE_RUNTIME_CONTROLLER_PAGE]);
   assert.doesNotMatch(html, /https?:\/\//i);
   assert.doesNotMatch(html, /<(?:iframe|form|img|link)\b/i);
