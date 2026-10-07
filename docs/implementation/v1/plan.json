@@ -1280,7 +1280,7 @@
     {
       "id": "P030",
       "title": "Production sandbox pages + background-hosted controller frames",
-      "status": "READY",
+      "status": "CLAIMED",
       "dependsOn": [
         "P028"
       ],
@@ -1295,7 +1295,9 @@
           "extension/pcms/runtime/**",
           "extension/pcms/background/sandbox/**",
           "tests/pcms/p030/**",
-          "docs/evidence/P030/**"
+          "docs/evidence/P030/**",
+          "package.json",
+          ".github/workflows/firefox.yml"
         ],
         "contractReads": [],
         "contractWrites": [],

@@ -273,7 +273,7 @@ Merge wave: 13
 - [ ] T029.3 — T029.3 Background continuity proof with zero PCMS tabs and forced unloads
 
 ## P030 — Production sandbox pages + background-hosted controller frames
-Status: **READY**  
+Status: **CLAIMED**  
 Depends on: P028  
 Merge wave: 13
 
