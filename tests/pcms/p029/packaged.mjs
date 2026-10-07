@@ -36,25 +36,26 @@ async function page(code,args=[]){
   if(!result.ok)throw new Error(result.error);
   return result.value;
 }
+let timerProbeSequence=0;
 async function timerRow(){
+  const sequence=++timerProbeSequence;
   return page(`
-    const db=await new Promise((resolve,reject)=>{
-      const request=indexedDB.open("persona-monkey-pcms",1);
-      request.onsuccess=()=>resolve(request.result);
-      request.onerror=()=>reject(request.error||new Error("PCMS IndexedDB open failed"));
+    const suffix=String(arguments[1])+"-"+Date.now();
+    const response=await api.runtime.sendMessage({
+      type:"PCMS_UI_REQUEST",
+      version:1,
+      requestId:"p029-probe-"+suffix,
+      kind:"command",
+      name:"backupRestore.createBackup",
+      params:{args:[{backupId:"p029-probe-"+suffix}]},
+      idempotencyKey:"p029-probe-"+suffix
     });
-    try{
-      return await new Promise((resolve,reject)=>{
-        const tx=db.transaction("records","readonly");
-        const request=tx.objectStore("records").get("core.timers\\u0000"+arguments[0]);
-        request.onsuccess=()=>resolve(request.result||null);
-        request.onerror=()=>reject(request.error||new Error("PCMS timer probe read failed"));
-      });
-    }finally{db.close();}
-  `,[PCMS_CONTINUITY_FIXTURE_TIMER_ID]);
+    if(!response?.ok)throw new Error((response?.error?.code||"PCMS_UI_FAILED")+": "+(response?.error?.message||"backup probe failed"));
+    return response.result.records.find((record)=>record.namespace==="core.timers"&&record.key===arguments[0])||null;
+  `,[PCMS_CONTINUITY_FIXTURE_TIMER_ID,sequence]);
 }
 async function alarms(){return page("return api.alarms.getAll();");}
-async function openProbe(){return h.openPage(PRODUCT,"popup/popup.html");}
+async function openProbe(){return h.openPage(PRODUCT,"pcms/app/index.html");}
 async function waitScheduled(label,priorRevision=0){
   return waitFor(async()=>{
     const row=await timerRow();
