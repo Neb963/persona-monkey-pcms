@@ -1,6 +1,6 @@
 # P032 — PCMS dashboard shell v2 as UI client
 
-State at this checkpoint: **COMMITTED · independent CI pending**
+Evidence state: **CI_VERIFIED · PR #42 OPEN**
 
 - Claim: `CLM-P032-001`, epoch **1**, owner `gpt-5-6-sol`.
 - Claim base: `4d1dfb314fef2f64bf5e89c67f6060c8d897d899`.
@@ -63,8 +63,24 @@ An exact-blob syntax/static pass was run against checkpoint `d86d9660581a1f6f18d
 
 A normal network checkout is unavailable in this execution container, so this document does **not** claim a local
 Node execution of the P032 test files. The phase-owned paths do not include `package.json` or workflow files, so
-P032 does not alter CI merely to make its new tests auto-discoverable. Independent PR workflows and their exact
-run IDs will be recorded here after they complete.
+P032 does not alter CI merely to make its new tests auto-discoverable.
+
+## Independent PR verification
+
+PR **#42** verified checkpoint `4c9b1f79cd29da7271283902b8fe4fcf09aa2623` successfully:
+
+- repository `verify`: run **37694604631**, job **113043096361** — **PASS**;
+- `firefox-developer-edition`: run **37694604595**, job **113043095959** — **PASS**.
+
+The pinned-Firefox job passed the inherited P026 regression suite, P028 background Core/UI protocol suite, P030
+sandbox suite, the packaged-XPI lifecycle/platform probe, and the runtime-supplied sandbox-controller probe. The
+packaged-XPI probe opens the real `pcms/app/index.html`, exercises two dashboard clients against one background
+Core, closes all PCMS tabs, wakes Core again with zero dashboards, and restarts the profile. Thus this run is the
+independent browser evidence for the rehost and multi-tab/no-tab guarantees that P032 inherits from P028.
+
+The new `tests/pcms/p032/*.test.mjs` suites remain phase-owned focused regression assets. Existing workflow/package
+ownership does not auto-discover them, and P032 intentionally did not broaden its claim to modify CI. Their exact
+branch blobs did pass the pre-PR syntax/static invariant check described above.
 
 ## Scope boundary
 
