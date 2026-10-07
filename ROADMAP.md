@@ -237,7 +237,7 @@ Merge wave: 9
 - [x] T025.3 — T025.3 provider/session compatibility
 
 ## P026 — Live acceptance 2 — representative mutations + recovery + final acceptance
-Status: **CLAIMED**  
+Status: **MERGED**  
 Depends on: P025  
 Merge wave: 10
 
