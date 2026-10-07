@@ -1280,7 +1280,7 @@
     {
       "id": "P030",
       "title": "Production sandbox pages + background-hosted controller frames",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P028"
       ],
