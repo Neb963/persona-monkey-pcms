@@ -22,6 +22,7 @@ export function validateBrowserPin(pin) {
   if (pin.product !== "firefox-developer-edition") throw new Error("browser pin product must be Firefox Developer Edition");
   if (pin.channel !== "developer") throw new Error("browser pin channel must be developer");
   if (!/^\d+\.0b\d+$/.test(pin.version ?? "")) throw new Error("browser pin version must be an exact beta build");
+  if (Number(pin.version.split(".")[0]) < 154) throw new Error("P027 browser pin must support Firefox sandbox pages (154+)");
   if (pin.platform !== "linux-x86_64") throw new Error("P001 CI pin must target linux-x86_64");
   if (pin.locale !== "en-US") throw new Error("P001 CI pin must target en-US");
   if (!/^[0-9a-f]{64}$/.test(pin.archive?.sha256 ?? "")) throw new Error("browser pin requires an exact SHA-256");
