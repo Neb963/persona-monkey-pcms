@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "phase": "P029",
+  "commitSha": "fe972d301e96cb2d52341a699e6e29a4e0a0f5f3",
+  "workflowRun": "37696634345",
+  "version": "154.0b10",
+  "artifactSha256": "681913108bba655d7ec6fadfac2731141b23e48dca88d1988a4d95a6bdaff164",
+  "productXpiSha256": "5d1a749f746c9a5aaa336968a933b10083022af19885489c5142099954a93615",
+  "checks": {
+    "zeroPcmsTabsAlarmWakeAndRun": true,
+    "coldRestartRecreatesAlarmsFromDurableTimer": true,
+    "profileRestartThenZeroTabsUnloadAndRun": true
+  },
+  "facts": {
+    "initial": {
+      "revision": 1,
+      "dueAt": "2026-10-07T22:32:52.423Z",
+      "alarms": [
+        {
+          "name": "persona-mullvad-idle",
+          "scheduledTime": 1791412420393,
+          "periodInMinutes": 1
+        },
+        {
+          "name": "pcms.core.heartbeat",
+          "scheduledTime": 1791412660422,
+          "periodInMinutes": 5
+        },
+        {
+          "name": "pcms.timers.next",
+          "scheduledTime": 1791412372423,
+          "periodInMinutes": null
+        }
+      ]
+    },
+    "afterUnload": {
+      "revision": 3,
+      "state": "FIRED",
+      "completedAt": "2026-10-07T22:32:52.554Z"
+    },
+    "restart": {
+      "revision": 4,
+      "dueAt": "2026-10-07T22:33:05.526Z",
+      "alarms": [
+        {
+          "name": "persona-mullvad-idle",
+          "scheduledTime": 1791412433489,
+          "periodInMinutes": 1
+        },
+        {
+          "name": "pcms.core.heartbeat",
+          "scheduledTime": 1791412673524,
+          "periodInMinutes": 5
+        },
+        {
+          "name": "pcms.timers.next",
+          "scheduledTime": 1791412385526,
+          "periodInMinutes": null
+        }
+      ]
+    },
+    "afterRestartUnload": {
+      "revision": 6,
+      "state": "FIRED",
+      "completedAt": "2026-10-07T22:33:05.529Z"
+    }
+  },
+  "firstUnload": {
+    "state": "stopped",
+    "mode": "firefox-test-hook"
+  },
+  "restartUnload": {
+    "state": "stopped",
+    "mode": "firefox-test-hook"
+  },
+  "passed": true
+}
