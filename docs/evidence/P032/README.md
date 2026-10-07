@@ -10,7 +10,7 @@ State: **COMMITTED; focused CI PASS at prior implementation checkpoint; final CI
 - P029 merged in PR #41 at 28651a46b1a0f37a56cbe4c327eea81e9bcc7c97.
 - Governance PR #43 merged at 837f0b2e149240dc3d34fc63ce52f310f908100e. It reconciled P029 to MERGED (not ACCEPTED) and expressly extended P032 ownership to the UI-client contract, background dispatcher, package script and pinned Firefox workflow, with pcms.ui-client/v1 contract-write authority.
 - P032 integrated that main with a non-force, two-parent merge commit 453bdf555c593aedfb041b7906b866273d96b419, preserving P029 product changes.
-- Most recent implementation checkpoint: cae150254b006fd178f0b7ffac2e6dac57c73f33. No migrations, resources other than CI workflow ownership, or PersonaMonkey/browser authority were added.
+- Orphaned-PENDING implementation checkpoint: cae150254b006fd178f0b7ffac2e6dac57c73f33; the current branch also includes the completion-time retention correction. No migrations, resources other than CI workflow ownership, or PersonaMonkey/browser authority were added.
 
 ## Scope and acceptance
 
@@ -26,7 +26,7 @@ State: **COMMITTED; focused CI PASS at prior implementation checkpoint; final CI
 - Added the additive read-only operation uiReceipts.list to the allow-listed pcms.ui-client/v1 contract and background UI dispatcher.
 - Core alone owns the existing core.ui-receipts store. A dashboard never uses raw storage, IndexedDB or its own durable receipt database.
 - Each response contains at most 20 records, with ONLY receiptId, fixed allow-listed command subject, status, recordedAt and completedAt. Request hashes, command inputs/results, stored errors and raw records do not cross the UI boundary.
-- Filtering respects the existing seven-day Core receipt retention. Malformed and future-dated rows are discarded. Unknown, failed and pending outcomes are prioritized over successful ones.
+- Filtering matches the existing seven-day Core receipt retention, using completion time for settled commands and creation time for outstanding commands. Malformed and future-dated rows are discarded. Unknown, failed and pending outcomes are prioritized over successful ones.
 - An orphaned PENDING receipt without a matching current-Core in-flight operation is reported UNKNOWN. The UI must not claim an interrupted operation is still Running or replay it.
 - The action tray reads durable receipts when opened or signaled by a revision. Immediate command feedback is de-duplicated. HumanTasks remain durable, separate Attention entries.
 - A failed receipt-list request leaves the rest of the UI functioning and shows an action-history-unavailable indication.

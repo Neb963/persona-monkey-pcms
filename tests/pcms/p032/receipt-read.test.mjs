@@ -148,3 +148,24 @@ test("A032-02 read-only endpoint is exact-key, sender guarded and never accepts 
   assert.deepEqual(direct.result.receipts,[]);
   assert.equal(h.executed,0);
 });
+
+
+test("A032-02 completed receipts use completion time for retention and recency",async()=>{
+  const h=fixture();
+  const store=h.durable.storageBroker.namespace(PCMS_UI_RECEIPT_NAMESPACE);
+  const now=Date.parse(h.durable.clock());
+  const oldStart=new Date(now-8*24*60*60*1000).toISOString();
+  const recentEnd=new Date(now-60*60*1000).toISOString();
+  const tooOldEnd=new Date(now-PCMS_UI_RECEIPT_RETENTION_MS-1000).toISOString();
+  for(const [key,completedAt] of [["ui-p032-recent-finish",recentEnd],["ui-p032-expired-finish",tooOldEnd]]){
+    await store.compareAndSwap(key,{expectedRevision:0,value:{
+      schemaVersion:1,kind:"ui-command-receipt",receiptId:key,subject:"accounts.createAccount",
+      requestHash:"private-hash",status:"COMPLETED",recordedAt:oldStart,
+      completedAt,resultRetained:false,result:null,error:null
+    }});
+  }
+  const listed=await h.client().runtime.uiReceipts.list();
+  assert.deepEqual(listed.receipts.map((row)=>row.receiptId),["ui-p032-recent-finish"]);
+  assert.equal(listed.receipts[0].completedAt,recentEnd);
+  assert.equal(h.executed,0);
+});

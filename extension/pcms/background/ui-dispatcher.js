@@ -71,21 +71,25 @@ export function createPcmsUiDispatcher({
           ||!["PENDING","FAILED","COMPLETED"].includes(value.status)
           ||typeof value.recordedAt!=="string") continue;
       const recorded=Date.parse(value.recordedAt);
+      const completedAt=typeof value.completedAt==="string"&&Number.isFinite(Date.parse(value.completedAt))
+        ?value.completedAt:null;
+      const lastRecorded=completedAt?Date.parse(completedAt):recorded;
+      // Match the existing Core prune rule: a long-running command completed
+      // recently must remain visible even if it was originally started days ago.
       if(!Number.isFinite(recorded)||!Number.isFinite(now)
-          ||recorded>now+5*60*1000||now-recorded>PCMS_UI_RECEIPT_RETENTION_MS) continue;
+          ||recorded>now+5*60*1000||lastRecorded>now+5*60*1000
+          ||now-lastRecorded>PCMS_UI_RECEIPT_RETENTION_MS) continue;
       // A P028 PENDING receipt with no matching in-flight command survived a
       // previous Core context: the outcome is unknown, NOT still running.
       const status=value.status==="PENDING"&&!inflight.has(value.receiptId)?"UNKNOWN":value.status;
       summaries.push(Object.freeze({
         receiptId:value.receiptId,subject:value.subject,status,
-        recordedAt:value.recordedAt,
-        completedAt:typeof value.completedAt==="string"&&Number.isFinite(Date.parse(value.completedAt))
-          ?value.completedAt:null
+        recordedAt:value.recordedAt,completedAt
       }));
     }
     const rank={UNKNOWN:0,FAILED:1,PENDING:2,COMPLETED:3};
     summaries.sort((a,b)=>rank[a.status]-rank[b.status]
-      ||Date.parse(b.recordedAt)-Date.parse(a.recordedAt)
+      ||Date.parse(b.completedAt||b.recordedAt)-Date.parse(a.completedAt||a.recordedAt)
       ||a.receiptId.localeCompare(b.receiptId));
     return Object.freeze({receipts:Object.freeze(summaries.slice(0,PCMS_UI_MAX_RECEIPT_LIST))});
   }
