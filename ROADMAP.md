@@ -246,16 +246,16 @@ Merge wave: 10
 - [x] T026.3 — T026.3 final human acceptance
 
 ## P027 — Packaged-XPI Firefox harness + browser pin >=154
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P026  
 Merge wave: 11
 
-- [ ] T027.1 — T027.1 Pin exact Firefox Developer Edition build >=154
-- [ ] T027.2 — T027.2 Packaged-XPI install/drive harness (tabs, idle unload, profile restart)
-- [ ] T027.3 — T027.3 Baseline packaged regression and pinned-build platform facts
+- [x] T027.1 — T027.1 Pin exact Firefox Developer Edition build >=154
+- [x] T027.2 — T027.2 Packaged-XPI install/drive harness (tabs, idle unload, profile restart)
+- [x] T027.3 — T027.3 Baseline packaged regression and pinned-build platform facts
 
 ## P028 — Background-authoritative PCMS Core + UI client protocol
-Status: **BLOCKED**  
+Status: **READY**  
 Depends on: P027  
 Merge wave: 12
 

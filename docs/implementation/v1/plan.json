@@ -1124,7 +1124,7 @@
     {
       "id": "P027",
       "title": "Packaged-XPI Firefox harness + browser pin >=154",
-      "status": "PR_OPEN",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P026"
       ],
@@ -1176,7 +1176,7 @@
     {
       "id": "P028",
       "title": "Background-authoritative PCMS Core + UI client protocol",
-      "status": "BLOCKED",
+      "status": "READY",
       "dependsOn": [
         "P027"
       ],

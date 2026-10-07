@@ -74,5 +74,36 @@ minimal fixture, PersonaMonkey has proxy/webRequest and other event listeners. F
 events/API calls; a short pref does not guarantee suspension of an active extension. The harness therefore uses
 Firefox's own `terminateBackground({disableResetIdleForTest:true,ignoreDevToolsAttached:true})` **only in CI** to
 force the product's real event-page suspension. The independent fixture continues proving natural default and
-short-pref unloads. No product keep-alive behavior is changed or assumed absent. Final-head CI is pending.
-Current state: **PR_OPEN**; no merged/accepted state claimed yet.
+short-pref unloads. No product keep-alive behavior is changed or assumed absent. The corrected final-head CI passed (see below).
+## Final PR verification and merge
+
+Final head `40dc2ca43bf326f64e112d6abdfe43b16e10b0d8` passed both independent workflows:
+
+- [repository verification 37675347344](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37675347344);
+- [packaged Firefox 37675347314](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37675347314).
+
+The exact tested PR integration commit was `3b428298cb0c7a59c08b46c9b47345802db36389`.
+`pinned-platform-facts.json` preserves its report verbatim as JSON, recovered from the completed job log.
+The same report was uploaded as artifact **11506897644**, ZIP digest
+`021ee9716452391bb1aee0c7a10feabf8d8eb6c161f93b54598ea76aede63f31`.
+All five packaged checks and all platform probes passed with content-sandbox disabling **false**;
+natural default idle unload measured **29965 ms**. The actual product context was forcibly suspended by
+Firefox's test hook with zero test dashboards, and both persistently installed XPIs worked after profile restart.
+The product XPI SHA-256 stayed `b8aa1dcc12bda4e0329a4436169d78bb061d05024baf6fe663def0952e533755`.
+
+[PR #36](https://github.com/Neb963/persona-monkey-pcms/pull/36) merged as
+`a9b2fb9f00aa06aea0541261db47a494945faf39`. Main had not moved since the claimed base; epoch 1 and the claim
+scope were revalidated before merge. ## Merged-main verification and acceptance
+
+Exact merged-main commit `a9b2fb9f00aa06aea0541261db47a494945faf39` passed:
+
+- [repository verification 37675719270](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37675719270);
+- [packaged Firefox 37675719295](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37675719295).
+
+The completed Firefox job **112978569328** reported the exact merged SHA, all five packaged checks PASS, and
+content-sandbox disabling false. The browser/archive/product-XPI hashes matched the final PR report.
+
+**A027-01 PASS · A027-02 PASS · A027-03 PASS.** Phase P027 and claim CLM-P027-001, epoch 1, are **ACCEPTED**.
+P028 becomes READY through its accepted dependency. No P028 implementation or claim was started.
+There are no unresolved P027 acceptance issues. Production background authority, alarms, runtime-module wiring
+and UI redesign remain in their assigned successor phases; no such product behavior is claimed by P027.
