@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "phase": "P029",
-  "commitSha": "fe972d301e96cb2d52341a699e6e29a4e0a0f5f3",
-  "workflowRun": "37696634345",
+  "commitSha": "c0bef5fd11363693ee1adc28f80a76bdeee3ee80",
+  "workflowRun": "37697271798",
   "version": "154.0b10",
   "artifactSha256": "681913108bba655d7ec6fadfac2731141b23e48dca88d1988a4d95a6bdaff164",
-  "productXpiSha256": "5d1a749f746c9a5aaa336968a933b10083022af19885489c5142099954a93615",
+  "productXpiSha256": "797f67aa73c4c5a943b1abdee092e5b7d8f39739468dba2ef7fd8856e9db301e",
   "checks": {
     "zeroPcmsTabsAlarmWakeAndRun": true,
     "coldRestartRecreatesAlarmsFromDurableTimer": true,
@@ -14,21 +14,21 @@
   "facts": {
     "initial": {
       "revision": 1,
-      "dueAt": "2026-10-07T22:32:52.423Z",
+      "dueAt": "2026-10-07T22:40:14.643Z",
       "alarms": [
         {
           "name": "persona-mullvad-idle",
-          "scheduledTime": 1791412420393,
+          "scheduledTime": 1791412844626,
           "periodInMinutes": 1
         },
         {
           "name": "pcms.core.heartbeat",
-          "scheduledTime": 1791412660422,
+          "scheduledTime": 1791413084642,
           "periodInMinutes": 5
         },
         {
           "name": "pcms.timers.next",
-          "scheduledTime": 1791412372423,
+          "scheduledTime": 1791412814643,
           "periodInMinutes": null
         }
       ]
@@ -36,25 +36,25 @@
     "afterUnload": {
       "revision": 3,
       "state": "FIRED",
-      "completedAt": "2026-10-07T22:32:52.554Z"
+      "completedAt": "2026-10-07T22:40:14.648Z"
     },
     "restart": {
       "revision": 4,
-      "dueAt": "2026-10-07T22:33:05.526Z",
+      "dueAt": "2026-10-07T22:40:45.851Z",
       "alarms": [
         {
           "name": "persona-mullvad-idle",
-          "scheduledTime": 1791412433489,
+          "scheduledTime": 1791412875808,
           "periodInMinutes": 1
         },
         {
           "name": "pcms.core.heartbeat",
-          "scheduledTime": 1791412673524,
+          "scheduledTime": 1791413115849,
           "periodInMinutes": 5
         },
         {
           "name": "pcms.timers.next",
-          "scheduledTime": 1791412385526,
+          "scheduledTime": 1791412845851,
           "periodInMinutes": null
         }
       ]
@@ -62,7 +62,7 @@
     "afterRestartUnload": {
       "revision": 6,
       "state": "FIRED",
-      "completedAt": "2026-10-07T22:33:05.529Z"
+      "completedAt": "2026-10-07T22:40:45.984Z"
     }
   },
   "firstUnload": {
