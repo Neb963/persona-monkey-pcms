@@ -255,7 +255,7 @@ Merge wave: 11
 - [x] T027.3 — T027.3 Baseline packaged regression and pinned-build platform facts
 
 ## P028 — Background-authoritative PCMS Core + UI client protocol
-Status: **IN_PROGRESS**  
+Status: **PR_OPEN**  
 Depends on: P027  
 Merge wave: 12
 

@@ -4,7 +4,7 @@
   "phaseId": "P028",
   "taskId": "T028.1",
   "claimEpoch": 2,
-  "state": "ACTIVE",
+  "state": "PR_OPEN",
   "owner": {
     "agentId": "claude-thread-gg298x"
   },
@@ -51,5 +51,5 @@
     "A028-02",
     "A028-03"
   ],
-  "lastCheckpointSha": null
+  "lastCheckpointSha": "dd8fa9ca2e8d5f499dec23acb24d02bbd3ab597b"
 }
