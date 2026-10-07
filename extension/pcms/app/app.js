@@ -274,9 +274,9 @@ export function mountPcmsApp({
     section(documentRef,"searchEmpty").hidden=snapshot.search.results.length!==0 || snapshot.search.query==="";
   }
 
-  function renderActionTray(snapshot) {
-    const list=section(documentRef,"actionTrayDurableList");
-    clear(list);
+  function renderActionTray(snapshot,receiptState) {
+    const taskList=section(documentRef,"actionTrayDurableList");
+    clear(taskList);
     for(const item of snapshot.notifications.items.slice(0,8)) {
       const presentation=presentPcmsHumanTask(item);
       const row=element(documentRef,"a","action-receipt");
@@ -285,18 +285,46 @@ export function mountPcmsApp({
       const text=element(documentRef,"span");
       text.textContent=item.title;
       row.appendChild(text);
-      list.appendChild(row);
+      taskList.appendChild(row);
+    }
+
+    const receiptList=section(documentRef,"actionTrayReceiptList");
+    clear(receiptList);
+    const receipts=Array.isArray(receiptState?.receipts)?receiptState.receipts.slice(0,8):[];
+    for(const receipt of receipts) {
+      const row=element(documentRef,"div","action-receipt");
+      row.dataset.receiptId=receipt.receiptId;
+      const presentation=presentPcmsReceipt(receipt);
+      appendStatusToken(documentRef,row,presentation.token,presentation.label);
+      const text=element(documentRef,"span");
+      text.textContent=receipt.subject;
+      row.appendChild(text);
+      receiptList.appendChild(row);
+    }
+    // A direct command response is temporary feedback. Core's durable copy becomes
+    // authoritative on the next revision, so never display the same ID twice.
+    const localList=section(documentRef,"actionTrayLocalList");
+    for(const row of [...localList.children]) {
+      if(receipts.some((receipt)=>receipt.receiptId===row.dataset.receiptId)) row.remove();
+    }
+    if(receiptState?.unavailable) {
+      const row=element(documentRef,"div","action-receipt");
+      appendStatusToken(documentRef,row,"UNAVAILABLE","History unavailable");
+      receiptList.appendChild(row);
     }
     section(documentRef,"actionTrayCount").textContent=snapshot.notifications.count?String(snapshot.notifications.count):"";
-    section(documentRef,"actionTrayEmpty").hidden=snapshot.notifications.items.length!==0
-      || section(documentRef,"actionTrayReceiptList").childNodes.length!==0
-      || section(documentRef,"actionTrayLocalList").childNodes.length!==0;
+    section(documentRef,"actionTrayEmpty").hidden=taskList.childNodes.length!==0
+      ||receiptList.childNodes.length!==0||localList.childNodes.length!==0;
   }
 
   function showReceipt(receipt) {
     const list=section(documentRef,"actionTrayReceiptList");
+    const id=String(receipt?.receiptId||"");
+    if(!id) return;
+    // Avoid duplicate direct responses for a retried command.
+    for(const previous of [...list.children]) if(previous.dataset.receiptId===id) previous.remove();
     const row=element(documentRef,"div","action-receipt");
-    row.dataset.receiptId=String(receipt?.receiptId||"");
+    row.dataset.receiptId=id;
     const presentation=presentPcmsReceipt(receipt);
     appendStatusToken(documentRef,row,presentation.token,presentation.label);
     const text=element(documentRef,"span");
@@ -350,11 +378,17 @@ export function mountPcmsApp({
     const generation=++refreshGeneration;
     const initial=resolvePcmsRouteV2(windowRef.location.hash);
     const parsed=initial.route;
-    let snapshot,moduleSnapshot;
+    let snapshot,moduleSnapshot,receiptState;
     try {
-      [snapshot,moduleSnapshot]=await Promise.all([
+      [snapshot,moduleSnapshot,receiptState]=await Promise.all([
         projectionService.snapshot({query:parsed.query}),
-        moduleProjectionService.snapshot()
+        moduleProjectionService.snapshot(),
+        runtime?.uiReceipts?.list
+          ?runtime.uiReceipts.list().then((result)=>{
+            if(!Array.isArray(result?.receipts)) throw new Error("Invalid receipt projection");
+            return {receipts:result.receipts,unavailable:false};
+          }).catch(()=>({receipts:[],unavailable:true}))
+          :Promise.resolve({receipts:[],unavailable:true})
       ]);
     } catch {
       if(disposed||generation!==refreshGeneration) return;
@@ -393,7 +427,7 @@ export function mountPcmsApp({
     renderAttention(snapshot,route.route==="attention"?route.id:null);
     renderAccounts(snapshot,route.route==="accounts"?route.id:null);
     renderSearch(snapshot);
-    renderActionTray(snapshot);
+    renderActionTray(snapshot,receiptState);
     renderPlaceholder(route);
     setVisible(routeView(route));
   }
