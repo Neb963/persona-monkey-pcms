@@ -31,6 +31,7 @@ State: **COMMITTED; focused CI PASS at prior implementation checkpoint; final CI
 - The action tray reads durable receipts when opened or signaled by a revision. Immediate command feedback is de-duplicated. HumanTasks remain durable, separate Attention entries.
 - A failed receipt-list request leaves the rest of the UI functioning and shows an action-history-unavailable indication.
 - Native P032 regressions include cross-tab revision visibility, all-tabs-closed/reopen with a new background context, failed and redacted receipts, max-results and expiry, orphaned pending and strict read-only authorization.
+- Packaged pinned-Firefox A032-02 test: tests/pcms/p032/packaged.mjs opens two actual dashboard tabs, creates a Core-backed backup command receipt, verifies both DOM trays and secret-safe RPC, closes every dashboard, forces event-page unload, then reopens and checks receipt persistence without command replay.
 
 ### A032-03: Core health and multi-tab operation
 

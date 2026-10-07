@@ -25,6 +25,7 @@
     "firefox:packaged:p030": "node scripts/build-extension.mjs && node tests/pcms/p030/packaged.mjs",
     "test:p029": "node --test tests/pcms/p029/*.test.mjs",
     "firefox:packaged:p029": "node scripts/build-extension.mjs && node tests/pcms/p029/packaged.mjs",
-    "test:p032": "node --test tests/pcms/p032/*.test.mjs"
+    "test:p032": "node --test tests/pcms/p032/*.test.mjs",
+    "firefox:packaged:p032": "node scripts/build-extension.mjs && node tests/pcms/p032/packaged.mjs"
   }
 }
