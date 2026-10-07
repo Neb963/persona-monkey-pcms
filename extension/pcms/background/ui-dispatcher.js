@@ -3,6 +3,8 @@
 import {
   PCMS_UI_ERROR_CODES,
   PCMS_UI_PROTOCOL_VERSION,
+  PCMS_UI_MAX_RECEIPT_LIST,
+  getPcmsUiOperation,
   PCMS_UI_RESPONSE_TYPE,
   PcmsUiProtocolError,
   isPcmsUiSender,
@@ -56,6 +58,34 @@ export function createPcmsUiDispatcher({
   const inflight=new Map();
 
   function receipts(core){return core.storageBroker.namespace(PCMS_UI_RECEIPT_NAMESPACE);}
+  
+  // UI clients cannot access hashes, command payloads, error bodies or stored results.
+  async function listReceiptSummaries(core){
+    const now=Date.parse(clock());
+    const summaries=[];
+    for(const row of await receipts(core).list()){
+      const value=row?.value;
+      if(value?.schemaVersion!==1||value.kind!=="ui-command-receipt"
+          ||typeof value.receiptId!=="string"||value.receiptId!==row.key
+          ||typeof value.subject!=="string"||getPcmsUiOperation(value.subject)?.kind!=="command"
+          ||!["PENDING","FAILED","COMPLETED"].includes(value.status)
+          ||typeof value.recordedAt!=="string") continue;
+      const recorded=Date.parse(value.recordedAt);
+      if(!Number.isFinite(recorded)||!Number.isFinite(now)
+          ||recorded>now+5*60*1000||now-recorded>PCMS_UI_RECEIPT_RETENTION_MS) continue;
+      summaries.push(Object.freeze({
+        receiptId:value.receiptId,subject:value.subject,status:value.status,
+        recordedAt:value.recordedAt,
+        completedAt:typeof value.completedAt==="string"&&Number.isFinite(Date.parse(value.completedAt))
+          ?value.completedAt:null
+      }));
+    }
+    const rank={PENDING:0,FAILED:1,COMPLETED:2};
+    summaries.sort((a,b)=>rank[a.status]-rank[b.status]
+      ||Date.parse(b.recordedAt)-Date.parse(a.recordedAt)
+      ||a.receiptId.localeCompare(b.receiptId));
+    return Object.freeze({receipts:Object.freeze(summaries.slice(0,PCMS_UI_MAX_RECEIPT_LIST))});
+  }
 
   function replay(requestId,row,requestHash){
     const value=row.value;
@@ -141,8 +171,12 @@ export function createPcmsUiDispatcher({
     catch{return failure(request.requestId,protocolError(PCMS_UI_ERROR_CODES.CORE_UNAVAILABLE,"PCMS Core is unavailable"));}
 
     if(request.kind==="query"){
-      try{return response(request.requestId,{ok:true,result:await invoke(core,request.name,request.args)});}
-      catch(error){return failure(request.requestId,error);}
+      try{
+        const result=request.name==="uiReceipts.list"
+          ?await listReceiptSummaries(core)
+          :await invoke(core,request.name,request.args);
+        return response(request.requestId,{ok:true,result});
+      } catch(error){return failure(request.requestId,error);}
     }
 
     // Concurrent duplicates of one idempotency key share one execution.
