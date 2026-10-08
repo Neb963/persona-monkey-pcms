@@ -14,7 +14,9 @@ const pin=await loadBrowserPin(),manifest=JSON.parse(await readFile("extension/m
 const xpi=resolve(`dist/persona-route-manager-v${manifest.version}.xpi`);
 const report={schemaVersion:1,phase:"P039",commitSha:process.env.GITHUB_SHA||(await execFileText("git",["rev-parse","HEAD"])).stdout.trim(),
   workflowRun:process.env.GITHUB_RUN_ID||null,version:pin.version,artifactSha256:pin.archive.sha256,
-  productXpiSha256:await sha256File(xpi),checks:{},facts:{},sourceState:process.env.CI?"actions-checkout":"local-worktree"};
+  productXpiSha256:await sha256File(xpi),checks:{},facts:{},sourceState:process.env.CI?"actions-checkout":"local-worktree",
+  contentSandboxDisabled:process.env.MOZ_DISABLE_CONTENT_SANDBOX==="1",
+  worktreeDirty:Boolean((await execFileText("git",["status","--porcelain"])).stdout.trim())};
 let h,server,probe,productTab,changed=false;
 const requests=[];
 const escape=s=>s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
