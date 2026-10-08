@@ -12,6 +12,8 @@ import {
 } from "./adapters.js";
 import { createExplorerDeployerBridge } from "./explorer-deployer.js";
 import { createGeneratorIndexService } from "./generator-index.js";
+import { createGithubRepositoryProvider } from "../providers/repository/github.js";
+import { createDeployerRepositoryService } from "../../../pcms-modules/p015/repository-service.js";
 import { createIntegrationRecoveryChecks } from "./recovery-checks.js";
 
 export const PCMS_INTEGRATION_NAMESPACES=Object.freeze({
@@ -62,6 +64,7 @@ export function createPcmsModuleIntegration({
   operationContext=null,
   statisticsDefinitions=[],
   providerProbes=[],
+  repositoryProvider=null,
   clock=()=>new Date().toISOString()
 }={}) {
   if(!storageBroker||typeof storageBroker.namespace!=="function")throw new TypeError("PCMS integration requires storage");
@@ -133,6 +136,15 @@ export function createPcmsModuleIntegration({
     clock
   });
 
+  // P037: repository-only durable state, separate from the accepted Deployer
+  // v2 migration and independent of runtime sandbox modules.
+  const repository=createDeployerRepositoryService({
+    stateStore:createSingletonStateStore({storageBroker,namespace:"module.deployer.repository"}),
+    ledgerStore:storageBroker.namespace("module.deployer.repository.ledger"),
+    repositoryProvider:repositoryProvider??createGithubRepositoryProvider(),
+    deployer,accounts,recoveryHold,auditJournal,clock
+  });
+
   const explorer=factories.explorer({
     stateStore:createSingletonStateStore({storageBroker,namespace:PCMS_INTEGRATION_NAMESPACES.explorer}),
     accountsService:accounts,
@@ -186,6 +198,7 @@ export function createPcmsModuleIntegration({
   return Object.freeze({
     accounts,
     deployer,
+    repository,
     explorer,
     refresher,
     statistics,

@@ -112,9 +112,12 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
       return "CREATED";
     }
     try{
-      await deployer.setDesired(existing.deploymentId,{expectedRevision:current.revision,
+      const same=existing.desired.payloadHash===item.payloadHash&&existing.desired.thumbnailHash===item.thumbnailHash
+        &&existing.desired.listing===item.listing;
+      const method=same?"setRepositoryOrigin":"setDesired";
+      await deployer[method](existing.deploymentId,{expectedRevision:current.revision,
         expectedDesiredRevision:existing.desired.revision,...intent});
-      return "UPDATED";
+      return same?"UNCHANGED":"UPDATED";
     }catch(e){if(e?.code===DEPLOYER_ERROR_CODES.OPERATION_BUSY)return "QUEUED";throw e;}
   }
   async function recoveryHeld(){
@@ -182,10 +185,11 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
       }else fail(REPO_ERRORS.PROTOCOL);
     }catch(e){
       const code=typeof e?.code==="string"?e.code:REPO_ERRORS.UNAVAILABLE;
-      // Only the active attempt may record a failure; never overwrite another scan's state.
+      // During APPLY preserve the cursor for an explicit retry; never abandon
+      // a successfully published snapshot with only some targets prepared.
       current=await read();
       if(current.value.scan?.scanId===scan.scanId){
-        try{await cas(current,{...current.value,scan:null,lastFailure:{code,
+        try{await cas(current,{...current.value,scan:scan.step==="APPLY"?current.value.scan:null,lastFailure:{code,
           ...(e?.resetAt?{resetAt:e.resetAt}:{})},lastCheckedAt:clock()});}catch{}
       }
       return Object.freeze({done:true,status:"FAILED",error:code});

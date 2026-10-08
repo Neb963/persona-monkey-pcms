@@ -6,6 +6,7 @@
 // `ui` is an extension-absolute path: the background imports it lazily, so this list stays
 // importable outside the packaged extension (tests inject their own loader).
 export const PCMS_BUNDLED_MODULES=Object.freeze([
+  Object.freeze({moduleId:"deployer",service:"repository",ui:"/pcms-modules/p015/ui.js",dependsOn:Object.freeze([])}),
   Object.freeze({moduleId:"statistics",service:"statistics",ui:"/pcms-modules/p018/ui.js",dependsOn:Object.freeze([])})
 ]);
 

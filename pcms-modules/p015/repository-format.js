@@ -124,7 +124,7 @@ export async function validateRepositorySlice({
   const manifests=[...index.keys()].filter(path=>path.startsWith(pref)&&path.slice(pref.length).split("/").length===3
     &&path.endsWith("/generator.json")&&fileAt(index,path)).sort();
   if(manifests.length>REPOSITORY_MAX_ITEMS)throw repositoryFailure(REPO_ERRORS.TOO_LARGE);
-  if(cursor>manifests.length||items.length+problems.length!==cursor)throw repositoryFailure(REPO_ERRORS.PROTOCOL);
+  if(cursor>manifests.length)throw repositoryFailure(REPO_ERRORS.PROTOCOL);
   const ledgerNext=normalizeLedger(ledger);
   const chunkItems=[...items],chunkProblems=[...problems];
   const end=Math.min(manifests.length,cursor+batchSize);
