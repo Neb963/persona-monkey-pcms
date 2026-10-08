@@ -309,7 +309,7 @@ Merge wave: 15
 - [ ] T033.3 — T033.3 Statistics pilot and fixture runtime-module UI proof, including lifecycle presentation states
 
 ## P034 — Accounts UX with Persona/account pickers
-Status: **BLOCKED**  
+Status: **CLAIMED**  
 Depends on: P032  
 Merge wave: 14
 

@@ -1492,7 +1492,7 @@
     {
       "id": "P034",
       "title": "Accounts UX with Persona/account pickers",
-      "status": "BLOCKED",
+      "status": "CLAIMED",
       "dependsOn": [
         "P032"
       ],

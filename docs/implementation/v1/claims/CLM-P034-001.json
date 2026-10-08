@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "claimId": "CLM-P034-001",
+  "phaseId": "P034",
+  "taskId": "T034.1",
+  "claimEpoch": 1,
+  "state": "ACTIVE",
+  "owner": {
+    "agentId": "gpt-6"
+  },
+  "baseMainSha": "1ea1c08286c976ebd3bbc6aaa32169f18e74a603",
+  "branch": "agent/gpt-6/p034-t034-1",
+  "writePaths": [
+    "extension/pcms/app/views/accounts/**",
+    "extension/pcms/app/ui/picker/**",
+    "pcms-modules/p014/**",
+    "tests/pcms/p034/**",
+    "docs/evidence/P034/**",
+    "docs/implementation/v1/claims/CLM-P034-001.json",
+    "docs/implementation/v1/plan.json",
+    "ROADMAP.md",
+    "docs/progress/STATUS.md"
+  ],
+  "contractReads": [],
+  "contractWrites": [],
+  "resources": [],
+  "migrationSlots": [],
+  "acceptanceIds": [
+    "A034-01",
+    "A034-02",
+    "A034-03"
+  ]
+}
