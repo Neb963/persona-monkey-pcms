@@ -1,6 +1,6 @@
 # P032 — PCMS dashboard shell v2 as UI client
 
-State: **ACCEPTED; PR #42 merged at 76ac9e7239ef58ddbcacb4dde85d5023930ee270**. All phase acceptance gates have independent CI evidence.
+State: **ACCEPTED** after verified P032 product merge, targeted Firefox harness repair and governance reconciliation.
 
 ## Governance and provenance
 
@@ -50,17 +50,18 @@ State: **ACCEPTED; PR #42 merged at 76ac9e7239ef58ddbcacb4dde85d5023930ee270**. 
 
 - Repository verification now includes npm run test:p032 under native Node. The pinned Firefox workflow also runs these P032 suites ahead of packaged-XPI probes.
 - The new receipt API and native test suite passed repository verification at implementation checkpoint 801cacf5e8c8936d203a150fc0927abb27ebce4e: https://github.com/Neb963/persona-monkey-pcms/actions/runs/37701975348.
-- The subsequent orphaned-PENDING correction at cae150254b006fd178f0b7ffac2e6dac57c73f33 is NOT covered by that earlier CI run. Independent verification on the final head is still required.
+- The orphaned-PENDING correction at cae150254b006fd178f0b7ffac2e6dac57c73f33 and later retention-time fix were covered by final P032 implementation verification in runs 37706520958 and 37706521058.
 - Historical pre-amendment implementation checkpoint d5f76d0adb31422ba0d9292d9f6afbc9b5067ad1 passed repository verify run 37695873000 and pinned Firefox run 37695873021. Fourteen earlier P032 test bodies also passed a V8 shimming harness, not native Node; that evidence is superseded by explicit test:p032 CI.
 - The old A032-02 blocker was confirmed: second/reopened tabs saw no receipts from the first tab using the P028-only response protocol. Its root cause is addressed by the amended claim and Core read-only receipt-list facade, not by UI-owned state or raw storage access.
 - Hosted pinned Firefox CI is distinct from final provider-live testing, reserved for P043/P044. No successor phase is started.
 
-## Final integration and acceptance evidence
+## Final acceptance evidence
 
-- Final P032 PR head: d28affccad9b30a5fa94c815cc4ce0fb7096f7c1.
-- Native P032 tests and repository verification: [verify run 37706520958](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37706520958), **PASS**.
-- Exact pinned Firefox Developer Edition: [run 37706521058](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37706521058), **PASS**, including isolated A032-02 packaged two-tab, all-tabs-closed/background-unload/reopen receipt visibility proof, and inherited P027/P029/P030 packaged probes.
-- Earlier shared-run navigation failures affected a later packaged probe. Isolating the new P032 packaged test onto a separate runner restored the P027/P029/P030 job sequence. No P029 runtime sources were changed.
-- Scope audit: epoch 1 ACTIVE at integration, 20 modified paths within P032 claim ownership, branch zero behind main, no migrations or successor implementation.
-- [PR #42](https://github.com/Neb963/persona-monkey-pcms/pull/42) merged with exact expected head at 76ac9e7239ef58ddbcacb4dde85d5023930ee270.
-- This governance update transitions the claim and plan to ACCEPTED and regenerates status/roadmap views; no runtime changes.
+- P032 product PR [#42](https://github.com/Neb963/persona-monkey-pcms/pull/42) merged at `76ac9e7239ef58ddbcacb4dde85d5023930ee270` from head `d28affccad9b30a5fa94c815cc4ce0fb7096f7c1`.
+- P032 product CI: [repository verify 37706520958](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37706520958) and [pinned Firefox 37706521058](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37706521058), both **PASS** including native P032 tests and two-tab/all-tabs-closed/reopened packaged receipt proof.
+- Subsequent independent rerun exposed intermittent extension-page navigation timeouts in both the P029 and P032 packaged tests. Root cause: the P032 dashboard canonicalizes the route fragment to `#/overview`, while `PackagedFirefox.openPage` previously required byte-for-byte equality of the entire URL, including its fragment.
+- Narrow governance amendment [PR #45](https://github.com/Neb963/persona-monkey-pcms/pull/45) authorized the shared Firefox harness file for P032. Targeted repair [PR #46](https://github.com/Neb963/persona-monkey-pcms/pull/46) merged at `7214c5d833b5a4a7de6677da529d73d7100a6c0a`, source `0d7107848116d8ab944ceacf8de7510ec4cd736f`.
+- The repaired harness compares protocol, host, path and query while permitting fragment normalization; wrong extension origins, documents, queries and `about:blank` still fail. `tests/pcms/p032/firefox-navigation.test.mjs` proves the helper and the actual packaged `openPage` path.
+- Independent repair CI: [repository verify 37707904437](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37707904437) **PASS**, [pinned Firefox 37707904519](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37707904519) **PASS**. The latter includes successful isolated P032 receipt-reopen test and inherited P027, P029 restart, and P030 packaged tests.
+- The P032 claim epoch was 1 throughout the work, with all implementation changes limited to explicitly claimed files, no runtime migrations, no successor-phase implementation and no live provider acceptance (reserved for P043/P044).
+- This governance-only acceptance update changes the authoritative P032 phase and claim to **ACCEPTED**, regenerates the two derived views, and records this evidence. It does not change product runtime or the tested harness.

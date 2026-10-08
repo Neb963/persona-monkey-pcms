@@ -1404,7 +1404,8 @@
           "extension/pcms/integration/ui-client-contract.js",
           "extension/pcms/background/ui-dispatcher.js",
           "package.json",
-          ".github/workflows/firefox.yml"
+          ".github/workflows/firefox.yml",
+          "tools/firefox/packaged-harness.mjs"
         ],
         "contractReads": [
           "pcms.ui-client/v1"
