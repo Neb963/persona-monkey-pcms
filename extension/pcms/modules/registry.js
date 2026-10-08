@@ -537,8 +537,23 @@ export function createModulePackageRegistry({
     }
   }
 
+  async function listModules() {
+    const rows = await store.list();
+    const modules = [];
+    for (const row of rows) {
+      if (typeof row.key !== "string") fail(MODULE_ERROR_CODES.CORRUPT_STATE);
+      if (!row.key.startsWith("module:")) continue;
+      const id = assertModuleId(row.key.slice("module:".length));
+      const normalized = normalizeModuleState(row, id);
+      modules.push(Object.freeze({ moduleId: id, revision: normalized.revision, updatedAt: row.updatedAt, value: normalized.value }));
+    }
+    modules.sort((a, b) => a.moduleId.localeCompare(b.moduleId));
+    return Object.freeze(modules);
+  }
+
   return Object.freeze({
     getModule,
+    listModules,
     getPackage: readPackage,
     stageCandidate,
     stageStoredCandidate,
