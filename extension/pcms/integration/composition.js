@@ -80,9 +80,45 @@ export function createPcmsModuleIntegration({
   const personaResolver=createPersonaResolverFromBroker({broker:personaBroker});
   const humanTasks=createHumanTaskService({storageBroker,auditJournal,clock});
 
+  // Account rebind must never strand an unresolved provider mutation on a new
+  // Persona. An operation without durable account correlation is ambiguous and
+  // therefore blocks rebind until reconciled.
+  const operationInspector=Object.freeze({
+    async assertSafeRebind(accountId){
+      const unresolved=await remoteOps.listUnresolved();
+      if(!Array.isArray(unresolved))throw new Error("RemoteOperation state unavailable");
+      for(const row of unresolved){
+        const op=row?.value;
+        if(typeof op?.operationId!=="string"||typeof op?.targetRef?.id!=="string"){
+          throw Object.assign(new Error("Unresolved operation correlation is invalid"),{code:"PCMS_ACCOUNTS_UNRESOLVED_OPERATION"});
+        }
+        let related=null;
+        if(operationContext&&typeof operationContext.get==="function"){
+          let context;
+          try{context=await operationContext.get(op.operationId);}catch{
+            throw Object.assign(new Error("Operation correlation cannot be read"),{code:"PCMS_ACCOUNTS_UNRESOLVED_OPERATION"});
+          }
+          if(context){
+            if(typeof context.accountId!=="string")throw Object.assign(
+              new Error("Operation correlation is incomplete"),{code:"PCMS_ACCOUNTS_UNRESOLVED_OPERATION"});
+            related=context.accountId===accountId;
+          }
+        }
+        if(related===false)continue;
+        if(op.targetRef.kind==="account"&&op.targetRef.id!==accountId&&related===null)continue;
+        // Includes account targets, generator targets with unknown account linkage,
+        // PREPARED operations and interrupted/UNCERTAIN outcomes.
+        throw Object.assign(new Error("Rebind blocked until unresolved provider operations are reconciled"),{
+          code:"PCMS_ACCOUNTS_UNRESOLVED_OPERATION"
+        });
+      }
+    }
+  });
+
   const accounts=factories.accounts({
     stateStore:createSingletonStateStore({storageBroker,namespace:PCMS_INTEGRATION_NAMESPACES.accounts}),
     personaResolver,
+    operationInspector,
     clock
   });
   const providerGateResolver=createAccountProviderGateResolver({accountsService:accounts,providerGate,operationContext});

@@ -5,6 +5,7 @@ import { readPcmsCachedStatus, startPcmsLiveRuntime } from "./live-runtime.js";
 import { startPcmsRuntimeWithRetry } from "./startup-retry.js";
 import { createPcmsModuleProjectionService } from "./module-projections.js";
 import { bindPcmsLiveControls } from "./live-controls.js";
+import { createPcmsAccountsView } from "./views/accounts/accounts-view.js";
 
 function element(documentRef,tag,className=null) {
   const node=documentRef.createElement(tag);
@@ -104,6 +105,9 @@ export function mountPcmsApp({
   const notificationStatus=section(documentRef,"notificationStatus");
   let disposed=false;
   let refreshGeneration=0;
+  const accountsView=runtime?.accounts && documentRef.getElementById("accountsV2")
+    ?createPcmsAccountsView({runtime,documentRef,windowRef,onChanged:()=>refresh()})
+    :null;
 
   function setVisible(route) {
     for(const [name,node] of [
@@ -244,20 +248,18 @@ export function mountPcmsApp({
     section(documentRef,"attentionEmpty").hidden=items.length!==0;
   }
 
-  function renderAccounts(snapshot,selectedId=null) {
+  function renderAccounts(snapshot,route) {
+    if(accountsView) {
+      void accountsView.render({accounts:snapshot.accounts.accounts,revision:snapshot.accounts.revision,route})
+        .catch(()=>{notificationStatus.textContent="Accounts view unavailable.";notificationStatus.dataset.state="warning";});
+      return;
+    }
     const list=section(documentRef,"accountList");
     clear(list);
-    const items=selectedId===null
-      ? snapshot.accounts.accounts
-      : snapshot.accounts.accounts.filter((item)=>item.accountId===selectedId);
-    for(const item of items) {
-      appendLink(documentRef,list,{
-        href:item.href,
-        title:item.displayName,
-        subtitle:item.accountId+" · "+item.personaUid
-      });
-    }
-    section(documentRef,"accountsEmpty").hidden=items.length!==0;
+    for(const item of snapshot.accounts.accounts)appendLink(documentRef,list,{
+      href:item.href,title:item.displayName,subtitle:item.providerId
+    });
+    section(documentRef,"accountsEmpty").hidden=snapshot.accounts.accounts.length!==0;
   }
 
   function renderSearch(snapshot) {
@@ -425,7 +427,7 @@ export function mountPcmsApp({
     renderOverview(snapshot,moduleSnapshot);
     renderModules(moduleSnapshot);
     renderAttention(snapshot,route.route==="attention"?route.id:null);
-    renderAccounts(snapshot,route.route==="accounts"?route.id:null);
+    renderAccounts(snapshot,route);
     renderSearch(snapshot);
     renderActionTray(snapshot,receiptState);
     renderPlaceholder(route);
@@ -454,6 +456,7 @@ export function mountPcmsApp({
       if(disposed) return;
       disposed=true;
       refreshGeneration+=1;
+      accountsView?.destroy();
       windowRef.removeEventListener("hashchange",onHashChange);
       searchForm.removeEventListener("submit",onSubmit);
     }
