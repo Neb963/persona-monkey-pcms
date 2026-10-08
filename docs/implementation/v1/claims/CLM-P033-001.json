@@ -4,7 +4,7 @@
   "phaseId": "P033",
   "taskId": "T033.1",
   "claimEpoch": 1,
-  "state": "ACTIVE",
+  "state": "ACCEPTED",
   "owner": {
     "agentId": "claude-awesome-dirac-ac6ja1"
   },
@@ -53,5 +53,5 @@
     "A033-02",
     "A033-03"
   ],
-  "lastCheckpointSha": "a4e8d971a34efd67af15d58c4e3f680e7f31f0c4"
+  "lastCheckpointSha": "06cd88c26ecac403eaf9a35adedf30baefcc89ad"
 }

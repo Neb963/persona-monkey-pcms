@@ -300,13 +300,13 @@ Merge wave: 13
 - [x] T032.3 — T032.3 Diagnostics page and multi-tab behaviour
 
 ## P033 — Module UI contribution contract v1 for built-in and runtime modules
-Status: **CLAIMED**  
+Status: **ACCEPTED**  
 Depends on: P031, P032  
 Merge wave: 15
 
-- [ ] T033.1 — T033.1 Contribution validator and Core merge points (nav, overview, search, conditions, settings, activity)
-- [ ] T033.2 — T033.2 Runtime-module contributions via core.ui.publish and the sandboxed module page surface
-- [ ] T033.3 — T033.3 Statistics pilot and fixture runtime-module UI proof, including lifecycle presentation states
+- [x] T033.1 — T033.1 Contribution validator and Core merge points (nav, overview, search, conditions, settings, activity)
+- [x] T033.2 — T033.2 Runtime-module contributions via core.ui.publish and the sandboxed module page surface
+- [x] T033.3 — T033.3 Statistics pilot and fixture runtime-module UI proof, including lifecycle presentation states
 
 ## P034 — Accounts UX with Persona/account pickers
 Status: **ACCEPTED**  
