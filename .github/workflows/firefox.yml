@@ -85,6 +85,9 @@ jobs:
       - name: Verify P037 repository provider, immutable releases and durable manual scans
         run: npm run test:p037
 
+      - name: Verify P038 cadence, recovery, bounded scans and backoff
+        run: npm run test:p038
+
       - name: Install and drive packaged XPI, lifecycle and platform probes
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
@@ -393,5 +396,46 @@ jobs:
         with:
           name: firefox-packaged-p036
           path: ${{ runner.temp }}/firefox-p036-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  # P038 uses a dedicated pinned-FDE runner: a failed network scan should be
+  # durable across a real extension event-page unload and profile restart.
+  p038-packaged:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Install Firefox runtime libraries
+        timeout-minutes: 6
+        run: |
+          packages="libgtk-3-0 libdbus-glib-1-2 libasound2t64 libx11-xcb1 libxt6"
+          if dpkg -s $packages >/dev/null 2>&1; then exit 0; fi
+          apt_opts="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30"
+          for attempt in 1 2 3; do
+            if sudo timeout 150 apt-get $apt_opts update && sudo timeout 150 apt-get $apt_opts install -y $packages; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - name: Install exact pinned Firefox Developer Edition
+        id: install
+        env:
+          FIREFOX_INSTALL_ROOT: ${{ runner.temp }}/pcms-firefox
+        run: npm run firefox:install
+      - name: Verify real background repository checks without PCMS tabs and across restart
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged-p038
+          FIREFOX_P038_REPORT: ${{ runner.temp }}/firefox-p038-report.json
+        run: npm run firefox:packaged:p038
+      - name: Upload P038 packaged evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-packaged-p038
+          path: ${{ runner.temp }}/firefox-p038-report.json
           if-no-files-found: warn
           retention-days: 7
