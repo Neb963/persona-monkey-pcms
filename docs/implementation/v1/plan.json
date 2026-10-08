@@ -1738,7 +1738,7 @@
     {
       "id": "P038",
       "title": "Scheduled background repository synchronization",
-      "status": "BLOCKED",
+      "status": "CLAIMED",
       "dependsOn": [
         "P037",
         "P029"
@@ -1748,13 +1748,21 @@
         "writePaths": [
           "pcms-modules/p015/**",
           "tests/pcms/p038/**",
-          "docs/evidence/P038/**"
+          "docs/evidence/P038/**",
+          "extension/pcms/background/core-factory.js",
+          "package.json",
+          ".github/workflows/firefox.yml"
         ],
         "contractReads": [
           "pcms.timers.ensure/v1"
         ],
         "contractWrites": [],
-        "resources": [],
+        "resources": [
+          {
+            "key": "ci-workflows",
+            "mode": "exclusive"
+          }
+        ],
         "migrationSlots": []
       },
       "tasks": [
