@@ -121,10 +121,10 @@ test("A037-01 strict repository provider mapping and bounded GitHub shapes",asyn
     seen.push({url,opts});
     if(url.includes("/commits/"))return {ok:true,status:200,headers,async text(){return JSON.stringify({
       sha:sha1,commit:{committer:{date:"2026-10-01T12:00:00Z"},message:"first"}})}};
-    };
+
     if(url.includes("/git/trees/"))return {ok:true,status:200,headers,async text(){return JSON.stringify({
       truncated:false,tree:[{path:"pcms-generators.json",type:"blob",sha:sha2,size:12}]})}};
-    };
+
     return {ok:true,status:200,headers,async text(){return JSON.stringify({encoding:"base64",size:2,content:"aGk="})}};
   };
   const github=createGithubRepositoryProvider({fetchImpl});
