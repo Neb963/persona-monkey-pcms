@@ -1,8 +1,8 @@
 # P036 evidence — Deployer v2 domain, Perchance contract v2 and Generators views
 
 Claim `CLM-P036-001` (epoch 1), base `b89d5d244dd3a74e81226f82b906bdb81a8650f0`, merged with current `main`
-(accepted P041). State: **PR_OPEN** — [PR #57](https://github.com/Neb963/persona-monkey-pcms/pull/57),
-**CI_VERIFIED** on PR head `a0838f5a0c5929b17c1dd1f3056ef8614edd35d6`. Not yet MERGED or ACCEPTED.
+(accepted P041). State: **ACCEPTED** — merged to `main` as `0a2073eaa0543470c7cf16f6bdfab3ff09ab18c8`
+([PR #57](https://github.com/Neb963/persona-monkey-pcms/pull/57)) with green merged-main CI.
 
 ## What shipped
 
@@ -53,6 +53,12 @@ PR head `a0838f5a0c5929b17c1dd1f3056ef8614edd35d6`, `pull_request` merge commit
   (digest `09e510c7…f04f0c`), `passed: true`, checks `generatorsRouteRendersCoreIndex`,
   `deployDialogNeedsNoTypedIds`, `generatorDetailDeepLink`, `manualDeployDurableHandoffInFirefox`,
   `unknownAnswerNeverReplayed`, `appliedAnswerSettlesInSync`; `dispatchOpensFinal: 1`.
+
+## Merged-main CI (MERGED → ACCEPTED)
+
+Merge commit `0a2073eaa0543470c7cf16f6bdfab3ff09ab18c8` on `main` (push): `firefox-developer-edition` run
+`37764875691` (all jobs incl. `pinned-firefox` with `test:p036` and `p036-packaged`) — success; `verify` run
+`37764875653` (`npm run verify` incl. `test:p036`) — success.
 
 ## Regressions encoded from the pinned-Firefox run (AGENTS §10)
 

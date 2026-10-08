@@ -4,7 +4,7 @@
   "phaseId": "P036",
   "taskId": "T036.1",
   "claimEpoch": 1,
-  "state": "PR_OPEN",
+  "state": "ACCEPTED",
   "owner": {
     "agentId": "claude-sweet-knuth-06661g"
   },
@@ -61,5 +61,5 @@
     "A036-02",
     "A036-03"
   ],
-  "lastCheckpointSha": "a0838f5a0c5929b17c1dd1f3056ef8614edd35d6"
+  "lastCheckpointSha": "0a2073eaa0543470c7cf16f6bdfab3ff09ab18c8"
 }
