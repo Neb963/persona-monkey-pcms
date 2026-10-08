@@ -6,6 +6,29 @@ import { startPcmsRuntimeWithRetry } from "./startup-retry.js";
 import { createPcmsModuleProjectionService } from "./module-projections.js";
 import { bindPcmsLiveControls } from "./live-controls.js";
 import { createPcmsAccountsView } from "./views/accounts/accounts-view.js";
+import {
+  contributionNavItems,
+  derivedAttention,
+  emptyPcmsContributionSnapshot,
+  findContribution,
+  humanTaskModuleState,
+  legacyModuleIds,
+  mergeSearchResults,
+  modulePageModel,
+  modulePageRenderKey,
+  overviewModuleCards,
+  routableModuleIds,
+  settingsModuleRows
+} from "./contributions.js";
+import { createPcmsConfirmDialog, createPcmsModuleActionRunner } from "./module-actions.js";
+import { createPcmsModuleFrameHost } from "./module-frame-host.js";
+import {
+  renderActivity,
+  renderFacets,
+  renderModulePage,
+  renderOverviewCards,
+  renderSettingsModules
+} from "./module-view.js";
 
 function element(documentRef,tag,className=null) {
   const node=documentRef.createElement(tag);
@@ -100,6 +123,7 @@ export function mountPcmsApp({
   const search=section(documentRef,"viewSearch");
   const diagnostics=section(documentRef,"viewDiagnostics");
   const placeholder=section(documentRef,"viewPlaceholder");
+  const modulePage=documentRef.getElementById("viewModulePage");
   const searchForm=section(documentRef,"searchForm");
   const searchInput=section(documentRef,"searchInput");
   const notificationStatus=section(documentRef,"notificationStatus");
@@ -108,15 +132,29 @@ export function mountPcmsApp({
   const accountsView=runtime?.accounts && documentRef.getElementById("accountsV2")
     ?createPcmsAccountsView({runtime,documentRef,windowRef,onChanged:()=>refresh()})
     :null;
+  // P033: module contributions are read from Core (pcms.ui-contribution/v1 via ui.*).
+  const contributionsLive=typeof runtime?.ui?.snapshot==="function"&&modulePage!==null;
+  let actionRunner=null;
+  let frameHost=null;
+  if(contributionsLive&&documentRef.getElementById("moduleConfirmDialog")){
+    actionRunner=createPcmsModuleActionRunner({runtime,confirm:createPcmsConfirmDialog({documentRef})});
+    frameHost=createPcmsModuleFrameHost({documentRef,windowRef,runtime,runAction:(request)=>runModuleAction(request)});
+  }
+  let modulePageKey=null;
+  let lastContributions=emptyPcmsContributionSnapshot();
 
   function setVisible(route) {
     for(const [name,node] of [
       ["overview",overview],["modules",modules],["attention",attention],["accounts",accounts],
-      ["search",search],["diagnostics",diagnostics],["placeholder",placeholder]
-    ]) node.hidden=name!==route;
+      ["search",search],["diagnostics",diagnostics],["placeholder",placeholder],["modulePage",modulePage]
+    ]) if(node) node.hidden=name!==route;
+    if(route!=="modulePage"&&modulePageKey!==null){
+      modulePageKey=null;
+      frameHost?.dispose();
+    }
   }
 
-  function renderNav(snapshot,currentRoute,moduleSnapshot) {
+  function renderNav(snapshot,currentRoute,moduleSnapshot,contributions) {
     clear(nav);
     const active=currentRoute.route==="module"
       ?"module-"+currentRoute.moduleId
@@ -128,12 +166,13 @@ export function mountPcmsApp({
       {id:"attention",label:"Attention",href:"#/attention",badge:snapshot.notifications.count},
       {id:"accounts",label:"Accounts",href:"#/accounts"},
       {id:"generators",label:"Generators",href:"#/generators"},
-      ...PCMS_V2_BUILTIN_MODULE_IDS.map((id)=>({
+      ...legacyModuleIds(contributions).map((id)=>({
         id:"module-"+id,
         label:id[0].toUpperCase()+id.slice(1),
         href:"#/m/"+id,
         badge:moduleSnapshot?.[id]?.available===false?"!":null
       })),
+      ...contributionNavItems(contributions).map((item)=>({...item,badge:null})),
       {id:"activity",label:"Activity",href:"#/activity"},
       {id:"settings-modules",label:"Module settings",href:"#/settings/modules"},
       {id:"settings-diagnostics",label:"Diagnostics",href:"#/settings/diagnostics"}
@@ -143,6 +182,14 @@ export function mountPcmsApp({
       link.href=item.href;
       link.textContent=item.label;
       if(item.id===active) link.setAttribute("aria-current","page");
+      if(item.moduleId) link.dataset.moduleId=item.moduleId;
+      if(item.greyed) link.dataset.greyed="true";
+      if(item.dot){
+        const dot=element(documentRef,"span","nav-dot");
+        dot.dataset.token=item.dot;
+        dot.setAttribute("aria-label",item.dot.toLowerCase());
+        link.appendChild(dot);
+      }
       if(item.badge!==null&&item.badge!==undefined) {
         const badge=element(documentRef,"span","nav-badge");
         badge.textContent=String(item.badge);
@@ -152,12 +199,16 @@ export function mountPcmsApp({
     }
   }
 
-  function renderOverview(snapshot,moduleSnapshot) {
+  function renderOverview(snapshot,moduleSnapshot,contributions) {
     section(documentRef,"overviewAttentionCount").textContent=String(snapshot.notifications.count);
     section(documentRef,"overviewAccountCount").textContent=String(snapshot.accounts.accounts.length);
+    const cards=overviewModuleCards(contributions);
     section(documentRef,"overviewModuleCount").textContent=String(
-      PCMS_V2_BUILTIN_MODULE_IDS.filter((id)=>moduleSnapshot?.[id]?.available===true).length
+      legacyModuleIds(contributions).filter((id)=>moduleSnapshot?.[id]?.available===true).length
+      +cards.filter((card)=>!card.greyed&&!card.unavailable).length
     );
+    const container=documentRef.getElementById("overviewModuleCards");
+    if(container) renderOverviewCards(documentRef,container,cards);
   }
 
   function renderModules(snapshot) {
@@ -210,7 +261,12 @@ export function mountPcmsApp({
     moduleStatus(documentRef,"Provisioning",snapshot.provisioning,snapshot.provisioning.items?.length||0);
   }
 
-  function renderAttention(snapshot,selectedId=null) {
+  function renderContributedModules(contributions) {
+    const list=documentRef.getElementById("contributedModuleList");
+    if(list) renderSettingsModules(documentRef,list,settingsModuleRows(contributions));
+  }
+
+  function renderAttention(snapshot,selectedId=null,contributions=lastContributions) {
     const list=section(documentRef,"attentionList");
     clear(list);
     const items=selectedId===null
@@ -222,6 +278,15 @@ export function mountPcmsApp({
         title:item.title,
         subtitle:item.priority+" · "+item.taskKind
       });
+      // HumanTasks stay Core records; a disabled module's task stays listed but not actionable.
+      const moduleState=humanTaskModuleState(item,contributions);
+      if(moduleState?.blocked) {
+        const note=element(documentRef,"p","module-status");
+        note.dataset.moduleBlocked=item.subjectRef.id;
+        note.textContent=moduleState.note;
+        list.appendChild(note);
+        continue;
+      }
       if(item.taskKind==="provider.confirm-apply"&&runtime?.providerHandoff) {
         // ADR-002 §9: the answer is submitted as reconciliation, from any tab, at any time.
         const show=element(documentRef,"button","inline-action");
@@ -246,6 +311,40 @@ export function mountPcmsApp({
       }
     }
     section(documentRef,"attentionEmpty").hidden=items.length!==0;
+    const conditionList=documentRef.getElementById("attentionConditions");
+    if(conditionList) {
+      clear(conditionList);
+      const conditions=selectedId===null?derivedAttention(contributions):[];
+      for(const condition of conditions) {
+        const link=appendLink(documentRef,conditionList,{
+          href:"#/m/"+encodeURIComponent(condition.moduleId),
+          title:condition.title,
+          subtitle:condition.priority+" · "+condition.moduleTitle+" · derived"
+        });
+        link.dataset.conditionKey=condition.key;
+        appendStatusToken(documentRef,link,condition.status.token,condition.status.label);
+      }
+      section(documentRef,"attentionConditionsHeading").hidden=conditions.length===0;
+    }
+  }
+
+  async function renderAccountFacets(route,contributions,generation) {
+    const container=documentRef.getElementById("accountFacets");
+    if(!container) return;
+    if(!contributionsLive||route.route!=="accounts"||route.id===null) {
+      clear(container);
+      delete container.dataset.accountId;
+      return;
+    }
+    let result;
+    try{result=await runtime.ui.facets({kind:"account",id:route.id});}
+    catch{result={entity:{kind:"account",id:route.id},facets:[]};}
+    if(disposed||generation!==refreshGeneration) return;
+    renderFacets(documentRef,container,result,{
+      snapshot:contributions,
+      onAction:(module,action,entity)=>void runModuleAction({module,action,target:entity}).catch(()=>{})
+    });
+    container.dataset.accountId=route.id;
   }
 
   function renderAccounts(snapshot,route) {
@@ -262,18 +361,19 @@ export function mountPcmsApp({
     section(documentRef,"accountsEmpty").hidden=snapshot.accounts.accounts.length!==0;
   }
 
-  function renderSearch(snapshot) {
+  function renderSearch(snapshot,hits=[]) {
     searchInput.value=snapshot.search.query;
     const list=section(documentRef,"searchResults");
     clear(list);
-    for(const result of snapshot.search.results) {
+    const results=mergeSearchResults(snapshot.search.results,hits);
+    for(const result of results) {
       appendLink(documentRef,list,{
         href:result.href,
         title:result.title,
         subtitle:result.kind+" · "+result.subtitle
       });
     }
-    section(documentRef,"searchEmpty").hidden=snapshot.search.results.length!==0 || snapshot.search.query==="";
+    section(documentRef,"searchEmpty").hidden=results.length!==0 || snapshot.search.query==="";
   }
 
   function renderActionTray(snapshot,receiptState) {
@@ -337,6 +437,18 @@ export function mountPcmsApp({
     section(documentRef,"actionTrayEmpty").hidden=true;
   }
 
+  async function renderActivityLines(route,generation) {
+    const list=documentRef.getElementById("activityList");
+    if(!list) return;
+    list.hidden=route.route!=="activity"||!contributionsLive;
+    if(list.hidden) return;
+    let result;
+    try{result=await runtime.ui.activity(30);}
+    catch{result={lines:[]};}
+    if(disposed||generation!==refreshGeneration) return;
+    renderActivity(documentRef,list,result.lines);
+  }
+
   function renderPlaceholder(route) {
     const heading=section(documentRef,"placeholderHeading");
     const body=section(documentRef,"placeholderBody");
@@ -345,18 +457,19 @@ export function mountPcmsApp({
       body.textContent="The canonical Generators route is available. Its domain redesign belongs to P036.";
     } else if(route.route==="activity") {
       heading.textContent="Activity";
-      body.textContent="The v2 shell reserves Activity without replacing the accepted audit surface in this phase.";
+      body.textContent="Module activity from the Audit Journal, newest first. The full Activity redesign belongs to its later phase.";
     } else {
       heading.textContent="Settings · "+String(route.section||"");
       body.textContent="This Settings section is reserved by the v2 shell and remains owned by its later phase.";
     }
   }
 
-  function routeView(route) {
+  function routeView(route,contributions=lastContributions) {
     if(route.route==="overview") return "overview";
     if(route.route==="attention") return "attention";
     if(route.route==="accounts") return "accounts";
     if(route.route==="search") return "search";
+    if(route.route==="module"&&contributionsLive&&!legacyModuleIds(contributions).includes(route.moduleId)) return "modulePage";
     if(route.route==="module"||(route.route==="settings"&&route.section==="modules")) return "modules";
     if(route.route==="settings"&&route.section==="diagnostics") return "diagnostics";
     return "placeholder";
@@ -376,13 +489,96 @@ export function mountPcmsApp({
     return presentation;
   }
 
+  function showModuleReceipt(receipt) {
+    notificationStatus.textContent=receipt.cancelled
+      ?"Action cancelled; nothing was changed."
+      :String(receipt.message||receipt.status?.label||"Done");
+    notificationStatus.dataset.state=receipt.cancelled||receipt.status?.token==="OK"||receipt.status?.token==="INFO"
+      ?"connected":"warning";
+    // Module receipts stay visible in the action tray (the status line follows revisions).
+    const localList=section(documentRef,"actionTrayLocalList");
+    const entry=element(documentRef,"div","action-receipt");
+    entry.dataset.moduleAction=String(receipt.moduleId||"")+":"+String(receipt.actionId||"");
+    entry.dataset.outcome=receipt.cancelled?"CANCELLED":String(receipt.status?.token||"INFO");
+    appendStatusToken(documentRef,entry,receipt.cancelled?"INFO":String(receipt.status?.token||"INFO"),receipt.cancelled?"Cancelled":receipt.status?.label);
+    const message=element(documentRef,"span");
+    message.textContent=receipt.cancelled?"Cancelled; nothing was changed.":String(receipt.message||"");
+    entry.appendChild(message);
+    localList.prepend(entry);
+    while(localList.childNodes.length>8) localList.removeChild(localList.lastChild);
+    section(documentRef,"actionTrayEmpty").hidden=true;
+    if(receipt.download) {
+      const row=element(documentRef,"div","action-receipt");
+      const link=element(documentRef,"a");
+      link.href=URL.createObjectURL(new Blob([receipt.download.text],{type:receipt.download.mediaType}));
+      link.download=receipt.download.filename;
+      link.dataset.download=receipt.download.filename;
+      link.textContent="Download "+receipt.download.filename;
+      row.appendChild(link);
+      localList.prepend(row);
+      section(documentRef,"actionTrayEmpty").hidden=true;
+    }
+  }
+
+  async function runModuleAction(request) {
+    if(!actionRunner) throw new Error("Module actions are unavailable");
+    try {
+      const receipt=await actionRunner.run(request);
+      showModuleReceipt(receipt);
+      return receipt;
+    } catch(error) {
+      notificationStatus.textContent=request.action.label+" failed · "+String(error?.code||"error");
+      notificationStatus.dataset.state="error";
+      throw error;
+    }
+  }
+
+  async function renderModuleRoute(route,contributions,generation) {
+    if(!modulePage||route.route!=="module"||routeView(route,contributions)!=="modulePage") return;
+    const model=modulePageModel(contributions,route);
+    const module=findContribution(contributions,route.moduleId);
+    const key=modulePageRenderKey(route,model,module);
+    // A frame keeps running across revision refreshes; it is remounted only when its route,
+    // presentation state or module version changes (not on a lazy re-activation).
+    if(key===modulePageKey) return;
+    modulePageKey=key;
+    if(model.kind!=="frame") frameHost?.dispose();
+    await renderModulePage(documentRef,modulePage,model,{
+      run:(action,target)=>void runModuleAction({module,action,target}).catch(()=>{}),
+      listRows:(...args)=>runtime.ui.listRows(...args),
+      getDetail:(...args)=>runtime.ui.getDetail(...args),
+      getSettings:(moduleId)=>runtime.ui.getSettings(moduleId),
+      setSetting:(moduleId,key,value)=>runtime.ui.setSetting(moduleId,key,value)
+        .then(()=>{notificationStatus.textContent="Setting saved.";notificationStatus.dataset.state="connected";})
+        .catch((error)=>{notificationStatus.textContent="Setting rejected · "+String(error?.code||"error");notificationStatus.dataset.state="error";}),
+      mountFrame:(container,moduleId)=>frameHost?frameHost.mount(container,moduleId):Promise.resolve()
+    });
+    if(generation===refreshGeneration) modulePage.dataset.rendered=route.href;
+  }
+
+  async function readContributions() {
+    if(!contributionsLive) return emptyPcmsContributionSnapshot();
+    try {
+      const value=await runtime.ui.snapshot();
+      return Array.isArray(value?.modules)?value:emptyPcmsContributionSnapshot();
+    } catch {
+      return emptyPcmsContributionSnapshot();
+    }
+  }
+
+  async function readSearchHits(parsed) {
+    if(!contributionsLive||parsed.route!=="search"||!parsed.query) return [];
+    try{return (await runtime.ui.search(parsed.query,20))?.hits||[];}
+    catch{return [];}
+  }
+
   async function refresh() {
     const generation=++refreshGeneration;
     const initial=resolvePcmsRouteV2(windowRef.location.hash);
     const parsed=initial.route;
-    let snapshot,moduleSnapshot,receiptState;
+    let snapshot,moduleSnapshot,receiptState,contributions,searchHits;
     try {
-      [snapshot,moduleSnapshot,receiptState]=await Promise.all([
+      [snapshot,moduleSnapshot,receiptState,contributions,searchHits]=await Promise.all([
         projectionService.snapshot({query:parsed.query}),
         moduleProjectionService.snapshot(),
         runtime?.uiReceipts?.list
@@ -390,7 +586,9 @@ export function mountPcmsApp({
             if(!Array.isArray(result?.receipts)) throw new Error("Invalid receipt projection");
             return {receipts:result.receipts,unavailable:false};
           }).catch(()=>({receipts:[],unavailable:true}))
-          :Promise.resolve({receipts:[],unavailable:true})
+          :Promise.resolve({receipts:[],unavailable:true}),
+        readContributions(),
+        readSearchHits(parsed)
       ]);
     } catch {
       if(disposed||generation!==refreshGeneration) return;
@@ -401,10 +599,14 @@ export function mountPcmsApp({
     }
     if(disposed||generation!==refreshGeneration) return;
 
+    lastContributions=contributions;
+    // A syntactically valid module link always resolves: the module page explains a
+    // disabled, removed or never-installed module instead of redirecting (03 §6).
+    const moduleIds=routableModuleIds(contributions,windowRef.location.hash);
     const resolved=resolvePcmsRouteV2(windowRef.location.hash,{
       accountIds:snapshot.accounts.accounts.map((item)=>item.accountId),
       attentionIds:snapshot.notifications.items.map((item)=>item.taskId),
-      moduleIds:PCMS_V2_BUILTIN_MODULE_IDS
+      moduleIds:contributionsLive?moduleIds:PCMS_V2_BUILTIN_MODULE_IDS
     });
     if(!resolved.valid) {
       notificationStatus.textContent=resolved.reason==="NOT_FOUND"
@@ -414,7 +616,8 @@ export function mountPcmsApp({
       windowRef.history.replaceState(null,"",resolved.route.href);
     } else {
       if(resolved.canonicalized) windowRef.history.replaceState(null,"",resolved.route.href);
-      const modulesReady=PCMS_V2_BUILTIN_MODULE_IDS.every((id)=>moduleSnapshot?.[id]?.available===true);
+      const modulesReady=PCMS_V2_BUILTIN_MODULE_IDS.every((id)=>moduleSnapshot?.[id]?.available===true)
+        &&!contributions.modules.some((item)=>item.summaryError);
       notificationStatus.textContent=snapshot.notifications.count
         ? snapshot.notifications.count+" item"+(snapshot.notifications.count===1?"":"s")+" need attention."
         : modulesReady
@@ -423,15 +626,22 @@ export function mountPcmsApp({
       notificationStatus.dataset.state=modulesReady?"connected":"warning";
     }
     const route=resolved.route;
-    renderNav(snapshot,route,moduleSnapshot);
-    renderOverview(snapshot,moduleSnapshot);
+    renderNav(snapshot,route,moduleSnapshot,contributions);
+    renderOverview(snapshot,moduleSnapshot,contributions);
     renderModules(moduleSnapshot);
-    renderAttention(snapshot,route.route==="attention"?route.id:null);
+    renderContributedModules(contributions);
+    renderAttention(snapshot,route.route==="attention"?route.id:null,contributions);
     renderAccounts(snapshot,route);
-    renderSearch(snapshot);
+    renderSearch(snapshot,searchHits);
     renderActionTray(snapshot,receiptState);
     renderPlaceholder(route);
-    setVisible(routeView(route));
+    setVisible(routeView(route,contributions));
+    documentRef.body.dataset.pcmsContributions=contributionsLive?String(contributions.modules.length):"off";
+    await Promise.all([
+      renderModuleRoute(route,contributions,generation).catch(()=>{}),
+      renderAccountFacets(route,contributions,generation).catch(()=>{}),
+      renderActivityLines(route,generation).catch(()=>{})
+    ]);
   }
 
   function onHashChange(){ void refresh(); }
@@ -457,6 +667,7 @@ export function mountPcmsApp({
       disposed=true;
       refreshGeneration+=1;
       accountsView?.destroy();
+      frameHost?.dispose();
       windowRef.removeEventListener("hashchange",onHashChange);
       searchForm.removeEventListener("submit",onSubmit);
     }

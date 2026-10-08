@@ -96,6 +96,20 @@ export const PCMS_UI_OPERATIONS=Object.freeze({
   "modules.purge":command(1,["modules"]),
   "modules.call":command(3,["modules","attention"]),
 
+  // P033 pcms.ui-contribution/v1 merge points, served by the background contribution host.
+  // Reads never wake a runtime module except for on-demand pulls (facets, rows, details).
+  "ui.snapshot":query(0),
+  "ui.search":query(2),
+  "ui.facets":query(1),
+  "ui.listRows":query(3),
+  "ui.getDetail":query(3),
+  "ui.preview":query(4),
+  "ui.frame":query(1),
+  "ui.activity":query(1),
+  "ui.getSettings":query(1),
+  "ui.invoke":command(5,["modules","attention","recovery"]),
+  "ui.setSetting":command(3,["modules"]),
+
   "recoveryHold.getStatus":query(0),
   "remoteOps.listUnresolved":query(0),
 

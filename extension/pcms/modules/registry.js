@@ -1,6 +1,6 @@
 import { EMPTY_MODULE_AUTHORITY, diffModuleAuthority, normalizeModuleAuthority } from "./authority.js";
 import { MODULE_ERROR_CODES, moduleError } from "./errors.js";
-import { assertModuleId, assertModulePackageHash, parseModuleArchive, verifyStoredModulePackage } from "./package.js";
+import { assertModuleId, assertModulePackageHash, canonicalModuleManifest, parseModuleArchive, verifyStoredModulePackage } from "./package.js";
 
 export const MODULE_REGISTRY_NAMESPACE = "core.modules";
 export const MODULE_RECORD_SCHEMA_VERSION = 1;
@@ -29,13 +29,7 @@ function copyPackageRecord(pkg) {
     kind: "package",
     packageHash: pkg.packageHash,
     format: pkg.format,
-    manifest: {
-      schemaVersion: pkg.manifest.schemaVersion,
-      moduleId: pkg.manifest.moduleId,
-      version: pkg.manifest.version,
-      controller: pkg.manifest.controller,
-      authority: { capabilities: [...pkg.manifest.authority.capabilities] }
-    },
+    manifest: canonicalModuleManifest(pkg.manifest),
     files
   };
 }
