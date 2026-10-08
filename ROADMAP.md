@@ -282,13 +282,13 @@ Merge wave: 13
 - [x] T030.3 — T030.3 Packaged proof that runtime-supplied controller source executes in a real sandbox page
 
 ## P031 — Runtime module lifecycle live in production
-Status: **CLAIMED**  
+Status: **ACCEPTED**  
 Depends on: P029, P030  
 Merge wave: 14
 
-- [ ] T031.1 — T031.1 Install/approve/admit/activate via UI client commands; module supervisor with lazy rehydration
-- [ ] T031.2 — T031.2 Capability set v1 (module storage, timers, attention, audit, read projections, provider via ProviderGate)
-- [ ] T031.3 — T031.3 Live update/disable/enable/rollback/remove/purge and packaged end-to-end proof
+- [x] T031.1 — T031.1 Install/approve/admit/activate via UI client commands; module supervisor with lazy rehydration
+- [x] T031.2 — T031.2 Capability set v1 (module storage, timers, attention, audit, read projections, provider via ProviderGate)
+- [x] T031.3 — T031.3 Live update/disable/enable/rollback/remove/purge and packaged end-to-end proof
 
 ## P032 — PCMS dashboard shell v2 as UI client
 Status: **ACCEPTED**  

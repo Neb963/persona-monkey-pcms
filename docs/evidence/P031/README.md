@@ -47,3 +47,23 @@ frozen at 2; after the profile restart the module was `READY` and not running, a
 `01:20:32.248Z`; purge deleted 2 data keys. The verbatim report is [`packaged-report.json`](packaged-report.json).
 
 This commit only records evidence; CI on it re-confirms the same tree. Acceptance follows merged-main CI.
+
+## Final PR verification and merge
+
+Final head `e78924bab1b97cb8922619850baf5cb0520bad62` passed both independent workflows on
+[PR #51](https://github.com/Neb963/persona-monkey-pcms/pull/51): `verify` run
+[37712620249](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37712620249) and `firefox-developer-edition` run
+[37712620293](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37712620293). The PR was merged at the operator's
+instruction as `370131a9c337cd9f5272f6f8e4c6b732ed1992ff`.
+
+## Merged-main verification and acceptance
+
+Exact merged-main commit `370131a9c337cd9f5272f6f8e4c6b732ed1992ff` passed:
+
+- [verify 37712978593](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37712978593);
+- [firefox-developer-edition 37712978574](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37712978574):
+  `pinned-firefox` (including `test:p031`), `p031-packaged` (job 113102923988), `p032-packaged` and `p034-packaged`.
+
+**A031-01 PASS · A031-02 PASS · A031-03 PASS.** Phase P031 and claim CLM-P031-001, epoch 1, are **ACCEPTED**. The plan's
+P031 ownership is reconciled with the claim (`package.json`, `firefox.yml`, `ci-workflows`), releasing them with the claim.
+No successor phase was started.
