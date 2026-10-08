@@ -56,7 +56,15 @@ confirms it (P044). No successor phase has been started.
   and [pinned Firefox](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37830200413)
   SUCCESS; all eleven Firefox jobs passed, including `p042-packaged` (job 113493259221,
   `packaged-pr-ci.json`).
-- Merged-main SHA `51bac5b`: see `independent-ci.json`.
+- Merged-main SHA `51bac5b402b30ce7c2ee9f69f090d642481065e2`:
+  [repository verification](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37830815327)
+  and [pinned Firefox](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37830815141)
+  SUCCESS; all eleven Firefox jobs passed on attempt 2, including `p042-packaged` (job 113495365721).
+- Attempt 1 of the merged-main Firefox run failed only in the inherited `p031-packaged` job
+  (`Timed out: module schedule wakes the unloaded background`). The identical product XPI
+  (`bbe084a0…`) passed that job on the PR run; with Automatic off P042 declares no timers and
+  that test configures no repository. The single permitted re-run of the failed job passed
+  (job 113499143885). Both attempts are recorded in `independent-ci.json`, the acceptance ledger.
 
 Firefox Developer Edition is exactly **154.0b10**, archive SHA-256
 `681913108bba655d7ec6fadfac2731141b23e48dca88d1988a4d95a6bdaff164`. The hosted report uses the
