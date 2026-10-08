@@ -1615,7 +1615,7 @@
     {
       "id": "P036",
       "title": "Deployer v2 domain, Perchance contract v2 and Generators views",
-      "status": "BLOCKED",
+      "status": "CLAIMED",
       "dependsOn": [
         "P033",
         "P034"
@@ -1625,12 +1625,22 @@
         "writePaths": [
           "pcms-modules/p015/**",
           "extension/pcms/providers/perchance/**",
-          "extension/pcms/integration/**",
+          "extension/pcms/integration/composition.js",
+          "extension/pcms/integration/explorer-deployer.js",
+          "extension/pcms/integration/live-mutations.js",
+          "extension/pcms/integration/provider-handoff.js",
+          "extension/pcms/integration/generator-index.js",
           "extension/pcms/app/views/generators/**",
+          "extension/pcms/app/router-v2.js",
+          "extension/pcms/app/live-controls.js",
+          "tests/pcms/p015/deployer.test.mjs",
           "tests/pcms/p036/**",
           "docs/evidence/P036/**"
         ],
-        "contractReads": [],
+        "contractReads": [
+          "pcms.ui-client/v1",
+          "pcms.ui-contribution/v1"
+        ],
         "contractWrites": [
           "pcms.perchance.driver/v2",
           "pcms.deployer.state/v2",

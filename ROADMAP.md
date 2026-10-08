@@ -327,7 +327,7 @@ Merge wave: 14
 - [ ] T035.3 — T035.3 ESR sizing regression extension
 
 ## P036 — Deployer v2 domain, Perchance contract v2 and Generators views
-Status: **BLOCKED**  
+Status: **CLAIMED**  
 Depends on: P033, P034  
 Merge wave: 16
 
