@@ -282,7 +282,7 @@ Merge wave: 13
 - [x] T030.3 — T030.3 Packaged proof that runtime-supplied controller source executes in a real sandbox page
 
 ## P031 — Runtime module lifecycle live in production
-Status: **BLOCKED**  
+Status: **CLAIMED**  
 Depends on: P029, P030  
 Merge wave: 14
 
