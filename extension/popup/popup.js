@@ -156,6 +156,7 @@ function routeOptions(selected) {
 async function load() {
   snapshot = await browser.runtime.sendMessage({ type:"GET_SNAPSHOT" });
   active = await browser.runtime.sendMessage({ type:"GET_ACTIVE_CONTEXT" });
+  renderPcms();
   const p = active.profile;
   if (!p || !p.managed) {
     $("status").textContent = "Not a persona"; $("status").className = "badge";
@@ -239,6 +240,15 @@ $("test").onclick = async () => {
   }
 };
 $("options").onclick = () => browser.runtime.openOptionsPage();
+$("pcmsOpenAccount").onclick = () => { void openPcmsAccount().catch(() => setResult("Could not open PCMS account.", true)); };
+if (browser.storage?.onChanged?.addListener) browser.storage.onChanged.addListener((changes, area) => {
+  if (area === "session" && changes[PCMS_STATUS_KEY]) {
+    pcmsSummary = normalizePcmsStatus(changes[PCMS_STATUS_KEY].newValue);
+    pcmsReadComplete = true;
+    renderPcms();
+  }
+});
+void readPcmsStatus();
 load().catch((e) => {
   $("status").textContent = "Unavailable";
   $("status").className = "badge bad";
