@@ -327,13 +327,13 @@ Merge wave: 14
 - [ ] T035.3 — T035.3 ESR sizing regression extension
 
 ## P036 — Deployer v2 domain, Perchance contract v2 and Generators views
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P033, P034  
 Merge wave: 16
 
-- [ ] T036.1 — T036.1 Deployer state v2 migration and status derivation
-- [ ] T036.2 — T036.2 Perchance driver v2 (code/HTML/thumbnail/listing) with GeneratorListing adapter mapping and emulator
-- [ ] T036.3 — T036.3 Generator index, Generators list/detail and assisted manual deploy
+- [x] T036.1 — T036.1 Deployer state v2 migration and status derivation
+- [x] T036.2 — T036.2 Perchance driver v2 (code/HTML/thumbnail/listing) with GeneratorListing adapter mapping and emulator
+- [x] T036.3 — T036.3 Generator index, Generators list/detail and assisted manual deploy
 
 ## P037 — Generator repository provider, manual scan and assisted repository deployments
 Status: **BLOCKED**  
