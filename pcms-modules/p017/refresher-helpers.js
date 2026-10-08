@@ -1,9 +1,11 @@
 import {
   PERCHANCE_GENERATOR_UPDATE_ACTION,
   PERCHANCE_PROVIDER_ID,
+  generatorReleaseFingerprint,
   generatorSourceFingerprint,
   sha256Hex
 } from "../../extension/pcms/providers/perchance/contract.js";
+import { readRefresherState } from "./migration.js";
 import { REFRESHER_ERROR_CODES, refresherError } from "./errors.js";
 import {
   REFRESHER_COHORT_KIND,
@@ -23,8 +25,8 @@ import {
   normalizeCohortId,
   normalizeGeneratorId,
   normalizePolicy,
-  normalizeRefresherState,
   normalizeSourceHash,
+  REFRESH_RELEASE_KIND,
   normalizeTimestamp,
   operationIdFor
 } from "./schema.js";
@@ -47,7 +49,7 @@ export function publicState(record){
   if(!plain(record)||Object.getOwnPropertySymbols(record).length)fail(REFRESHER_ERROR_CODES.CORRUPT_STATE);
   const d=Object.getOwnPropertyDescriptors(record);
   if(Object.keys(d).length!==2||!Object.hasOwn(d,"revision")||!Object.hasOwn(d,"value")||!d.revision.enumerable||!d.value.enumerable||!Object.hasOwn(d.revision,"value")||!Object.hasOwn(d.value,"value")||!Number.isSafeInteger(d.revision.value)||d.revision.value<1)fail(REFRESHER_ERROR_CODES.CORRUPT_STATE);
-  return Object.freeze({revision:d.revision.value,value:normalizeRefresherState(d.value.value)});
+  return Object.freeze({revision:d.revision.value,value:readRefresherState(d.value.value).value});
 }
 export function normalizeAccountSnapshot(raw,expectedAccountId){
   if(!plain(raw)||Object.getOwnPropertySymbols(raw).length)fail(REFRESHER_ERROR_CODES.ACCOUNT_UNAVAILABLE);
@@ -72,6 +74,13 @@ export function scheduleInfo(policy,at){
   if(atMs>=anchorMs){const activeMs=policy.activeHours*HOUR_MS;const cycleMs=activeMs+policy.sleepDays*DAY_MS;const elapsed=atMs-anchorMs;cycleIndex=Math.floor(elapsed/cycleMs);active=(elapsed%cycleMs)<activeMs;}
   return Object.freeze({at:atIso,dayStart,dayEnd,active,cycleIndex});
 }
+// Earliest instant after `at` at which an inactive AUTO_RECENT cycle becomes active again.
+export function nextActiveStart(policy,at){
+  const atMs=Date.parse(normalizeTimestamp(at,REFRESHER_ERROR_CODES.INVALID_ARGUMENT));const anchorMs=Date.parse(policy.anchorAt);
+  if(atMs<anchorMs)return new Date(anchorMs).toISOString();
+  const cycleMs=policy.activeHours*HOUR_MS+policy.sleepDays*DAY_MS;
+  return new Date(anchorMs+(Math.floor((atMs-anchorMs)/cycleMs)+1)*cycleMs).toISOString();
+}
 export function inDay(iso,info){return iso!==null&&Date.parse(iso)>=Date.parse(info.dayStart)&&Date.parse(iso)<Date.parse(info.dayEnd);}
 export function unresolvedReservation(member,info){return REFRESH_UNRESOLVED_STATUSES.has(member.operation.status)&&member.operation.budgetDayStart===info.dayStart;}
 export function usedBudget(cohort,info){return cohort.members.reduce((n,m)=>n+(inDay(m.lastConfirmedAt,info)||unresolvedReservation(m,info)?1:0),0);}
@@ -80,14 +89,23 @@ export function sortEligible(a,b){
   if(a.lastConfirmedAt===null&&b.lastConfirmedAt!==null)return -1;if(a.lastConfirmedAt!==null&&b.lastConfirmedAt===null)return 1;
   if(a.lastConfirmedAt!==b.lastConfirmedAt)return (a.lastConfirmedAt||"").localeCompare(b.lastConfirmedAt||"");return a.ordinal-b.ordinal;
 }
-export function operationDraft(cohort,member){return Object.freeze({
-  operationId:member.operation.operationId,providerId:PERCHANCE_PROVIDER_ID,action:PERCHANCE_GENERATOR_UPDATE_ACTION,
-  targetRef:Object.freeze({kind:REFRESHER_TARGET_KIND,id:member.generatorId}),intentFingerprint:generatorSourceFingerprint(member.sourceHash)
-});}
+// The fingerprint follows the pinned release: a legacy member keeps the accepted v1 source
+// fingerprint, a Deployer-confirmed member uses the v2 release fingerprint (04 §E.4.2).
+export async function operationDraft(cohort,member){
+  const release=member.operation.release;
+  if(release===null)fail(REFRESHER_ERROR_CODES.CORRUPT_STATE);
+  const intentFingerprint=release.payloadKind===REFRESH_RELEASE_KIND.V2_RELEASE
+    ?await generatorReleaseFingerprint(release)
+    :generatorSourceFingerprint(release.payloadHash);
+  return Object.freeze({
+    operationId:member.operation.operationId,providerId:PERCHANCE_PROVIDER_ID,action:PERCHANCE_GENERATOR_UPDATE_ACTION,
+    targetRef:Object.freeze({kind:REFRESHER_TARGET_KIND,id:member.generatorId}),intentFingerprint
+  });
+}
 export function project(cohort,member,info){
   const confirmedToday=inDay(member.lastConfirmedAt,info);const reservedToday=unresolvedReservation(member,info);const remaining=Math.max(0,cohort.policy.dailyBudget-usedBudget(cohort,info));
   return Object.freeze({
-    generatorId:member.generatorId,sourceHash:member.sourceHash,ordinal:member.ordinal,lastConfirmedAt:member.lastConfirmedAt,confirmedCount:member.confirmedCount,
+    generatorId:member.generatorId,sourceKind:member.sourceKind,sourceHash:member.sourceHash,release:member.operation.release,ordinal:member.ordinal,lastConfirmedAt:member.lastConfirmedAt,confirmedCount:member.confirmedCount,
     operationId:member.operation.operationId,operationStatus:member.operation.status,confirmedToday,reservedToday,
     eligible:cohort.enabled&&(cohort.policy.mode===REFRESHER_MODE.MANUAL||info.active)&&remaining>0&&eligibleMember(member,info),
     actions:Object.freeze({canPrepare:cohort.enabled&&(cohort.policy.mode===REFRESHER_MODE.MANUAL||info.active)&&remaining>0&&eligibleMember(member,info),canDispatch:[REFRESH_OPERATION_STATUS.PENDING,REFRESH_OPERATION_STATUS.RETRYABLE].includes(member.operation.status),canReconcile:[REFRESH_OPERATION_STATUS.ACTIVE,REFRESH_OPERATION_STATUS.RECONCILE].includes(member.operation.status)})

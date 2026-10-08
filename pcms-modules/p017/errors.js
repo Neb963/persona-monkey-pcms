@@ -12,7 +12,8 @@ export const REFRESHER_ERROR_CODES = Object.freeze({
   REMOTE_STATE: "PCMS_REFRESHER_REMOTE_STATE",
   BUDGET_EXHAUSTED: "PCMS_REFRESHER_BUDGET_EXHAUSTED",
   SCHEDULE_INACTIVE: "PCMS_REFRESHER_SCHEDULE_INACTIVE",
-  CAPACITY: "PCMS_REFRESHER_CAPACITY"
+  CAPACITY: "PCMS_REFRESHER_CAPACITY",
+  RELEASE_UNAVAILABLE: "PCMS_REFRESHER_RELEASE_UNAVAILABLE"
 });
 
 const MESSAGES = Object.freeze({
@@ -29,7 +30,8 @@ const MESSAGES = Object.freeze({
   [REFRESHER_ERROR_CODES.REMOTE_STATE]: "Refresh RemoteOperation state could not be reconciled safely",
   [REFRESHER_ERROR_CODES.BUDGET_EXHAUSTED]: "Refresher daily budget is exhausted",
   [REFRESHER_ERROR_CODES.SCHEDULE_INACTIVE]: "Refresher cohort is outside its active schedule",
-  [REFRESHER_ERROR_CODES.CAPACITY]: "Refresher capacity was reached"
+  [REFRESHER_ERROR_CODES.CAPACITY]: "Refresher capacity was reached",
+  [REFRESHER_ERROR_CODES.RELEASE_UNAVAILABLE]: "No refreshable Deployer-confirmed release is available"
 });
 
 export class PcmsRefresherError extends Error {
