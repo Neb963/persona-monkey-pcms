@@ -1,7 +1,7 @@
 # P041 evidence — Backup/restore and module management UX
 
 Claim `CLM-P041-001` (epoch 1), base `b89d5d244dd3a74e81226f82b906bdb81a8650f0`.
-State: **PR_OPEN** — PR #55.
+State: **PR_OPEN / CI_VERIFIED** — PR #55.
 
 ## What shipped
 
@@ -65,3 +65,26 @@ removal of the inherited P026 recovery form (P040).
   `P025 production runtime composes…`) fail identically on `origin/main` and are not run by CI.
 - Packaged Firefox could not run in this session (the pinned archive host is outside the session's network
   policy); PKG/FDE evidence comes from the independent `p041-packaged` CI job.
+
+## Independent CI (CI_VERIFIED)
+
+PR head `ec388c601d428cd7fead9a9375da70ddc0f21390` (code identical to the evidence commits on top),
+`pull_request` merge commit `6ff902a7fa5ad11faa1cf094d5b9cdbcd78fda8a`:
+
+- `firefox-developer-edition` run `37758463079`: `pinned-firefox` (incl. the new `npm run test:p041` + P020
+  step and all inherited P026–P034 steps), `p031-packaged`, `p032-packaged`, `p033-packaged`, `p034-packaged`
+  and the new `p041-packaged` — all success. `verify` run `37758463130` (`repository`, `npm run verify` incl.
+  `test:p041`) — success.
+- `p041-packaged` report (pinned `154.0b10`, archive sha256 `681913108b…f164`, product XPI sha256
+  `4982c3381ece0db1e4cb76293a45868a65e1fec6d5cd44044bf3811463468984`), `passed: true`, checks:
+  `installFromFileReviewApproveRunsLive`, `updateReviewHighlightsNewCapabilityAndAppliesLive`, `rollbackLive`,
+  `removeLive`, `purgeNeedsTypedNameAndDeletes`, `wholeLifecycleWithoutExtensionOrPageReload`,
+  `backupDownloadsAutoNamedFileWithoutSecrets`, `restoreNeedsPreviewAndTypedConfirmation`,
+  `checklistLinksSubjectsAndGatesResume`.
+- Observed: `fixture.counter` installed from file at generation 1 in a `sandbox="allow-scripts"` background
+  frame; update to 1.1.0 (generation 2) with `module.attention.open`/`settle` shown as **New**; rollback to
+  1.0.0 (generation 3); remove stopped the frame; purge accepted only the typed module id. Backup
+  `pcms-backup-2026-10-08-0942.json` (35 records) was saved to disk and contains no module secret value; the
+  restore stayed disabled for `restore` and ran for `RESTORE`; after it every check passed (each row linked to
+  its subject) and Resume returned PCMS to `NORMAL`. The failing-check paths of A041-02 are covered by the
+  U/I suites, as the gate requires.
