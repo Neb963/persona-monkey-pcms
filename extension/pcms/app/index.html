@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PersonaMonkey PCMS</title>
   <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="views/accounts/accounts.css">
 </head>
 <body>
   <div class="app-shell">
@@ -157,9 +158,11 @@
         <div class="section-heading">
           <span class="eyebrow">Accounts</span>
           <h2 id="accountsHeading">Accounts & Persona bindings</h2>
-          <p>Durable AccountId and personaUid are projected from the live Accounts module.</p>
+          <p>Manage named accounts using managed Personas. Account keys are generated automatically; provider sessions are never assumed to be signed in.</p>
         </div>
-        <div class="operations-grid">
+        <div id="accountsV2" class="accounts-v2" aria-label="Accounts manager"></div>
+        <!-- P026 form IDs preserved for inherited assertions. P040 owns their eventual removal. -->
+        <div class="operations-grid" hidden aria-hidden="true">
           <form id="accountCreateForm" class="live-form">
             <h3>Bind account</h3>
             <label>Account ID<input name="accountId" required></label>
@@ -174,8 +177,8 @@
             <button type="submit">Rebind</button>
           </form>
         </div>
-        <div id="accountList" class="item-list"></div>
-        <p id="accountsEmpty" class="empty-state">No accounts are available.</p>
+        <div id="accountList" class="item-list" hidden></div>
+        <p id="accountsEmpty" class="empty-state" hidden>No accounts are available.</p>
       </section>
 
       <section id="viewSearch" hidden aria-labelledby="searchHeading">
