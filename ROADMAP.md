@@ -318,7 +318,7 @@ Merge wave: 14
 - [ ] T034.3 — T034.3 Guarded rebind and visible-row route/session state
 
 ## P035 — Toolbar popup PCMS status block
-Status: **BLOCKED**  
+Status: **CLAIMED**  
 Depends on: P028, P032  
 Merge wave: 14
 

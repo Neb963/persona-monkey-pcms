@@ -1533,7 +1533,7 @@
     {
       "id": "P035",
       "title": "Toolbar popup PCMS status block",
-      "status": "BLOCKED",
+      "status": "CLAIMED",
       "dependsOn": [
         "P028",
         "P032"
