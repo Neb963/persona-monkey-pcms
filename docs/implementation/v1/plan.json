@@ -1495,7 +1495,7 @@
     {
       "id": "P034",
       "title": "Accounts UX with Persona/account pickers",
-      "status": "PR_OPEN",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P032"
       ],

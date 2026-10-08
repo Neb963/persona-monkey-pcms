@@ -309,13 +309,13 @@ Merge wave: 15
 - [ ] T033.3 — T033.3 Statistics pilot and fixture runtime-module UI proof, including lifecycle presentation states
 
 ## P034 — Accounts UX with Persona/account pickers
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P032  
 Merge wave: 14
 
-- [ ] T034.1 — T034.1 Accounts table and detail
-- [ ] T034.2 — T034.2 Add-account dialog with generated IDs and shared EntityPicker
-- [ ] T034.3 — T034.3 Guarded rebind and visible-row route/session state
+- [x] T034.1 — T034.1 Accounts table and detail
+- [x] T034.2 — T034.2 Add-account dialog with generated IDs and shared EntityPicker
+- [x] T034.3 — T034.3 Guarded rebind and visible-row route/session state
 
 ## P035 — Toolbar popup PCMS status block
 Status: **CLAIMED**  

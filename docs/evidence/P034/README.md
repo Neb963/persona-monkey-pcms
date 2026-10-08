@@ -1,6 +1,6 @@
 # P034 — Accounts UX with Persona/account pickers
 
-State: **PR_OPEN**. Claim CLM-P034-001, claimEpoch 1, branch `agent/gpt-6/p034-t034-1`. This evidence is the implementation checkpoint, not acceptance.
+State: **ACCEPTED**. Claim CLM-P034-001, claimEpoch 1, branch `agent/gpt-6/p034-t034-1`. All A034-01/A034-02/A034-03 acceptance gates were met by deterministic tests and pinned Firefox CI; no provider-live tests were represented as PASS.
 
 ## Governance
 - Dependency P032 ACCEPTED. Original claim base `1ea1c08286c976ebd3bbc6aaa32169f18e74a603`.
@@ -22,9 +22,12 @@ State: **PR_OPEN**. Claim CLM-P034-001, claimEpoch 1, branch `agent/gpt-6/p034-t
 | A034-02 | `tests/pcms/p034/rebind-guard.test.mjs` checks initial/racing unresolved guards, unchanged account state and successful resolved rebind; packaged Firefox verifies disabled rebind and visible warning |
 | A034-03 | 52-account Node fixture validates page/sort/filter/deep links; `tests/pcms/p034/packaged.mjs` drives 25/25/2 rows, interactive search, descending sort, a URL-backed status filter and detail in exact pinned Firefox Developer Edition 154.0b10 |
 
-## CI evidence and limitations
-- Repository verification for checkpoint `1e4c3d4d373856d2f84ffb7c53ed8a574d76362d`: [verify #37709932604](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37709932604) — PASS.
-- P034 packaged-Firefox job at [run #37709932642](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37709932642) — PASS; inherited broader run status must be checked independently.
-- Prior packaged-Firefox run #37709764755 exposed a **test-only** wrong assertion against the detail panel. Fixed in `1e4c3d4d373856d2f84ffb7c53ed8a574d76362d` (the UI and 52-row pagination were functioning).
-- Routing labels use PersonaMonkey's last-observed public health from `persona.list`. They do not claim a live `route.get` check or session authentication. Absent provider probe, session remains Unknown.
-- No live Perchance or operator-firefox proof is claimed; those belong exclusively to P043/P044.
+## Final verification, integration and acceptance evidence
+
+- Source branch checkpoint: `13a063c1672bccb057ae4c7f337f0b09279b040a`, claim epoch 1. PR [#49](https://github.com/Neb963/persona-monkey-pcms/pull/49) merged non-force into `main` as `7bdda8e8652a48580e6473c6999dfac614c92e7a`.
+- Independent PR CI for the exact source checkpoint: [repository verify #37710530889](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37710530889) — **PASS**; [pinned Firefox Developer Edition #37710530879](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37710530879) — **PASS**, including isolated packaged P034 and inherited P032 jobs plus the full pinned-Firefox job.
+- Independent **merged-main** CI at `7bdda8e8652a48580e6473c6999dfac614c92e7a`: [repository verify #37711256643](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37711256643) — **PASS**; [pinned Firefox Developer Edition #37711256652](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37711256652) — **PASS**. All three browser jobs passed: `p034-packaged`, `p032-packaged`, `pinned-firefox`.
+- Statuses are distinct: implementation committed on the source branch; independent CI verified at the head; integration verified by merged-main CI; PR #49 is **MERGED**; this subsequent governance-only update records **ACCEPTED**.
+- Earlier pinned-browser test assertion failure was isolated to a test checking the display name inside the technical detail panel; corrected in source commit `1e4c3d4d373856d2f84ffb7c53ed8a574d76362d` and the final enlarged fixture passed on PR head and merged main.
+- Route text reflects last-observed PersonaMonkey public health from `persona.list`, **not** a new `route.get` probe. Perchance session remains Unknown without authoritative provider observation.
+- No provider-live testing or operator Firefox acceptance was performed; those are reserved for P043/P044. P034 introduced no new migration or versioned contract write, and no successor phase was begun.
