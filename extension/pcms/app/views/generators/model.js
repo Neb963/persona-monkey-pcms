@@ -32,8 +32,13 @@ export function deploymentIdForSlug(slug) {
 
 // Byte-exact UTF-8 (payload identity is over the bytes as uploaded): invalid UTF-8 and NUL are
 // rejected, and a BOM is kept rather than silently stripped.
+// Realm-independent (a File read can yield bytes from another JS realm, where instanceof fails).
+function isBytes(value) {
+  return Object.prototype.toString.call(value) === "[object Uint8Array]";
+}
+
 export function decodeUtf8Exact(bytes, label) {
-  if (!(bytes instanceof Uint8Array)) throw new TypeError(label + " could not be read");
+  if (!isBytes(bytes)) throw new TypeError(label + " could not be read");
   let text;
   try { text = new TextDecoder("utf-8", { fatal:true, ignoreBOM:true }).decode(bytes); }
   catch { throw new TypeError(label + " is not valid UTF-8 text"); }
@@ -42,7 +47,7 @@ export function decodeUtf8Exact(bytes, label) {
 }
 
 export function isJpeg(bytes) {
-  return bytes instanceof Uint8Array && bytes.byteLength >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  return isBytes(bytes) && bytes.byteLength >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
 }
 
 export function bytesToBase64(bytes) {

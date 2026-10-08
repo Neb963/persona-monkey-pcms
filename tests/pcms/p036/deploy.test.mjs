@@ -5,7 +5,8 @@ import test from "node:test";
 
 import { generatorPayloadHash, generatorReleaseFingerprint, thumbnailHash } from "../../../extension/pcms/providers/perchance/contract.js";
 import { DEPLOYER_ERROR_CODES } from "../../../pcms-modules/p015/errors.js";
-import { deploymentIdForSlug, manualDeployPlan, parsePerchanceAddress } from "../../../extension/pcms/app/views/generators/model.js";
+import { runInNewContext } from "node:vm";
+import { decodeUtf8Exact, deploymentIdForSlug, isJpeg, manualDeployPlan, parsePerchanceAddress } from "../../../extension/pcms/app/views/generators/model.js";
 import { jpegBase64, setup } from "./harness.mjs";
 
 const CODE = "// tavern-names 1.1.0\ntitle = Tavern Names\n";
@@ -27,6 +28,17 @@ test("A036-03 the operator names generators by Perchance address; deployment IDs
   }
   for (const raw of ["", "Tavern Names", "https://example.com/../x", "perchance.org/a/b", "-bad"]) assert.equal(parsePerchanceAddress(raw), null);
   assert.equal(deploymentIdForSlug("tavern-names"), "gen:tavern-names");
+});
+
+// Regression from the pinned-Firefox run: file bytes may come from another JS realm.
+test("A036-03 uploaded file bytes are accepted from another realm, byte-exactly", () => {
+  const foreign = runInNewContext("new Uint8Array([0xef, 0xbb, 0xbf, 0x61, 0x0d, 0x0a])");
+  assert.equal(foreign instanceof Uint8Array, false);
+  assert.equal(decodeUtf8Exact(foreign, "Code"), "\ufeffa\r\n");
+  assert.equal(isJpeg(runInNewContext("new Uint8Array([0xff, 0xd8, 0xff, 0xe0])")), true);
+  assert.throws(() => decodeUtf8Exact(runInNewContext("[0x61]"), "Code"), /could not be read/);
+  assert.throws(() => decodeUtf8Exact(new Uint8Array([0xc3]), "Code"), /not valid UTF-8/);
+  assert.throws(() => decodeUtf8Exact(new Uint8Array([0x61, 0x00]), "Code"), /NUL/);
 });
 
 test("A036-03 emulator: v2 release deploys code, HTML, thumbnail and listing through ProviderGate", async () => {
