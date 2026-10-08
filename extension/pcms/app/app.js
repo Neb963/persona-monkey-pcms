@@ -6,6 +6,7 @@ import { startPcmsRuntimeWithRetry } from "./startup-retry.js";
 import { createPcmsModuleProjectionService } from "./module-projections.js";
 import { bindPcmsLiveControls } from "./live-controls.js";
 import { createPcmsAccountsView } from "./views/accounts/accounts-view.js";
+import { createPcmsGeneratorsView } from "./views/generators/generators-view.js";
 import { createPcmsSettingsView } from "./views/settings/settings-view.js";
 import {
   contributionNavItems,
@@ -133,6 +134,10 @@ export function mountPcmsApp({
   let refreshGeneration=0;
   const accountsView=runtime?.accounts && documentRef.getElementById("accountsV2")
     ?createPcmsAccountsView({runtime,documentRef,windowRef,onChanged:()=>refresh()})
+    :null;
+  // P036: Generators list/detail from the Core generator index (mounted in the routed section).
+  const generatorsView=runtime?.generators&&runtime?.deployer&&placeholder
+    ?createPcmsGeneratorsView({runtime,documentRef,windowRef,mount:placeholder,onChanged:()=>refresh()})
     :null;
   // P041: Settings → Backup & restore and Settings → Modules drive Core through the UI client.
   const settingsView=runtime?.backupRestore&&runtime?.modules&&settingsBackup&&documentRef.getElementById("settingsModulesManager")
@@ -462,7 +467,9 @@ export function mountPcmsApp({
     const body=section(documentRef,"placeholderBody");
     if(route.route==="generators") {
       heading.textContent="Generators";
-      body.textContent="The canonical Generators route is available. Its domain redesign belongs to P036.";
+      body.textContent=generatorsView
+        ?"Every generator PCMS knows, with what PCMS wants, what it last confirmed and what to do next."
+        :"Generators are unavailable until PCMS Core connects.";
     } else if(route.route==="activity") {
       heading.textContent="Activity";
       body.textContent="Module activity from the Audit Journal, newest first. The full Activity redesign belongs to its later phase.";
@@ -650,7 +657,8 @@ export function mountPcmsApp({
       renderModuleRoute(route,contributions,generation).catch(()=>{}),
       renderAccountFacets(route,contributions,generation).catch(()=>{}),
       renderActivityLines(route,generation).catch(()=>{}),
-      settingsView?.refresh(route).catch(()=>{})
+      settingsView?.refresh(route).catch(()=>{}),
+      generatorsView?.render(route).catch(()=>{})
     ]);
   }
 
@@ -678,6 +686,7 @@ export function mountPcmsApp({
       refreshGeneration+=1;
       accountsView?.destroy();
       settingsView?.destroy();
+      generatorsView?.destroy();
       frameHost?.dispose();
       windowRef.removeEventListener("hashchange",onHashChange);
       searchForm.removeEventListener("submit",onSubmit);
