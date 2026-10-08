@@ -363,7 +363,7 @@ Merge wave: 19
 - [ ] T039.3 — T039.3 Drift detection, comparison and operator choices
 
 ## P040 — Refresher, Explorer and Provisioning background services and UI migration
-Status: **CLAIMED**  
+Status: **IN_PROGRESS**  
 Depends on: P033, P036, P029  
 Merge wave: 17
 
