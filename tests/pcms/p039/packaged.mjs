@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {execFileText,loadBrowserPin,sha256File,writeJson} from "../../../tools/firefox/lib.mjs";
 import {PackagedFirefox,waitFor} from "../../../tools/firefox/packaged-harness.mjs";
-import {P039_FIXTURE_ID,P039_FIXTURE_PAGE,buildP039FixtureExtension} from "./fixture-extension.mjs";
+import {P039_FIXTURE_ID,P039_FIXTURE_PAGE,P039_ALARM_DELIVERY_DELAY_MS,buildP039FixtureExtension} from "./fixture-extension.mjs";
 const PRODUCT="persona-route-manager@local";
 const root=resolve(process.env.FIREFOX_PACKAGED_DIR||join(tmpdir(),"pcms-firefox-p039"));
 const reportPath=resolve(process.env.FIREFOX_P039_REPORT||join(root,"p039-report.json"));
@@ -18,7 +18,7 @@ const report={schemaVersion:1,phase:"P039",commitSha:process.env.GITHUB_SHA||(aw
   contentSandboxDisabled:process.env.MOZ_DISABLE_CONTENT_SANDBOX==="1",
   worktreeDirty:Boolean((await execFileText("git",["status","--porcelain"])).stdout.trim())};
 let h,server,denyProxy,probe,productTab,changed=false;
-const requests=[];
+const requests=[],completions=[];
 const escape=s=>s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 async function page(code,args=[]){
   const result=await h.pageScript(`const done=arguments[arguments.length-1];
@@ -32,6 +32,9 @@ try{
   await mkdir(root,{recursive:true});
   server=createServer((req,res)=>{
     requests.push({path:req.url,at:new Date().toISOString()});
+    if(req.method==="POST"&&req.url==="/__p039_sweep_complete"){
+      completions.push({at:new Date().toISOString()});res.writeHead(204);res.end();return;
+    }
     const slug=req.url.slice(1),challenge=changed&&slug==="gamma";
     const code=changed&&slug==="beta"?"provider changed":"fixture source\n  exact bytes";
     res.writeHead(200,{"content-type":"text/html;charset=utf-8","cache-control":"no-store"});
@@ -86,7 +89,7 @@ try{
     await api.runtime.sendMessage({type:"COMMIT_STATE_PREVIEW",authorizationId:approved.authorizationId});return profile.personaUid;`);
   const fixture=await buildP039FixtureExtension({productXpi:xpi,workDir:join(root,"fixture-build"),origin,personaUid,
     backgroundSource:await readFile("tests/pcms/p039/fixture-background.js","utf8")});
-  report.facts.fixture={copiedProductFiles:fixture.copiedFiles,productTreeDigest:fixture.digest,fixtureXpiSha256:await sha256File(fixture.xpi)};
+  report.facts.fixture={copiedProductFiles:fixture.copiedFiles,productTreeDigest:fixture.digest,fixtureXpiSha256:await sha256File(fixture.xpi),alarmDeliveryDelayMs:P039_ALARM_DELIVERY_DELAY_MS};
   const permission=await h.client.script(`const done=arguments[arguments.length-1];
     const {ExtensionPermissions}=ChromeUtils.importESModule("resource://gre/modules/ExtensionPermissions.sys.mjs");
     const extension=WebExtensionPolicy.getByID(arguments[0]).extension;
@@ -119,21 +122,24 @@ try{
   assert.equal(report.facts.unload.state,"stopped");
   // Two spaced reads complete with no extension page open; opening the probe
   // afterward is read-only inspection, not the source of the alarm wake.
-  await waitFor(async()=>Date.now()>dueAt+12500&&(await h.extension(P039_FIXTURE_ID)).state==="running",
-    "the alarm wakes the stopped event page and completes the two spaced reads",60000);
+  await waitFor(async()=>completions.length&&(await h.extension(P039_FIXTURE_ID)).state==="running",
+    "the zero-tab alarm completes the delayed sweep and durable challenge transition",90000);
   const probeOpenedAt=Date.now();probe=await h.openPage(P039_FIXTURE_ID,P039_FIXTURE_PAGE);
   const after=await waitFor(async()=>{const s=await status();if(s?.error)throw new Error(s.error);return s.attention?.length?s:null;},"challenge task is durable",20000);
+  const beta=after.deployments.find(d=>d.slug==="beta");
+  report.facts.zeroTabInterval={unloadedAt:new Date(unloadedAt).toISOString(),probeOpenedAt:new Date(probeOpenedAt).toISOString(),completionReceiptAt:completions[0].at};
+  report.facts.after={reads:after.reads,starts:after.starts,queue:after.control.queue,paused:beta.policy,taskCount:after.attention.length};
   assert.deepEqual(after.reads.map(r=>r.slug),["alpha","beta","gamma"]);
   assert.ok(Date.parse(after.reads[2].at)-Date.parse(after.reads[1].at)>=10000);
   assert.ok(after.reads.slice(1).every(r=>Date.parse(r.at)>unloadedAt&&Date.parse(r.at)<probeOpenedAt));
   assert.ok(after.starts.some(s=>Date.parse(s.at)>unloadedAt&&Date.parse(s.at)<probeOpenedAt));
-  const beta=after.deployments.find(d=>d.slug==="beta");assert.equal(beta.status.drift,true);assert.equal(beta.policy.pauseReason,"DRIFT");
+  assert.ok(Date.parse(completions[0].at)>unloadedAt&&Date.parse(completions[0].at)<=probeOpenedAt);
+  assert.equal(beta.status.drift,true);assert.equal(beta.policy.pauseReason,"DRIFT");
   assert.equal(after.attention.length,1);assert.equal(after.attention[0].taskKind,"provider.observation-challenge");
   assert.ok(!after.timers.some(t=>t.state==="SCHEDULED"));assert.deepEqual(after.control.queue,["gen:gamma"]);
   assert.equal(after.operations.length,3);assert.ok(after.operations.every(op=>op.state==="SUCCEEDED"));assert.equal(after.storedContent,false);
   report.checks.zeroTabAlarmWake=true;report.checks.oldestFirstLimitAndDurableSpacing=true;
   report.checks.realFixtureDriftPausedWithoutOverwrite=true;report.checks.oneChallengeTaskStopsSweep=true;report.checks.hashOnlyDurableState=true;
-  report.facts.after={reads:after.reads,starts:after.starts,queue:after.control.queue,paused:beta.policy,taskCount:after.attention.length};
   // Reconstructing the event page cannot create a duplicate challenge or read.
   await h.closePage(probe);probe=null;await h.forceIdleUnload(P039_FIXTURE_ID);
   probe=await h.openPage(P039_FIXTURE_ID,P039_FIXTURE_PAGE);const restarted=await status();
