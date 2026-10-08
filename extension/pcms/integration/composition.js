@@ -15,7 +15,6 @@ import { createGeneratorIndexService } from "./generator-index.js";
 import { createGithubRepositoryProvider } from "../providers/repository/github.js";
 import { createSecretStore } from "../secrets/secret-store.js";
 import { createNativeSecretBackend, createFirefoxNativeSecretTransport } from "../secrets/native-secret-backend.js";
-import { createDeployerRepositoryService } from "../../../pcms-modules/p015/repository-service.js";
 import { createIntegrationRecoveryChecks } from "./recovery-checks.js";
 
 export const PCMS_INTEGRATION_NAMESPACES=Object.freeze({
@@ -27,6 +26,7 @@ export const PCMS_INTEGRATION_NAMESPACES=Object.freeze({
 });
 
 const FACTORY_NAMES=Object.freeze(["accounts","deployer","explorer","refresher","statistics","provisioning"]);
+const OPTIONAL_FACTORY="repository";
 
 function plain(value){
   if(!value||typeof value!=="object"||Array.isArray(value))return false;
@@ -36,11 +36,15 @@ function plain(value){
 function normalizeFactories(value){
   if(!plain(value)||Object.getOwnPropertySymbols(value).length)throw new TypeError("PCMS feature factories are invalid");
   const d=Object.getOwnPropertyDescriptors(value);
-  if(Object.keys(d).length!==FACTORY_NAMES.length
+  if((Object.keys(d).length!==FACTORY_NAMES.length
+        &&Object.keys(d).length!==FACTORY_NAMES.length+1)
+      ||(Object.keys(d).length===FACTORY_NAMES.length+1
+        &&(!Object.hasOwn(d,OPTIONAL_FACTORY)||!d[OPTIONAL_FACTORY].enumerable
+          ||!Object.hasOwn(d[OPTIONAL_FACTORY],"value")||typeof d[OPTIONAL_FACTORY].value!=="function"))
       || !FACTORY_NAMES.every((name)=>Object.hasOwn(d,name)&&d[name].enumerable&&Object.hasOwn(d[name],"value")&&typeof d[name].value==="function")){
     throw new TypeError("PCMS feature factories are invalid");
   }
-  return Object.freeze(Object.fromEntries(FACTORY_NAMES.map((name)=>[name,d[name].value])));
+  return Object.freeze(Object.fromEntries([...FACTORY_NAMES,...(Object.hasOwn(d,OPTIONAL_FACTORY)?[OPTIONAL_FACTORY]:[])].map((name)=>[name,d[name].value])));
 }
 
 function requireMethods(value,names,label){
@@ -140,7 +144,7 @@ export function createPcmsModuleIntegration({
 
   // P037: repository-only durable state, separate from the accepted Deployer
   // v2 migration and independent of runtime sandbox modules.
-  const repository=createDeployerRepositoryService({
+  const repository=factories.repository?factories.repository({
     stateStore:createSingletonStateStore({storageBroker,namespace:"module.deployer.repository"}),
     ledgerStore:storageBroker.namespace("module.deployer.repository.ledger"),
     repositoryProvider:repositoryProvider??createGithubRepositoryProvider({
@@ -156,7 +160,7 @@ export function createPcmsModuleIntegration({
       }
     }),
     deployer,accounts,recoveryHold,auditJournal,clock
-  });
+  }):null;
 
   const explorer=factories.explorer({
     stateStore:createSingletonStateStore({storageBroker,namespace:PCMS_INTEGRATION_NAMESPACES.explorer}),

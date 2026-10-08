@@ -19,7 +19,8 @@
     "docs/evidence/P037/**",
     "docs/implementation/v1/claims/CLM-P037-001.json",
     "package.json",
-    ".github/workflows/firefox.yml"
+    ".github/workflows/firefox.yml",
+    "extension/pcms/background/feature-factories.js"
   ],
   "contractReads": [],
   "contractWrites": [
