@@ -1832,7 +1832,7 @@
     {
       "id": "P040",
       "title": "Refresher, Explorer and Provisioning background services and UI migration",
-      "status": "IN_PROGRESS",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P033",
         "P036",
