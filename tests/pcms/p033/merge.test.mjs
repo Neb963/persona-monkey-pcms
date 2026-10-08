@@ -100,7 +100,8 @@ test("A033-01 I module pages: declarative views for built-ins, a frame page for 
   const frame = await ctx.ui.frame(BOARD_ID);
   assert.equal(frame.moduleId, BOARD_ID);
   assert.match(frame.source, /^\(ui\) =>/);
-  assert.deepEqual(frame.actions.map((action) => [action.id, action.confirm]), [["record-probe", false], ["reset", true], ["pin", false]]);
+  // The frame's action specs carry preview/confirm so the dashboard runner previews and confirms.
+  assert.deepEqual(frame.actions.map((action) => [action.id, action.confirm, action.preview]), [["record-probe", false, false], ["reset", true, true], ["pin", false, false]]);
   await assert.rejects(ctx.ui.frame(SHELF_ID), /no page frame/, "built-ins never get a frame");
 });
 

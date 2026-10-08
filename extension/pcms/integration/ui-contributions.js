@@ -614,7 +614,7 @@ export function createPcmsUiContributionHost({
       generation:described.generation,
       packageHash:described.activePackageHash,
       source,
-      actions:Object.freeze(view.actions.map((action)=>Object.freeze({id:action.id,label:action.label,risk:action.risk,appliesTo:action.appliesTo,confirm:action.confirm,held:action.held})))
+      actions:Object.freeze(view.actions.map((action)=>Object.freeze({id:action.id,label:action.label,risk:action.risk,appliesTo:action.appliesTo,confirm:action.confirm,preview:action.preview,held:action.held})))
     });
   }
 
