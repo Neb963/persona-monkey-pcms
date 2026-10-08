@@ -1238,7 +1238,7 @@
     {
       "id": "P029",
       "title": "Durable PCMS timers woken by extension alarms",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P028"
       ],
