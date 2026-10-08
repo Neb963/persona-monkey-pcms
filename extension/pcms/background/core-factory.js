@@ -7,6 +7,14 @@ import { createProviderHandoff } from "../integration/provider-handoff.js";
 import { createHumanTaskService } from "../services/human-tasks.js";
 import { createCoreServiceRegistry } from "../services/registry.js";
 import { createTimerService } from "../services/timers.js";
+import { createSingletonStateStore } from "../integration/adapters.js";
+// The source tree and the packaged extension place pcms-modules at different
+// relative roots. Choose one of two fixed, reviewed specifiers at module load.
+const repositorySyncModuleUrl=import.meta.url.startsWith("file:")
+  ? new URL("../../../pcms-modules/p015/repository-sync.js",import.meta.url).href
+  : "/pcms-modules/p015/repository-sync.js";
+const {createDeployerRepositorySync,REPOSITORY_SYNC_SERVICE,REPOSITORY_SYNC_OWNER,
+  REPOSITORY_SYNC_GENERATION}=await import(repositorySyncModuleUrl);
 import { createAccountProviderGateResolver } from "../integration/adapters.js";
 import { createPcmsBundledModuleLoader } from "../integration/bundled-modules.js";
 import { PCMS_UI_PUBLISH_CAPABILITY, createPcmsUiContributionHost } from "../integration/ui-contributions.js";
@@ -108,6 +116,18 @@ export function createBackgroundPcmsCore({
     }
   });
   const continuityFixture=createPcmsContinuityFixture({timers,clock});
+  // P038: built-in scheduler owns only repository checks, not provider deployments.
+  const repositorySync=core.repository?createDeployerRepositorySync({
+    repository:core.repository,
+    timers,
+    stateStore:createSingletonStateStore({
+      storageBroker:core.storageBroker,namespace:"module.deployer.repository.sync"
+    }),
+    clock
+  }):null;
+  if(repositorySync)timerServices.register(REPOSITORY_SYNC_SERVICE,Object.freeze({
+    onTimer:event=>repositorySync.onTimer(event)
+  }),{ownerId:REPOSITORY_SYNC_OWNER,generation:REPOSITORY_SYNC_GENERATION});
 
   // ADR-003 §2/§3/§5: runtime modules run live in this background Core.
   const moduleSchedules=createModuleScheduleStore({storageBroker:core.storageBroker});
@@ -166,6 +186,7 @@ export function createBackgroundPcmsCore({
 
   async function declareTimerSchedules(input){
     const declared=await continuityFixture.declare(input);
+    if(repositorySync)await repositorySync.declare();
     try{await moduleSupervisor.declare(input);}catch{}
     return declared;
   }
@@ -184,6 +205,7 @@ export function createBackgroundPcmsCore({
     personaBroker,
     timers,
     timerServices,
+    repositorySync,
     modules:moduleSupervisor.api,
     moduleSupervisor,
     ui:uiHost.api,
