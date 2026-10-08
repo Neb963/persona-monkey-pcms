@@ -24,6 +24,10 @@
     "tests/pcms/p015/deployer.test.mjs",
     "tests/pcms/p036/**",
     "docs/evidence/P036/**",
+    "extension/pcms/app/app.js",
+    "extension/pcms/integration/ui-client-contract.js",
+    "package.json",
+    ".github/workflows/firefox.yml",
     "docs/implementation/v1/claims/CLM-P036-001.json"
   ],
   "contractReads": [
@@ -39,9 +43,15 @@
   "contractWrites": [
     "pcms.perchance.driver/v2",
     "pcms.deployer.state/v2",
-    "pcms.generator-index/v1"
+    "pcms.generator-index/v1",
+    "pcms.ui-client/v1"
   ],
-  "resources": [],
+  "resources": [
+    {
+      "key": "ci-workflows",
+      "mode": "exclusive"
+    }
+  ],
   "migrationSlots": [
     "MIG-P036-deployer-state-v2"
   ],
