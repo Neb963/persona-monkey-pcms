@@ -235,13 +235,11 @@ export function createDeployerObservations({deployer,accounts,provider=null,stor
     return {desired,observed:result.content,desiredListing:(await deployer.getDeployment(id)).desired.listing,
       observedListing:result.observation.listing,observedAt:result.observation.observedAt};
   }
-  async function desiredChanged(before,after){
+  async function canResumeForRelease(before,origin){
     const v=await statusObservation(before);
-    if(v?.keptDesiredRevision===before.desired.revision&&before.desired.origin.kind==="REPOSITORY"
-      &&after.desired.origin.kind==="REPOSITORY"&&before.desired.origin.version!==after.desired.origin.version){
-      const latest=await deployer.listDeployments();
-      await deployer.setPaused(after.deploymentId,{expectedRevision:latest.revision,paused:false});
-    }
+    return Boolean(v?.keptDesiredRevision===before.desired.revision&&before.policy.pauseReason==="OPERATOR"
+      &&before.desired.origin.kind==="REPOSITORY"&&origin.kind==="REPOSITORY"
+      &&before.desired.origin.version!==origin.version&&!deriveDrift({deployment:before,observation:v}));
   }
   async function recover(){
     // Repair a crash between the observation row and the domain transition using
@@ -259,5 +257,5 @@ export function createDeployerObservations({deployer,accounts,provider=null,stor
     }
   }
   return Object.freeze({get,available,listForStatus,isDrifted,keptCurrent,canOverwrite,readControl,verifyNow,afterConfirmed,enqueueSweep,verifyNext,configure,
-    keep,overwrite,compare,desiredChanged,recover,challenged,held,bindWake(fn){wake=fn;}});
+    keep,overwrite,compare,canResumeForRelease,recover,challenged,held,bindWake(fn){wake=fn;}});
 }

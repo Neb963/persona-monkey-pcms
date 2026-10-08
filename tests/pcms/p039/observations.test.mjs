@@ -109,6 +109,26 @@ test("A039-02 Keep adopts the observed baseline, stays paused, and a newer repos
     payloadHash:await generatorPayloadHash("next release",HTML),thumbnailHash:null,listing:"PUBLICLY_LISTED",
     origin:{kind:"REPOSITORY",commitId:COMMIT,path:"alice/alpha",version:"2.0"}});
   assert.equal(next.deployment.policy.paused,false);assert.equal(next.revision,(await h.deployer.listDeployments()).revision);
+  assert.equal(next.revision,list.revision+1); // No crash window between intent and resume.
+  await createDeployerObservations(h.options).recover();
+  assert.equal((await h.deployer.getDeployment("gen:alpha")).policy.paused,false);
+});
+test("A039-02 a new release with identical repository bytes resumes Keep atomically, while fresh drift stays paused",async()=>{
+  for(const freshDrift of [false,true]){
+    const h=harness();await h.create("alpha","REPOSITORY");h.advance();await h.alter("alpha",{code:"kept provider edit"});
+    await h.obs.verifyNow("gen:alpha");await h.obs.keep("gen:alpha",await h.choice());
+    if(freshDrift){h.advance();await h.alter("alpha",{code:"another provider edit"});await h.obs.verifyNow("gen:alpha");}
+    const before=await h.deployer.listDeployments(),old=before.deployments[0],dispatches=h.emulator.dispatched().length;
+    const result=await h.deployer.setRepositoryOrigin("gen:alpha",{expectedRevision:before.revision,
+      expectedDesiredRevision:old.desired.revision,payloadHash:old.desired.payloadHash,thumbnailHash:old.desired.thumbnailHash,
+      listing:old.desired.listing,origin:{...old.desired.origin,version:"2.0"}});
+    assert.equal(result.revision,before.revision+1);
+    assert.equal(result.deployment.policy.paused,freshDrift);
+    assert.equal(result.deployment.desired.revision,old.desired.revision+(freshDrift?0:1));
+    assert.equal(result.deployment.operation.operationId===old.operation.operationId,freshDrift);
+    assert.equal((await h.generators.list()).rows[0].status.label,freshDrift?"Changed on Perchance":"Update ready");
+    assert.equal(h.emulator.dispatched().length,dispatches);
+  }
 });
 test("A039-02 explicit resume after Keep prepares a fresh operation and reports the remaining repository change",async()=>{
   for(const [change,label] of [

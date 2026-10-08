@@ -279,15 +279,13 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     if(existing.desired.revision!==expectedDesired) fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
     if(BUSY_STATUSES.includes(existing.operation.status)) fail(DEPLOYER_ERROR_CODES.OPERATION_BUSY);
     if(sameIntent(existing.desired,intent)) return Object.freeze({revision:current.revision,changed:false,deployment:existing});
+    const resumeKept=observations&&await observations.canResumeForRelease(existing,intent.origin);
     const nextDesiredRevision=existing.desired.revision+1;
     const next=Object.freeze({...existing,desired:Object.freeze({revision:nextDesiredRevision,...intent}),
       operation:Object.freeze({sequence:1,operationId:operationIdFor(existing.deploymentId,nextDesiredRevision,1),status:DEPLOYMENT_OPERATION_STATUS.PENDING}),
+      policy:resumeKept?Object.freeze({paused:false,pauseReason:null}):existing.policy,
       updatedAt:isoNow(clock)});
     const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
-    if(observations){
-      await observations.desiredChanged(existing,next);
-      const latest=await read();return Object.freeze({revision:latest.revision,changed:true,deployment:latest.value.deployments.find(d=>d.deploymentId===deploymentId)});
-    }
     return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find((item)=>item.deploymentId===deploymentId)});
   }
   // LOCAL: operator pause/resume of one target (04 §E.8.3). Resume never clears a drift pause
@@ -347,7 +345,14 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     if(BUSY_STATUSES.includes(existing.operation.status))fail(DEPLOYER_ERROR_CODES.OPERATION_BUSY);
     if(JSON.stringify(existing.desired.origin)===JSON.stringify(origin.origin))
       return Object.freeze({revision:current.revision,changed:false,deployment:existing});
-    const next=Object.freeze({...existing,desired:Object.freeze({...existing.desired,origin:origin.origin}),updatedAt:isoNow(clock)});
+    const resumeKept=observations&&await observations.canResumeForRelease(existing,origin.origin);
+    const desired=Object.freeze({...existing.desired,origin:origin.origin,
+      revision:existing.desired.revision+(resumeKept?1:0)});
+    // A new release resumes an adopted provider baseline in the same CAS. Even
+    // identical repository bytes need a fresh operation after an explicit Keep.
+    const next=Object.freeze({...existing,desired,
+      operation:resumeKept?Object.freeze({sequence:1,operationId:operationIdFor(deploymentId,desired.revision,1),status:DEPLOYMENT_OPERATION_STATUS.PENDING}):existing.operation,
+      policy:resumeKept?Object.freeze({paused:false,pauseReason:null}):existing.policy,updatedAt:isoNow(clock)});
     const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
     return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find(v=>v.deploymentId===deploymentId)});
   }
