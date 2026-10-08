@@ -116,7 +116,11 @@ export const PCMS_UI_OPERATIONS=Object.freeze({
   "backupRestore.stageRestore":query(1),
   "backupRestore.createBackup":command(1,["recovery"],{retainResult:false}),
   "backupRestore.applyStagedRestore":command(1,PCMS_UI_TOPICS),
-  "backupRestore.reconcileAndRelease":command(0,["recovery","modules"])
+  "backupRestore.reconcileAndRelease":command(0,["recovery","modules"]),
+  // P041 Settings → Backup & restore: the recovery checklist and per-item reconciliation.
+  // stageRestore returns the preview; applyStagedRestore needs its typed confirmation.
+  "backupRestore.recoveryChecklist":query(0),
+  "backupRestore.reconcileOperation":command(1,["recovery","attention","modules"])
 });
 
 // Read-only Persona Broker commands a dashboard may proxy through Core.

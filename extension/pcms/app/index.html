@@ -6,6 +6,7 @@
   <title>PersonaMonkey PCMS</title>
   <link rel="stylesheet" href="app.css">
   <link rel="stylesheet" href="views/accounts/accounts.css">
+  <link rel="stylesheet" href="views/settings/settings.css">
 </head>
 <body>
   <div class="app-shell">
@@ -67,6 +68,11 @@
           <h2 id="modulesHeading">PCMS modules</h2>
           <p>Accepted module state and representative P026 controls are wired into the live PCMS composition. Provider effects remain fenced by RemoteOperation and explicit operator confirmation.</p>
         </div>
+
+        <section class="core-status" aria-labelledby="settingsModulesHeading">
+          <h3 id="settingsModulesHeading">Settings → Modules</h3>
+          <div id="settingsModulesManager" class="settings-panel" aria-label="Module management"></div>
+        </section>
 
         <section class="core-status" aria-labelledby="installedModulesHeading">
           <h3 id="installedModulesHeading">Installed modules</h3>
@@ -205,6 +211,17 @@
         </form>
         <div id="searchResults" class="item-list"></div>
         <p id="searchEmpty" class="empty-state">No matching projections.</p>
+      </section>
+
+      <section id="viewSettingsBackup" hidden aria-labelledby="settingsBackupHeading">
+        <div class="section-heading">
+          <span class="eyebrow">Settings → Backup &amp; restore</span>
+          <h2 id="settingsBackupHeading">Backup &amp; restore</h2>
+          <p>Back up PCMS data to a file, or restore one after reviewing what it changes.</p>
+        </div>
+        <section class="core-status">
+          <div id="settingsBackup" class="settings-panel" aria-label="Backup and restore"></div>
+        </section>
       </section>
 
       <section id="viewDiagnostics" hidden aria-labelledby="diagnosticsHeading">
