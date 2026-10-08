@@ -11,6 +11,7 @@ import {
   serializePcmsUiError,
   validatePcmsUiRequest
 } from "../integration/ui-client-contract.js";
+import { redactPcmsUiSecrets } from "../integration/ui-contribution-contract.js";
 
 export const PCMS_UI_RECEIPT_NAMESPACE="core.ui-receipts";
 export const PCMS_UI_RECEIPT_RETENTION_MS=7*24*60*60*1000;
@@ -114,7 +115,8 @@ export function createPcmsUiDispatcher({
   async function runCommand(core,request){
     const store=receipts(core);
     const key=request.idempotencyKey;
-    const requestHash=await sha256Hex(JSON.stringify({name:request.name,args:request.args}));
+    // P040: secret fields are redacted first; the durable receipt never derives from a secret.
+    const requestHash=await sha256Hex(JSON.stringify({name:request.name,args:redactPcmsUiSecrets(request.args)}));
     const existing=await store.get(key);
     if(existing) return replay(request.requestId,existing,requestHash);
     const recordedAt=new Date(clock()).toISOString();

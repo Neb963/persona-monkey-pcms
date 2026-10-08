@@ -23,6 +23,7 @@ import {
   settingsModuleRows
 } from "./contributions.js";
 import { createPcmsConfirmDialog, createPcmsModuleActionRunner } from "./module-actions.js";
+import { createPcmsActionInputDialog, createPcmsEntityPickerSources } from "./action-input.js";
 import { createPcmsModuleFrameHost } from "./module-frame-host.js";
 import {
   renderActivity,
@@ -74,32 +75,10 @@ function appendLink(documentRef,parent,{href,title,subtitle=null,badge=null}) {
   return link;
 }
 
-function appendModuleRow(documentRef,parent,title,subtitle) {
-  const row=element(documentRef,"div","module-row");
-  const strong=element(documentRef,"strong");
-  strong.textContent=title;
-  const small=element(documentRef,"small");
-  small.textContent=subtitle;
-  row.append(strong,small);
-  parent.appendChild(row);
-}
-
 function section(documentRef,id) {
   const node=documentRef.getElementById(id);
   if(!node) throw new Error("PCMS app DOM is incomplete");
   return node;
-}
-
-function moduleStatus(documentRef,name,projection,count) {
-  section(documentRef,"module"+name+"Count").textContent=String(count);
-  const node=section(documentRef,"module"+name+"Status");
-  if(projection.available) {
-    node.textContent="Live module state connected.";
-    node.dataset.state="connected";
-  } else {
-    node.textContent="Unavailable · "+String(projection.code||projection.error||"PCMS_MODULE_UNAVAILABLE");
-    node.dataset.state="error";
-  }
 }
 
 export function mountPcmsApp({
@@ -147,8 +126,13 @@ export function mountPcmsApp({
   const contributionsLive=typeof runtime?.ui?.snapshot==="function"&&modulePage!==null;
   let actionRunner=null;
   let frameHost=null;
+  let collectInput=null;
   if(contributionsLive&&documentRef.getElementById("moduleConfirmDialog")){
     actionRunner=createPcmsModuleActionRunner({runtime,confirm:createPcmsConfirmDialog({documentRef})});
+    // P040: action inputs are collected in a Core-rendered dialog with pickers, never typed IDs.
+    if(documentRef.getElementById("moduleInputDialog")){
+      collectInput=createPcmsActionInputDialog({documentRef,pickers:createPcmsEntityPickerSources(runtime)});
+    }
     frameHost=createPcmsModuleFrameHost({documentRef,windowRef,runtime,runAction:(request)=>runModuleAction(request)});
   }
   let modulePageKey=null;
@@ -222,56 +206,6 @@ export function mountPcmsApp({
     );
     const container=documentRef.getElementById("overviewModuleCards");
     if(container) renderOverviewCards(documentRef,container,cards);
-  }
-
-  function renderModules(snapshot) {
-    const explorerList=section(documentRef,"moduleExplorerList");
-    clear(explorerList);
-    const explorerItems=[
-      ...snapshot.explorer.candidates.map((item)=>({
-        title:"Candidate · "+item.generatorId,
-        subtitle:item.accountId+" · "+item.freshness+(item.claimStatus ? " · "+item.claimStatus : "")
-      })),
-      ...snapshot.explorer.reservations.map((item)=>({
-        title:"Reservation · "+item.claimId,
-        subtitle:item.accountId+" · "+item.status+(item.ready ? " · ready" : "")
-      }))
-    ];
-    for(const item of explorerItems.slice(0,20)) appendModuleRow(documentRef,explorerList,item.title,item.subtitle);
-    if(explorerItems.length===0) appendModuleRow(documentRef,explorerList,"No discovery state","Explorer is connected and has no candidates or reservations.");
-    moduleStatus(documentRef,"Explorer",snapshot.explorer,explorerItems.length);
-
-    const deployerList=section(documentRef,"moduleDeployerList");
-    clear(deployerList);
-    for(const item of snapshot.deployer.items?.slice(0,20)||[]) {
-      appendModuleRow(documentRef,deployerList,item.generatorId||item.deploymentId,(item.accountId||"unknown")+" · "+(item.syncState||item.operationStatus||"unknown"));
-    }
-    if((snapshot.deployer.items?.length||0)===0) appendModuleRow(documentRef,deployerList,"No deployments","Deployer is connected and has no desired/observed targets.");
-    moduleStatus(documentRef,"Deployer",snapshot.deployer,snapshot.deployer.items?.length||0);
-
-    const refresherList=section(documentRef,"moduleRefresherList");
-    clear(refresherList);
-    for(const item of snapshot.refresher.items?.slice(0,20)||[]) {
-      appendModuleRow(documentRef,refresherList,item.cohortId,(item.accountId||"unknown")+" · "+item.mode+" · budget "+item.budget.used+"/"+item.budget.limit);
-    }
-    if((snapshot.refresher.items?.length||0)===0) appendModuleRow(documentRef,refresherList,"No cohorts","Refresher is connected and has no configured cohorts.");
-    moduleStatus(documentRef,"Refresher",snapshot.refresher,snapshot.refresher.items?.length||0);
-
-    const statisticsList=section(documentRef,"moduleStatisticsList");
-    clear(statisticsList);
-    for(const item of snapshot.statistics.items?.slice(0,20)||[]) {
-      appendModuleRow(documentRef,statisticsList,item.label,String(item.value)+" total · "+String(item.matchedEvents)+" matched events");
-    }
-    if((snapshot.statistics.items?.length||0)===0) appendModuleRow(documentRef,statisticsList,"No metrics","Statistics is connected but no metric projection is available.");
-    moduleStatus(documentRef,"Statistics",snapshot.statistics,snapshot.statistics.items?.length||0);
-
-    const provisioningList=section(documentRef,"moduleProvisioningList");
-    clear(provisioningList);
-    for(const item of snapshot.provisioning.items?.slice(0,20)||[]) {
-      appendModuleRow(documentRef,provisioningList,item.attemptId,(item.accountId||"unbound")+" · "+item.state+(item.humanReason ? " · "+item.humanReason : ""));
-    }
-    if((snapshot.provisioning.items?.length||0)===0) appendModuleRow(documentRef,provisioningList,"No attempts","Provisioning is connected and has no active attempts.");
-    moduleStatus(documentRef,"Provisioning",snapshot.provisioning,snapshot.provisioning.items?.length||0);
   }
 
   function renderContributedModules(contributions) {
@@ -355,7 +289,7 @@ export function mountPcmsApp({
     if(disposed||generation!==refreshGeneration) return;
     renderFacets(documentRef,container,result,{
       snapshot:contributions,
-      onAction:(module,action,entity)=>void runModuleAction({module,action,target:entity}).catch(()=>{})
+      onAction:(module,action,entity)=>void runModuleAction({module,action,target:entity,collect:true}).catch(()=>{})
     });
     container.dataset.accountId=route.id;
   }
@@ -520,6 +454,13 @@ export function mountPcmsApp({
     const message=element(documentRef,"span");
     message.textContent=receipt.cancelled?"Cancelled; nothing was changed.":String(receipt.message||"");
     entry.appendChild(message);
+    if(!receipt.cancelled&&receipt.followUp?.href){
+      const follow=element(documentRef,"a");
+      follow.href=receipt.followUp.href;
+      follow.textContent=receipt.followUp.label;
+      follow.dataset.followUp="true";
+      entry.appendChild(follow);
+    }
     localList.prepend(entry);
     while(localList.childNodes.length>8) localList.removeChild(localList.lastChild);
     section(documentRef,"actionTrayEmpty").hidden=true;
@@ -536,11 +477,23 @@ export function mountPcmsApp({
     }
   }
 
-  async function runModuleAction(request) {
+  async function runModuleAction({collect=false,...request}) {
     if(!actionRunner) throw new Error("Module actions are unavailable");
     try {
-      const receipt=await actionRunner.run(request);
+      let input=request.input??null;
+      if(collect&&request.action.input?.length){
+        if(!collectInput) throw new Error("Module action input is unavailable");
+        input=await collectInput(request.module.title,request.action);
+        if(input===null){
+          const cancelled=Object.freeze({cancelled:true,moduleId:request.module.moduleId,actionId:request.action.id});
+          showModuleReceipt(cancelled);
+          return cancelled;
+        }
+      }
+      const receipt=await actionRunner.run({...request,input});
       showModuleReceipt(receipt);
+      // A Core-rendered module page shows module state; render it again after its action.
+      if(collect&&!receipt.cancelled){modulePageKey=null;void refresh().catch(()=>{});}
       return receipt;
     } catch(error) {
       notificationStatus.textContent=request.action.label+" failed · "+String(error?.code||"error");
@@ -560,7 +513,7 @@ export function mountPcmsApp({
     modulePageKey=key;
     if(model.kind!=="frame") frameHost?.dispose();
     await renderModulePage(documentRef,modulePage,model,{
-      run:(action,target)=>void runModuleAction({module,action,target}).catch(()=>{}),
+      run:(action,target)=>void runModuleAction({module,action,target,collect:true}).catch(()=>{}),
       listRows:(...args)=>runtime.ui.listRows(...args),
       getDetail:(...args)=>runtime.ui.getDetail(...args),
       getSettings:(moduleId)=>runtime.ui.getSettings(moduleId),
@@ -644,7 +597,6 @@ export function mountPcmsApp({
     const route=resolved.route;
     renderNav(snapshot,route,moduleSnapshot,contributions);
     renderOverview(snapshot,moduleSnapshot,contributions);
-    renderModules(moduleSnapshot);
     renderContributedModules(contributions);
     renderAttention(snapshot,route.route==="attention"?route.id:null,contributions);
     renderAccounts(snapshot,route);
@@ -718,9 +670,9 @@ export function mountUnavailablePcmsShell({
     link.textContent=label;
     nav.appendChild(link);
   }
-  // The page can be reloaded while Core is unavailable; no inherited P026
-  // mutation form should remain actionable without a bound UI client.
-  for(const form of documentRef.querySelectorAll(".live-form, #restoreApplyForm, #recoveryReleaseForm")){
+  // The page can be reloaded while Core is unavailable; no form should remain
+  // actionable without a bound UI client.
+  for(const form of documentRef.querySelectorAll(".live-form")){
     for(const control of form.querySelectorAll("button, input, select, textarea")) control.disabled=true;
   }
   function showRoute(){

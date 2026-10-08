@@ -135,6 +135,8 @@ export function modulePageModel(snapshot,route){
     summaryError:module.summaryError,
     actions:module.actions.filter((action)=>action.appliesTo==="module"),
     allActions:module.actions,
+    // P040: every list view is reachable from the page (tabs), not only the first one.
+    listViews:Object.freeze(views.filter((item)=>item.type==="list").map((item)=>Object.freeze({id:item.id,title:item.title}))),
     settings:module.settings,
     view,
     objectId:route.objectId,

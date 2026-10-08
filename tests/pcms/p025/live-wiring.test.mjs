@@ -60,8 +60,10 @@ test("P025 installed product identifies and opens as PCMS", async () => {
   assert.match(popup,/<button id="options" class="primary">Open PCMS<\/button>/);
   assert.match(popup,/PersonaMonkey settings/);
   assert.match(index,/PCMS modules/);
-  for(const module of ["Explorer","Deployer","Refresher","Statistics","Provisioning"]) {
-    assert.match(index,new RegExp(">"+module+"<"));
+  // A040-03: the module cards of the P026 page are superseded by contributed module pages;
+  // each feature module still names itself, now in its built-in contribution.
+  for(const [module,path] of [["Explorer","p016"],["Deployer","p015"],["Refresher","p017"],["Statistics","p018"],["Provisioning","p019"]]) {
+    assert.match(await readFile("pcms-modules/"+path+"/ui.js","utf8"),new RegExp("title:\\s*\""+module+"\""));
   }
 });
 
@@ -73,7 +75,9 @@ test("P025 production runtime composes and surfaces all accepted feature modules
     readFile("scripts/build-extension.mjs","utf8")
   ]);
   assert.match(app,/createPcmsModuleProjectionService/);
-  assert.match(app,/renderModules/);
+  // A040-03: the legacy module cards (renderModules) are superseded by contributed module pages.
+  assert.match(app,/renderModulePage/);
+  assert.match(app,/renderOverviewCards/);
   assert.doesNotMatch(app,/emptyProjection/);
   for(const phase of ["p014","p015","p016","p017","p018","p019"]) {
     assert.match(liveRuntime,new RegExp("/pcms-modules/"+phase+"/"));

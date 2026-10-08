@@ -59,7 +59,8 @@ test("A034-01 visible Accounts workflow uses pickers, not free-text identifiers"
   readFile("extension/pcms/app/ui/picker/entity-picker.js","utf8")
  ]);
  assert.match(html,/id="accountsV2"/);
- assert.match(html,/class="operations-grid" hidden aria-hidden="true"/);
+ // A040-03 supersedes the hidden P026 account forms kept for inheritance: they are removed.
+ assert.doesNotMatch(html,/id="accountCreateForm"|id="accountRebindForm"|class="operations-grid"/);
  assert.match(view,/createEntityPicker/);assert.match(view,/key.readOnly=true/);
  assert.match(view,/runtime.accounts.createAccount/);assert.match(view,/runtime.accounts.rebindPersona/);
  assert.doesNotMatch(view,/innerHTML|browser\.(?:tabs|proxy|contextualIdentities)/);

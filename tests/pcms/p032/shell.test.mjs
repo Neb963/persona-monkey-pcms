@@ -26,7 +26,7 @@ test("A032-01 dashboard source constructs no Core or privileged service",async()
   assert.match(joined,/pcms\.ui-client\/v1|createPcmsUiClient/);
 });
 
-test("A032-02 no global Working state remains and accepted P026 control IDs survive rehost",async()=>{
+test("A032-02 no global Working state remains and P026 workflows survive rehost on their P034/P040/P041 surfaces",async()=>{
   const [html,controls]=await Promise.all([
     readFile("extension/pcms/app/index.html","utf8"),
     readFile("extension/pcms/app/live-controls.js","utf8")
@@ -35,10 +35,15 @@ test("A032-02 no global Working state remains and accepted P026 control IDs surv
   const statusIndex=html.indexOf('id="liveActionStatus"');
   const mainIndex=html.indexOf('<main class="content">');
   assert.ok(statusIndex>0&&statusIndex<mainIndex);
+  // P040 (A040-03): the rehosted P026 control IDs are superseded. Each workflow keeps exactly
+  // one mount point: Accounts (P034), Settings → Backup & restore (P041) and the module page /
+  // input dialog that serves the Provisioning page (P040).
+  for(const id of ["accountsV2","settingsBackup","viewModulePage","moduleInputDialog"])
+    assert.equal((html.match(new RegExp('id="'+id+'"',"g"))||[]).length,1,id);
   for(const id of [
     "accountCreatePersonaUid","accountRebindPersonaUid","provisioningLiveForm",
     "backupCreateForm","restoreApplyForm","recoveryReleaseForm"
-  ]) assert.equal((html.match(new RegExp('id="'+id+'"',"g"))||[]).length,1,id);
+  ]) assert.equal(html.includes('id="'+id+'"'),false,id);
   assert.match(html,/id="actionTrayDurableList"/);
   assert.match(html,/id="actionTrayReceiptList"/);
   assert.match(html,/id="actionTrayLocalList"/);
