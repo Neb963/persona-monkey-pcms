@@ -16,7 +16,7 @@ function sameDeployment(existing,reservation){
     && existing.accountId===reservation.accountId
     && existing.providerId===reservation.providerId
     && existing.targetRef?.id===reservation.targetRef?.id
-    && existing.desired?.sourceHash===reservation.observedSourceHash;
+    && existing.desired?.payloadHash===reservation.observedSourceHash;
 }
 
 export function createExplorerDeployerBridge({explorer,deployer}={}) {

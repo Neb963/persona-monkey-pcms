@@ -9,6 +9,7 @@ export const DEPLOYER_ERROR_CODES = Object.freeze({
   OPERATION_BUSY: "PCMS_DEPLOYER_OPERATION_BUSY",
   INVALID_TRANSITION: "PCMS_DEPLOYER_INVALID_TRANSITION",
   SOURCE_MISMATCH: "PCMS_DEPLOYER_SOURCE_MISMATCH",
+  CONTENT_MISMATCH: "PCMS_DEPLOYER_CONTENT_MISMATCH",
   REMOTE_STATE: "PCMS_DEPLOYER_REMOTE_STATE",
   CAPACITY: "PCMS_DEPLOYER_CAPACITY"
 });
@@ -24,6 +25,7 @@ const MESSAGES = Object.freeze({
   [DEPLOYER_ERROR_CODES.OPERATION_BUSY]: "Deployment operation is still dispatching",
   [DEPLOYER_ERROR_CODES.INVALID_TRANSITION]: "Deployment transition is invalid",
   [DEPLOYER_ERROR_CODES.SOURCE_MISMATCH]: "Deployment source does not match desired source hash",
+  [DEPLOYER_ERROR_CODES.CONTENT_MISMATCH]: "Deployment content does not match the desired release",
   [DEPLOYER_ERROR_CODES.REMOTE_STATE]: "Remote operation state could not be reconciled safely",
   [DEPLOYER_ERROR_CODES.CAPACITY]: "Deployer capacity was reached"
 });

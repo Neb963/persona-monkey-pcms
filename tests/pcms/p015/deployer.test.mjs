@@ -59,8 +59,9 @@ test("A015-01 desired/observed model stores hashes and stable ownership but neve
   assert.equal(result.revision,1);
   assert.equal(result.deployment.providerId,DEPLOYER_PROVIDER_ID);
   assert.deepEqual(result.deployment.targetRef,{kind:"generator",id:"gen-123"});
-  assert.deepEqual(result.deployment.desired,{revision:1,sourceHash:HASH_A});
-  assert.deepEqual(result.deployment.observed,{sourceHash:null,confirmedAt:null});
+  // P036: v1 inputs create a pcms.deployer.state/v2 "v1-source" record with the same meaning.
+  assert.deepEqual(result.deployment.desired,{revision:1,payloadKind:"v1-source",payloadHash:HASH_A,thumbnailHash:null,listing:null,origin:{kind:"MANUAL"}});
+  assert.deepEqual(result.deployment.confirmed,{payloadHash:null,thumbnailHash:null,listing:null,confirmedAt:null,operationId:null,baselineHash:null});
   assert.equal(result.deployment.operation.status,DEPLOYMENT_OPERATION_STATUS.PENDING);
   const serialized=JSON.stringify(h.state.shared.row.value);
   assert.equal(serialized.includes(SOURCE_A),false);
@@ -95,7 +96,7 @@ test("A015-01 desired revisions are monotonic and idempotent for the same hash",
   assert.equal(changed.changed,true);
   assert.equal(changed.deployment.desired.revision,2);
   assert.equal(changed.deployment.operation.operationId,"deploy:dep-1:2:1");
-  assert.equal(changed.deployment.observed.sourceHash,null);
+  assert.equal(changed.deployment.confirmed.payloadHash,null);
 });
 
 test("A015-02 stable-target mutation dispatches through ProviderGate and confirms observed state",async()=>{
@@ -105,7 +106,7 @@ test("A015-02 stable-target mutation dispatches through ProviderGate and confirm
   const result=await h.service.deploy("dep-1",{expectedRevision:1,source:SOURCE_A});
   assert.equal(result.status,"APPLIED");
   assert.equal(result.deployment.operation.status,DEPLOYMENT_OPERATION_STATUS.SUCCEEDED);
-  assert.equal(result.deployment.observed.sourceHash,HASH_A);
+  assert.equal(result.deployment.confirmed.payloadHash,HASH_A);
   assert.deepEqual(h.emulator.getGenerator("gen-123"),{generatorId:"gen-123",sourceHash:HASH_A,source:SOURCE_A});
   const remote=await h.remoteOps.get("deploy:dep-1:1:1");
   assert.equal(remote.value.targetRef.id,"gen-123");
@@ -175,7 +176,7 @@ test("A015-03 post-apply ambiguity reconciles to IN_SYNC without replay",async()
   assert.equal(h.emulator.getGenerator("gen-123").sourceHash,HASH_A);
   const reconciled=await h.service.reconcileDeployment("dep-1",{expectedRevision:3});
   assert.equal(reconciled.deployment.operation.status,DEPLOYMENT_OPERATION_STATUS.SUCCEEDED);
-  assert.equal(reconciled.deployment.observed.sourceHash,HASH_A);
+  assert.equal(reconciled.deployment.confirmed.payloadHash,HASH_A);
   const view=(await h.service.listDeploymentViews()).deployments[0];
   assert.equal(view.syncState,"IN_SYNC");
   assert.equal(view.actions.canDeploy,false);
@@ -193,7 +194,7 @@ test("A015-03 pre-apply ambiguity must reconcile NOT_APPLIED before same operati
   const retried=await h.service.deploy("dep-1",{expectedRevision:4,source:SOURCE_A});
   assert.equal(retried.status,"APPLIED");
   assert.equal(retried.deployment.operation.operationId,"deploy:dep-1:1:1");
-  assert.equal(retried.deployment.observed.sourceHash,HASH_A);
+  assert.equal(retried.deployment.confirmed.payloadHash,HASH_A);
 });
 
 test("A015-03 restart-style ACTIVE recovery with no RemoteOperation safely returns to PENDING",async()=>{
@@ -206,7 +207,7 @@ test("A015-03 restart-style ACTIVE recovery with no RemoteOperation safely retur
   h.state.shared.row=row;
   const recovered=await h.service.reconcileDeployment("dep-1",{expectedRevision:2});
   assert.equal(recovered.deployment.operation.status,DEPLOYMENT_OPERATION_STATUS.PENDING);
-  assert.equal(recovered.deployment.observed.sourceHash,null);
+  assert.equal(recovered.deployment.confirmed.payloadHash,null);
 });
 
 test("A015-03 UI projection distinguishes pending and out-of-sync actions",async()=>{
@@ -218,7 +219,7 @@ test("A015-03 UI projection distinguishes pending and out-of-sync actions",async
   const applied=await h.service.deploy("dep-1",{expectedRevision:1,source:SOURCE_A});
   const changed=await h.service.setDesired("dep-1",{expectedRevision:applied.revision,expectedDesiredRevision:1,sourceHash:HASH_B});
   view=(await h.service.listDeploymentViews()).deployments[0];
-  assert.equal(changed.deployment.observed.sourceHash,HASH_A);
+  assert.equal(changed.deployment.confirmed.payloadHash,HASH_A);
   assert.equal(view.syncState,"OUT_OF_SYNC");
   assert.equal(view.actions.canUpdateDesired,true);
 });
