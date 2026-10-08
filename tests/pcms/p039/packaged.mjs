@@ -39,7 +39,16 @@ try{
   });
   await new Promise(done=>server.listen(0,"127.0.0.1",done));
   const origin="http://127.0.0.1:"+server.address().port;
-  h=await PackagedFirefox.create({root:join(root,"profiles")});await h.start();assert.equal(await h.install(xpi),PRODUCT);
+  h=await PackagedFirefox.create({root:join(root,"profiles")});await h.start();
+  // CI-only parent HTTP observer: all product and fixture requests are confined
+  // to the exact loopback origin, including PersonaMonkey's catalog refreshes.
+  await h.client.script(`const origin=arguments[0];
+    Services.obs.addObserver({observe(subject){
+      const channel=subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+      if(channel.URI.prePath!==origin)channel.cancel(Components.results.NS_ERROR_ABORT);
+    }},"http-on-modify-request");`,[origin]);
+  report.facts.networkIsolation={mode:"parent-http-observer",allowedOrigin:origin};
+  assert.equal(await h.install(xpi),PRODUCT);
   productTab=await h.openPage(PRODUCT,"options/options.html");
   await waitFor(()=>h.pageScript('return !!document.getElementById("integrationEnabled")'),"PersonaMonkey security settings load");
   await waitFor(()=>page('try{return (await api.runtime.sendMessage({type:"GET_INTEGRATION_POLICY"}))?.policy??null;}catch{return null;}'),"product background is ready for reviewed changes");
@@ -65,12 +74,17 @@ try{
     ExtensionPermissions.add(extension.id,{permissions:["userScripts"],origins:[]},extension).then(()=>done(true),error=>done({error:String(error)}));`,[PRODUCT],{async:true});
   assert.equal(permission,true);
   await h.closePage(productTab);productTab=null;
-  // The optional userscript signal listener is established at PersonaMonkey
-  // context initialization. Start a fresh context with the permission present.
-  await h.stop();await h.start();
+  // Reinitialize with the permission present without losing the HTTP isolation
+  // observer. Normal disable/enable preserves the reviewed policy and profile.
+  const reenabled=await h.client.script(`const done=arguments[arguments.length-1];
+    const {AddonManager}=ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
+    AddonManager.getAddonByID(arguments[0]).then(async addon=>{
+      await addon.disable();await addon.enable();return true;
+    }).then(done,error=>done({error:String(error)}));`,[PRODUCT],{async:true});
+  assert.equal(reenabled,true);
   productTab=await h.openPage(PRODUCT,"options/options.html");
   await waitFor(()=>page('try{return (await api.runtime.sendMessage({type:"GET_INTEGRATION_POLICY"}))?.policy?.enabled??false;}catch{return false;}'),
-    "reviewed execution policy survives a profile restart");
+    "reviewed execution policy survives add-on reinitialization");
   await h.closePage(productTab);productTab=null;
   assert.equal(await h.install(fixture.xpi),P039_FIXTURE_ID);
   probe=await h.openPage(P039_FIXTURE_ID,P039_FIXTURE_PAGE);
