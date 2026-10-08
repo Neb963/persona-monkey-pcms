@@ -1,7 +1,7 @@
 # P033 evidence — Module UI contribution contract v1 for built-in and runtime modules
 
 Claim `CLM-P033-001` (epoch 1), base `9717eb215c7485bda84830d4a69c9cb610df0b76`.
-State: **COMMITTED** — CI evidence is recorded below once independent CI has run.
+State: **CI_VERIFIED** on PR head `a4e8d971a34efd67af15d58c4e3f680e7f31f0c4` (PR #53; not yet MERGED or ACCEPTED).
 
 ## What shipped
 
@@ -72,3 +72,33 @@ inherited P026 module cards (their later phases). Those cards keep rendering unc
   activated page: no external URL, no iframe/form/object/embed, exactly `module-ui.js` and `module-ui.css`.
 - Packaged Firefox could not run in this session (the pinned archive host is outside the session's network
   policy); FDE/PKG evidence comes from the independent `p033-packaged` CI job.
+
+## Independent CI (CI_VERIFIED)
+
+PR head `a4e8d971a34efd67af15d58c4e3f680e7f31f0c4`, `pull_request` merge commit
+`9fb64d45d30485cbff1af4339f8789e24abbf851`:
+
+- `firefox-developer-edition` run `37718229436`: `pinned-firefox` (incl. `npm run test:p033` and all
+  inherited P026–P034 steps), `p031-packaged`, `p032-packaged`, `p034-packaged` and the new `p033-packaged` — all
+  success. `verify` run `37718229399` (`repository`, `npm run verify` incl. `test:p033`) — success.
+- `p033-packaged` report (pinned `154.0b10`, archive sha256 `681913108b…f164`, product XPI sha256
+  `1d0681dc84df8d8690682dde5501c233b902dc45b68f6227f8172bfe3cfc47b7`), `passed: true`, checks:
+  `builtInAndRuntimeInNavOverviewSearch`, `sandboxedModulePageNoExtensionApiNoNetwork`,
+  `riskyActionConfirmedByCoreDialog`, `dashboardsWorkWhileModulesUnloaded`, `failedUpdateKeepsLastKnownGood`,
+  `cancelledConfirmationExecutesNothing`, `disabledHiddenAndExplained`, `incompatibleGreyedOut`,
+  `removedAndPurgedDegradeGracefully`.
+- Observed in the module-UI frame (reported through a declared action): `browser`/`chrome` absent, origin
+  `null`, dashboard document unreadable, `fetch` → `blocked`, undeclared action rejected; frame
+  `sandbox="allow-scripts"`, `contentDocument === null`. After the forced event-page unload the reopened
+  dashboard showed the module while `modules.get` reported `running: false` (`READY`).
+
+### Live observations encoded as regressions before fixing (AGENTS §10)
+
+The first packaged runs found three defects; each is now a deterministic Node regression:
+
+1. `ui.frame()` omitted the action `preview` flag, so frame-originated risky actions skipped the preview
+   (`merge.test.mjs`, frame action specs).
+2. The module page render key read `model.actions`, absent on state pages, so a disabled module kept its old
+   page (`lifecycle.test.mjs`, `modulePageRenderKey`).
+3. A purged module's deep link was pre-resolved against built-in ids and redirected to Overview
+   (`lifecycle.test.mjs`, `routableModuleIds` with the hash).
