@@ -29,3 +29,21 @@ Local: P031 **27/27**; P028 29/29 and P030 19/19 unchanged; `verify:repo`, `veri
 Node suite has the same three failures as `main` (two P023 and one P025 static assertions already superseded; none runs in
 required CI). The packaged run cannot execute in this container (Mozilla archive blocked), so FDE/PKG evidence comes from
 required CI. No live provider, Mullvad, secrets, operator profiles or routing inputs are used.
+
+## Independent CI checkpoint
+
+CI_VERIFIED on head `ba4f83dc89de9d1dc0163829c94d0048abb7e979` ([PR #51](https://github.com/Neb963/persona-monkey-pcms/pull/51),
+tested merge commit `22ece519a53c9fce37c0c7603a6e9cc9013fcbad`):
+
+- `verify` run [37712220816](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37712220816), job `repository`: success.
+- `firefox-developer-edition` run [37712220827](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37712220827):
+  `pinned-firefox` (including `test:p031`), `p031-packaged` (job 113100499053), `p032-packaged` and `p034-packaged` all
+  success; artifact `firefox-packaged-p031` (id 11522670587).
+
+Packaged report (Firefox `154.0b10`, product XPI sha256 `adbdaf26cbaeb979c424dcafd2de41e10a564304673d2f5fc036f6b604c4cfdc`):
+all seven checks true. The module ran its first tick at `01:19:26.554Z` with the event page suspended by the Firefox test hook
+and no PCMS tab, before the tab was reopened at `01:19:29.393Z`; the update moved generation 2 → 3 and the v1 beat stayed
+frozen at 2; after the profile restart the module was `READY` and not running, and its tick ran with zero tabs at
+`01:20:32.248Z`; purge deleted 2 data keys. The verbatim report is [`packaged-report.json`](packaged-report.json).
+
+This commit only records evidence; CI on it re-confirms the same tree. Acceptance follows merged-main CI.
