@@ -150,3 +150,35 @@ test("A038-02 no repository config declares no scan and cancels a pending schedu
   assert.equal((await h.scheduled()).length,0);
   assert.equal(h.dispatches,0);
 });
+
+test("A038-03 a fully committed scan checkpoint is recognized after an interrupted sync-state write",async()=>{
+  const h=harness({steps:2});
+  await h.sync.declare();
+  // The P037 final checkpoint committed, but the event page was terminated
+  // before the P038 state CAS. This replay must not prepare desired state twice.
+  h.state.scanSequence=1;
+  h.state.lastCheckedAt=h.now;
+  h.state.lastSuccessfulScanAt=h.now;
+  const pass=await h.run();
+  assert.equal(pass.processed.length,1);
+  assert.equal(h.dispatches,0);
+  assert.equal(h.state.scanSequence,1);
+  assert.equal((await h.scheduled()).length,1);
+  assert.equal((await h.sync.readState()).value.lastCheckedAt,h.now);
+});
+test("A038-03 a missed callback that failed outside the repository step is re-declared",async()=>{
+  const h=harness();
+  await h.sync.declare();
+  const pending=(await h.scheduled())[0];
+  const row=await h.ctx.storage.namespace(TIMER_NAMESPACE).compareAndSwap(pending.value.timerId,{
+    expectedRevision:pending.revision,
+    value:{...pending.value,state:TIMER_STATES.MISSED,completedAt:h.now,missedReason:"delivery-failed"}
+  });
+  assert.equal(row.value.state,TIMER_STATES.MISSED);
+  await h.sync.declare();
+  assert.equal((await h.scheduled()).length,1);
+  assert.notEqual((await h.scheduled())[0].value.timerId,pending.value.timerId);
+  h.advance(1000);
+  await h.run();
+  assert.equal(h.dispatches,1);
+});
