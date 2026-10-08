@@ -27,6 +27,18 @@ async function unusedPort() {
 export const extensionLookup = `const extension = WebExtensionPolicy.getByID(arguments[0])?.extension;
   if (!extension) throw new Error('Extension is not installed');`;
 
+// Navigation resolves to a document, not to a permanent hash fragment. The
+// P032 router may canonicalize #/overview before Marionette reads location.href.
+// Still require the precise extension scheme, host, path and query to avoid
+// mistaking about:blank, an error page or another extension for a successful load.
+export function matchesExtensionDocumentUrl(actual, requested) {
+  try {
+    const a=new URL(actual), b=new URL(requested);
+    return a.protocol===b.protocol && a.host===b.host &&
+      a.pathname===b.pathname && a.search===b.search;
+  } catch { return false; }
+}
+
 export class PackagedFirefox {
   constructor({ firefoxBin, profilePath }) { this.firefoxBin = firefoxBin; this.profilePath = profilePath; }
   static async create({ firefoxBin = process.env.FIREFOX_BIN, root } = {}) {
@@ -98,15 +110,18 @@ export class PackagedFirefox {
     const extension = await this.extension(id);
     await this.client.command('Marionette:SetContext', { value: 'content' });
     const before = await this.client.command('WebDriver:GetWindowHandles');
+    const requestedUrl=new URL(path, extension.url).href;
     await this.client.script(`const tab = window.gBrowser.addTab(arguments[0], {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal() });
-      window.gBrowser.selectedTab = tab;`, [new URL(path, extension.url).href]);
+      window.gBrowser.selectedTab = tab;`, [requestedUrl]);
     await this.client.command('Marionette:SetContext', { value: 'content' });
     const after = await this.client.command('WebDriver:GetWindowHandles');
     const handle = (after.value ?? after).find(value => !(before.value ?? before).includes(value));
     if (!handle) throw new Error('Failed to open extension tab');
     await this.client.command('WebDriver:SwitchToWindow', { handle });
-    await waitFor(() => this.pageScript('return location.href === arguments[0]', [new URL(path, extension.url).href]), 'extension page navigation');
+    await waitFor(async () => matchesExtensionDocumentUrl(
+      await this.pageScript('return location.href'), requestedUrl
+    ), 'extension page navigation');
     return handle;
   }
   async closePage(handle) {
