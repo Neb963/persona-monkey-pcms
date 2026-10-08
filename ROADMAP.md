@@ -318,13 +318,13 @@ Merge wave: 14
 - [x] T034.3 — T034.3 Guarded rebind and visible-row route/session state
 
 ## P035 — Toolbar popup PCMS status block
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P028, P032  
 Merge wave: 14
 
-- [ ] T035.1 — T035.1 Read the non-secret storage.session status summary
-- [ ] T035.2 — T035.2 PCMS line and account-for-active-Persona deep link
-- [ ] T035.3 — T035.3 ESR sizing regression extension
+- [x] T035.1 — T035.1 Read the non-secret storage.session status summary
+- [x] T035.2 — T035.2 PCMS line and account-for-active-Persona deep link
+- [x] T035.3 — T035.3 ESR sizing regression extension
 
 ## P036 — Deployer v2 domain, Perchance contract v2 and Generators views
 Status: **ACCEPTED**  

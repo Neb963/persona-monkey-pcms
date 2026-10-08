@@ -34,7 +34,11 @@
 - Focused P035 packaged test `tests/pcms/p035/packaged.mjs` is invoked by the independent `verify` pipeline through the P035-owned upstream-integrity test entrypoint. CI run `37711608724` reported `✔ A035-01/A035-03 — packaged Firefox popup layout and account deep link` (12.77s) with 11/11 tests passing and zero skips. It operates against the packaged XPI and exact pinned browser with a disposable profile, not Firefox DevTools MCP.
 - The native toolbar panel itself and Firefox ESR 153 remain **not directly tested**. Existing static regression and pinned-FDE rendering evidence support the sizing invariant, but do not constitute a native ESR popup measurement.
 
-## Status
+## Merged-main verification and final acceptance
 
-Implementation is published in PR #48; claim and phase remain `PR_OPEN`.
-The targeted pinned-FDE popup rendering/navigation evidence is now recorded; final PR integration CI and the merge-state transition remain separate. No successor phase was started.
+- PR #48 merged to `main` at `d9724df03d4f34fc8e1254409a0c105164a961ce` (parents `93ac1cd2ce04ac82838415486456b05d03256fd6` and `c65e585c1e9c0057dc0fee9462bc809f7e77a764`).
+- Merged-main `verify` run [37768475568](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37768475568): **SUCCESS** for `d9724df03d4f34fc8e1254409a0c105164a961ce` (push).
+- Merged-main `firefox-developer-edition` run [37768475864](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37768475864): **SUCCESS** for `d9724df03d4f34fc8e1254409a0c105164a961ce` (push), including the pinned Firefox job and all packaged regression jobs.
+- A035-01, A035-02 and A035-03 have the U/SEC/pinned-FDE evidence listed above. These gates require pinned-FDE proof, not separate native ESR hardware acceptance.
+- Scope limit remains explicit: the popup document was tested in the packaged extension's managed-Persona iframe; native Firefox ESR toolbar-panel geometry was **not** directly measured. This is not reported as a performed test.
+- After green merged-main verification, `CLM-P035-001` epoch 1 and phase P035 are marked **ACCEPTED**. No successor phase was implemented.
