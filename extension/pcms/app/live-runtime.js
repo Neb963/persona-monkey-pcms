@@ -2,6 +2,7 @@
 // This module constructs no Core service: every call goes through pcms.ui-client/v1.
 import { createPcmsUiClient } from "./ui-client.js";
 import { createFirefoxPcmsUiTransport } from "../platform/firefox-ui-client-transport.js";
+import { PCMS_STATUS_KEY } from "../integration/ui-client-contract.js";
 
 let requestSequence=0;
 let personaDirectorySequence=0;
@@ -60,8 +61,15 @@ export function createLivePersonaDirectory(personaBroker) {
 }
 
 
+export async function readPcmsCachedStatus({transport=null}={}) {
+  const uiTransport=transport||createFirefoxPcmsUiTransport();
+  if(typeof uiTransport.readSession!=="function") return null;
+  return uiTransport.readSession(PCMS_STATUS_KEY);
+}
+
 export async function startPcmsLiveRuntime({transport=null}={}) {
-  const client=createPcmsUiClient({transport:transport||createFirefoxPcmsUiTransport()});
+  const uiTransport=transport||createFirefoxPcmsUiTransport();
+  const client=createPcmsUiClient({transport:uiTransport});
   try {
     const coreStatus=await client.status();
     if(coreStatus?.state!=="RUNNING") throw new Error("PCMS Core is "+String(coreStatus?.state||"unavailable"));
@@ -80,6 +88,8 @@ export async function startPcmsLiveRuntime({transport=null}={}) {
       brokerRevision:response.revision,
       personaDirectory:createLivePersonaDirectory(personaBroker),
       subscribe:client.subscribe,
+      subscribeReceipt:client.subscribeReceipt,
+      readCachedStatus:()=>typeof uiTransport.readSession==="function"?uiTransport.readSession(PCMS_STATUS_KEY):null,
       close:client.close
     });
   } catch(error) {

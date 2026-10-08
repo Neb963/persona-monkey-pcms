@@ -50,7 +50,22 @@ export function createPcmsUiClient({
     throw new TypeError("PCMS UI client requires a transport");
   }
   const unsubscribers=new Set();
+  const receiptListeners=new Set();
   let closed=false;
+
+  function emitReceipt(response,message){
+    const raw=response?.receipt;
+    if(!raw||typeof raw!=="object") return;
+    const receipt=Object.freeze({
+      receiptId:typeof raw.receiptId==="string"?raw.receiptId:null,
+      subject:typeof raw.subject==="string"?raw.subject:message.name,
+      status:typeof raw.status==="string"?raw.status:"UNKNOWN",
+      replayed:raw.replayed===true,
+      requestId:typeof response.requestId==="string"?response.requestId:message.requestId,
+      ok:response.ok===true
+    });
+    for(const listener of receiptListeners){try{listener(receipt);}catch{}}
+  }
 
   async function exchange(message){
     let lastError=null;
@@ -61,6 +76,7 @@ export function createPcmsUiClient({
       try{response=await withTimeout(Promise.resolve(transport.send(message)),timeoutMs,setTimeoutRef,clearTimeoutRef);}
       catch(error){lastError=error;continue;}
       if(!response||typeof response!=="object") throw remoteError({code:"PCMS_UI_PROTOCOL",message:"PCMS Core returned no response"});
+      emitReceipt(response,message);
       if(!response.ok) throw remoteError(response.error);
       return response;
     }
@@ -113,11 +129,17 @@ export function createPcmsUiClient({
       unsubscribers.add(unsubscribe);
       return ()=>{unsubscribers.delete(unsubscribe);unsubscribe();};
     },
+    subscribeReceipt(onReceipt){
+      if(typeof onReceipt!=="function") throw new TypeError("PCMS receipt listener is invalid");
+      receiptListeners.add(onReceipt);
+      return ()=>receiptListeners.delete(onReceipt);
+    },
     close(){
       if(closed) return;
       closed=true;
       for(const unsubscribe of unsubscribers) {try{unsubscribe();}catch{}}
       unsubscribers.clear();
+      receiptListeners.clear();
     }
   });
 }

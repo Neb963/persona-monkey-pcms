@@ -13,14 +13,22 @@
         <span class="eyebrow">PersonaMonkey PCMS</span>
         <h1>Perchance Central Management System</h1>
       </div>
+      <a class="header-search-link" href="#/search">Search PCMS</a>
       <div class="topbar-tools">
+        <div id="coreStatusPill" class="core-pill" role="status" aria-live="polite">Starting</div>
         <p id="notificationStatus" class="notification-status" role="status" aria-live="polite">Loading PCMS…</p>
         <a class="secondary-link" href="../../options/options.html">PersonaMonkey settings</a>
       </div>
     </header>
 
     <nav id="primaryNav" class="primary-nav" aria-label="PCMS"></nav>
-    <p id="liveActionStatus" class="module-status global-action-status" role="status" aria-live="polite">Live controls ready.</p>
+    <aside id="liveActionStatus" class="action-tray" aria-label="PCMS actions" aria-live="polite">
+      <div class="action-tray-head"><strong>Actions</strong><span id="actionTrayCount" class="badge"></span></div>
+      <div id="actionTrayDurableList" class="action-tray-list"></div>
+      <div id="actionTrayReceiptList" class="action-tray-list"></div>
+      <div id="actionTrayLocalList" class="action-tray-list"></div>
+      <p id="actionTrayEmpty" class="action-tray-empty">No actions need attention.</p>
+    </aside>
 
     <main class="content">
       <section id="viewOverview" aria-labelledby="overviewHeading">
@@ -34,19 +42,9 @@
           <article><strong id="overviewAccountCount">0</strong><span>Accounts</span></article>
           <article><strong id="overviewModuleCount">5</strong><span>Feature modules</span></article>
         </div>
-        <section class="core-status" aria-labelledby="coreStatusHeading">
-          <h3 id="coreStatusHeading">Live PCMS core</h3>
-          <dl>
-            <div><dt>Namespace</dt><dd id="namespaceVersion">—</dd></div>
-            <div><dt>Persona Broker contract</dt><dd id="brokerVersion">—</dd></div>
-            <div><dt>Broker commands</dt><dd id="commandCount">—</dd></div>
-            <div><dt>Broker implementation</dt><dd id="brokerImplementation">—</dd></div>
-            <div><dt>Live Integration v1</dt><dd id="brokerLiveStatus">Connecting…</dd></div>
-            <div><dt>Core host</dt><dd id="coreHostStatus">Background · connecting…</dd></div>
-          </dl>
-        </section>
+        <p class="diagnostics-link"><a href="#/settings/diagnostics">Open Settings → Diagnostics for Core and Broker details.</a></p>
 
-        <section class="core-status live-operations" aria-labelledby="recoveryHeading">
+        <section class="core-status live-operations" aria-labelledby="recoveryHeading">        <section class="core-status live-operations" aria-labelledby="recoveryHeading">
           <h3 id="recoveryHeading">Recovery & backup</h3>
           <p id="recoveryStatus" class="module-status">Loading recovery state…</p>
           <form id="backupCreateForm" class="live-form compact-form">
@@ -195,6 +193,37 @@
         </form>
         <div id="searchResults" class="item-list"></div>
         <p id="searchEmpty" class="empty-state">No matching projections.</p>
+      </section>
+
+      <section id="viewDiagnostics" hidden aria-labelledby="diagnosticsHeading">
+        <div class="section-heading">
+          <span class="eyebrow">Settings → Diagnostics</span>
+          <h2 id="diagnosticsHeading">Diagnostics</h2>
+          <p>Read-only technical state for the background Core and Persona Broker.</p>
+        </div>
+        <section class="core-status">
+          <dl>
+            <div><dt>Core state</dt><dd id="diagnosticCoreState">STARTING</dd></div>
+            <div><dt>Last Core summary</dt><dd id="diagnosticCoreAsOf">—</dd></div>
+            <div><dt>UI revision signal</dt><dd id="diagnosticUiRevision">—</dd></div>
+            <div><dt>Namespace</dt><dd id="namespaceVersion">—</dd></div>
+            <div><dt>Persona Broker contract</dt><dd id="brokerVersion">—</dd></div>
+            <div><dt>Broker commands</dt><dd id="commandCount">—</dd></div>
+            <div><dt>Broker implementation</dt><dd id="brokerImplementation">—</dd></div>
+            <div><dt>Broker boot ID</dt><dd id="diagnosticBrokerBootId">—</dd></div>
+            <div><dt>Broker revision</dt><dd id="diagnosticBrokerRevision">—</dd></div>
+            <div><dt>Live Integration v1</dt><dd id="brokerLiveStatus">Connecting…</dd></div>
+            <div><dt>Core host</dt><dd id="coreHostStatus">Background · connecting…</dd></div>
+          </dl>
+        </section>
+      </section>
+
+      <section id="viewPlaceholder" hidden aria-labelledby="placeholderHeading">
+        <div class="section-heading">
+          <span class="eyebrow">PCMS v2</span>
+          <h2 id="placeholderHeading">PCMS</h2>
+          <p id="placeholderBody"></p>
+        </div>
       </section>
     </main>
 

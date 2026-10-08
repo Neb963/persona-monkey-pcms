@@ -12,6 +12,7 @@ export const PCMS_UI_REVISION_KEY="pcms.ui.revision";
 export const PCMS_STATUS_KEY="pcms.status.v1";
 
 export const PCMS_UI_TOPICS=Object.freeze(["core","attention","accounts","modules","recovery"]);
+export const PCMS_UI_MAX_RECEIPT_LIST=20; // Bounded, secret-safe dashboard projections
 
 export const PCMS_UI_ERROR_CODES=Object.freeze({
   INVALID_REQUEST:"PCMS_UI_INVALID_REQUEST",
@@ -34,6 +35,7 @@ function command(arity,topics,{retainResult=true}={}){
 // services validate the values themselves.
 export const PCMS_UI_OPERATIONS=Object.freeze({
   "core.status":query(0),
+  "uiReceipts.list":query(0), // Read-only Core-owned receipt summaries
   "broker.request":query(1),
   "uiProjection.snapshot":query(1),
 

@@ -1,11 +1,32 @@
 import { sha256Hex } from "../providers/perchance/contract.js";
 
+const ACTION_LABELS=Object.freeze({
+  accountCreateForm:"Creating account binding",
+  accountRebindForm:"Rebinding account Persona",
+  explorerLiveForm:"Recording Explorer discovery",
+  deployerLiveForm:"Deploying generator",
+  refresherLiveForm:"Refreshing generator",
+  provisioningLiveForm:"Advancing provisioning",
+  backupCreateForm:"Creating backup",
+  restoreApplyForm:"Applying restore",
+  recoveryReleaseForm:"Checking recovery hold"
+});
+
 function value(form,name){return String(new FormData(form).get(name)||"").trim();}
-function setStatus(documentRef,message,state=""){
-  const node=documentRef.getElementById("liveActionStatus");
-  if(!node)return;
+function setStatus(documentRef,message,state="",key="system"){
+  const list=documentRef.getElementById("actionTrayLocalList")||documentRef.getElementById("liveActionStatus");
+  if(!list)return;
+  let node=[...list.children].find((child)=>child.dataset?.actionKey===key);
+  if(!node){
+    node=documentRef.createElement("div");
+    node.className="action-local";
+    node.dataset.actionKey=key;
+    list.prepend(node);
+  }
   node.textContent=message;
   node.dataset.state=state;
+  const empty=documentRef.getElementById("actionTrayEmpty");
+  if(empty)empty.hidden=true;
 }
 function errorMessage(error){
   // ADR-002 §9: an assisted provider step is handed off, so its outcome is not known yet.
@@ -32,14 +53,15 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
       const submit=node?.querySelector?.('button[type="submit"]');
       if(submit)submit.disabled=true;
       node?.setAttribute?.("aria-busy","true");
-      setStatus(documentRef,"Working…");
+      const actionLabel=ACTION_LABELS[id]||"PCMS action";
+      setStatus(documentRef,actionLabel+"…","active",id);
       try{
         const result=await run(node,event);
-        setStatus(documentRef,result||"Operation completed.","connected");
+        setStatus(documentRef,result||actionLabel+" completed.","connected",id);
         await refresh();
       }catch(error){
         console.error(error);
-        setStatus(documentRef,errorMessage(error),"error");
+        setStatus(documentRef,errorMessage(error),"error",id);
       }finally{
         node?.removeAttribute?.("aria-busy");
         if(submit)submit.disabled=false;
