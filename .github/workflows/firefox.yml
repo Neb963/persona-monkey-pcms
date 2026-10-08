@@ -82,6 +82,9 @@ jobs:
       - name: Verify P036 Deployer v2 migration, status table, Perchance driver v2 and Generators deploy flow
         run: npm run test:p036
 
+      - name: Verify P037 repository provider, immutable releases and durable manual scans
+        run: npm run test:p037
+
       - name: Install and drive packaged XPI, lifecycle and platform probes
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
