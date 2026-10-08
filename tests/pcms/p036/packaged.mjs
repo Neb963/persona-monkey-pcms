@@ -45,7 +45,7 @@ async function page(code, args = []) {
   const result = await h.pageScript(`const done = arguments[arguments.length - 1];
     (async () => { const api = window.wrappedJSObject.browser; ${code} })()
       .then(value => done({ ok: true, value: JSON.parse(JSON.stringify(value ?? null)) }),
-        error => done({ ok: false, error: String(error && error.stack || error) }));`, args, { async: true });
+        error => done({ ok: false, error: String(error && error.message || error) + "\n" + String(error && error.stack || "") }));`, args, { async: true });
   if (!result.ok) throw new Error(result.error);
   return result.value;
 }

@@ -107,8 +107,8 @@ export async function generatorsViewFlow({ base, documentRef, windowRef, hostId 
   const q = (selector) => host.querySelector(selector);
   const qa = (selector) => [...host.querySelectorAll(selector)];
   const wait = async (predicate, label) => {
-    for (let index = 0; index < 200; index += 1) { if (predicate()) return; await new Promise((resolve) => setTimeout(resolve, 25)); }
-    throw new Error("timed out: " + label + " · " + host.textContent.slice(0, 400));
+    for (let index = 0; index < 400; index += 1) { if (predicate()) return; await new Promise((resolve) => setTimeout(resolve, 25)); }
+    throw new Error("timed out: " + label + " · feedback: " + (q(".generators-feedback")?.textContent || "") + " · dialog: " + (q(".generators-dialog-status")?.textContent || "") + " · " + host.textContent.slice(0, 400));
   };
   const out = { steps:[] };
 

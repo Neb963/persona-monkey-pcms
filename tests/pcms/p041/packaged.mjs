@@ -135,8 +135,9 @@ async function typeInto(selector, value) {
   await h.pageScript(`const node = document.querySelector(arguments[0]); node.value = arguments[1];
     node.dispatchEvent(new Event("input", { bubbles: true })); return true;`, [selector, value]);
 }
-async function approveDialog(kind, label) {
+async function approveDialog(kind, label, beforeAccept = async () => {}) {
   const state = await until((d) => d.dialog && !d.dialog.hidden && d.dialog.kind === kind, label);
+  await beforeAccept(state);
   await click("[data-module-dialog] [data-dialog-accept]");
   return state;
 }
@@ -167,11 +168,13 @@ try {
   const nonce = randomBytes(16).toString("hex");
   const v1Caps = FIXTURE_CAPABILITIES.filter((cap) => !cap.startsWith("module.attention."));
   await chooseFile("[data-module-install]", ID + "-1.0.0.json", buildCounterArchiveText({ version: "1.0.0", nonce, capabilities: v1Caps }));
-  state = await approveDialog("review", "install review dialog");
+  // Checked while the review is still open: after Accept the frame may start at any moment.
+  state = await approveDialog("review", "install review dialog", async () => {
+    assert.deepEqual(await frames(), [], "nothing runs before approval");
+  });
   assert.equal(state.dialog.title, "Install " + ID + " 1.0.0");
   assert.deepEqual(state.dialog.capabilities.map((item) => item.capability).sort(), [...v1Caps].sort());
   assert.ok(state.dialog.capabilities.every((item) => item.added && /^New: can /.test(item.text)), JSON.stringify(state.dialog.capabilities));
-  assert.deepEqual(await frames(), [], "nothing runs before approval");
   state = await until((d) => row(d)?.version === "1.0.0" && /^(Active|Ready)/.test(row(d).state), "installed module active");
   let live = await waitFor(async () => { const f = await frames(); return f.length === 1 ? f : null; }, "module frame in background", 20000);
   assert.equal(live[0].module, ID);
