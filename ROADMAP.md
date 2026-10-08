@@ -381,7 +381,7 @@ Merge wave: 16
 - [x] T041.3 — T041.3 Modules page driving live install/review/update/rollback/remove/purge
 
 ## P042 — Unattended Perchance automation via PersonaMonkey execution artifacts (gated)
-Status: **BLOCKED**  
+Status: **CLAIMED**  
 Depends on: P039  
 Merge wave: 20
 

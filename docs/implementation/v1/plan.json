@@ -1948,7 +1948,7 @@
     {
       "id": "P042",
       "title": "Unattended Perchance automation via PersonaMonkey execution artifacts (gated)",
-      "status": "BLOCKED",
+      "status": "CLAIMED",
       "dependsOn": [
         "P039"
       ],
@@ -1959,11 +1959,22 @@
           "extension/pcms/integration/**",
           "pcms-modules/p015/**",
           "tests/pcms/p042/**",
-          "docs/evidence/P042/**"
+          "docs/evidence/P042/**",
+          "extension/pcms/background/core-factory.js",
+          "tests/pcms/p015/**",
+          "package.json",
+          ".github/workflows/firefox.yml"
         ],
         "contractReads": [],
-        "contractWrites": [],
-        "resources": [],
+        "contractWrites": [
+          "pcms.perchance.driver/v2"
+        ],
+        "resources": [
+          {
+            "key": "ci-workflows",
+            "mode": "exclusive"
+          }
+        ],
         "migrationSlots": []
       },
       "tasks": [
