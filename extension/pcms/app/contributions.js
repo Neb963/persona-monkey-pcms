@@ -133,6 +133,13 @@ export function modulePageModel(snapshot,route){
   });
 }
 
+// When the module page must be rendered again. A running frame is kept across revision
+// refreshes; state pages (disabled, removed, missing, …) carry no actions.
+export function modulePageRenderKey(route,model,module){
+  return [route.href,model.kind,model.state||"",module?.version??"",
+    model.kind==="frame"?"":JSON.stringify([model.summary??null,model.banner??null,model.message??null,(model.actions||[]).map((action)=>action.held)])].join("|");
+}
+
 export function settingsModuleRows(snapshot){
   return contributionModules(snapshot).map((item)=>Object.freeze({
     moduleId:item.moduleId,

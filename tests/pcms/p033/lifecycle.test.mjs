@@ -7,6 +7,7 @@ import {
   contributionNavItems,
   humanTaskModuleState,
   modulePageModel,
+  modulePageRenderKey,
   overviewModuleCards
 } from "../../../extension/pcms/app/contributions.js";
 import { PCMS_UI_PRESENTATION as P, createPcmsUiContributionHost } from "../../../extension/pcms/integration/ui-contributions.js";
@@ -87,8 +88,13 @@ test("A033-03 I disabled, removed and purged runtime modules leave the shell saf
   await installBoard(ctx.core);
   await ctx.core.humanTasks.open({ taskId: "board-review", taskKind: "test.board", title: "Look at the board", instructions: "", priority: "NORMAL", subjectRef: { kind: "module", id: BOARD_ID } });
 
+  const activeRoute = { href: "#/m/" + BOARD_ID, moduleId: BOARD_ID, view: null, objectId: null };
+  const activeKey = modulePageRenderKey(activeRoute, page(await ctx.ui.snapshot()), byId(await ctx.ui.snapshot(), BOARD_ID));
   await ctx.core.modules.disable(BOARD_ID);
   let snapshot = await ctx.ui.snapshot();
+  // Packaged-Firefox regression: a state page (no actions) must still get a new render key.
+  const disabledKey = modulePageRenderKey(activeRoute, page(snapshot), byId(snapshot, BOARD_ID));
+  assert.notEqual(disabledKey, activeKey);
   assert.equal(contributionNavItems(snapshot).some((item) => item.moduleId === BOARD_ID), false, "hidden from navigation");
   assert.equal(overviewModuleCards(snapshot).some((card) => card.moduleId === BOARD_ID), false);
   assert.equal((await ctx.ui.search("boardcard", 20)).hits.length, 0, "omitted from search");

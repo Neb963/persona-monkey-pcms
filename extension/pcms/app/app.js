@@ -15,6 +15,7 @@ import {
   legacyModuleIds,
   mergeSearchResults,
   modulePageModel,
+  modulePageRenderKey,
   overviewModuleCards,
   routableModuleIds,
   settingsModuleRows
@@ -536,8 +537,7 @@ export function mountPcmsApp({
     if(!modulePage||route.route!=="module"||routeView(route,contributions)!=="modulePage") return;
     const model=modulePageModel(contributions,route);
     const module=findContribution(contributions,route.moduleId);
-    const key=[route.href,model.kind,model.state||"",module?.version??"",
-      model.kind==="frame"?"":JSON.stringify([model.summary,model.banner,model.actions.map((action)=>action.held)])].join("|");
+    const key=modulePageRenderKey(route,model,module);
     // A frame keeps running across revision refreshes; it is remounted only when its route,
     // presentation state or module version changes (not on a lazy re-activation).
     if(key===modulePageKey) return;
