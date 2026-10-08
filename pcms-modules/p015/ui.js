@@ -13,7 +13,7 @@ export function createUiContribution({moduleId="deployer",service}={}){
       {key:"ref",label:"Branch or tag",kind:"text",required:true,maxLength:200,default:"main"},
       {key:"root",label:"Root folder (optional)",kind:"text",maxLength:256},
       {key:"listing",label:"Default listing",kind:"choice",required:true,options:[
-        {id:"UNLISTED",label:"Unlisted"},{id:"PUBLICLY_LISTED",label:"Publicly listed"}]}
+        {id:"unlisted",label:"Unlisted"},{id:"public",label:"Publicly listed"}]}
     ]},
     {id:"check",label:"Check now",appliesTo:"module",risk:"LOCAL"},
     {id:"continue",label:"Continue scan",appliesTo:"module",risk:"LOCAL"},
@@ -88,7 +88,7 @@ export function createUiContribution({moduleId="deployer",service}={}){
       }
       if(actionId==="connect"){
         const current=await service.read();
-        await service.configure({expectedRevision:current.revision,defaultListing:input.listing,
+        await service.configure({expectedRevision:current.revision,defaultListing:input.listing==="public"?"PUBLICLY_LISTED":"UNLISTED",
           config:{provider:"github",owner:input.owner,repo:input.repo,ref:input.ref,root:input.root??"",
             access:{kind:"public"},network:"default"}});
         return receipt("Repository configured. Select Check now to read the pinned commit.");
