@@ -69,6 +69,7 @@ try{
  const lastHref=fixtureRoot.querySelector(".accounts-table tbody a").getAttribute("href");
  await view.render({accounts,revision:52,route:{id:"acct-01",filter:""}});
  const details=fixtureRoot.querySelector(".accounts-details")?.textContent||"";
+ const heading=fixtureRoot.querySelector(".accounts-detail h3")?.textContent||"";
  fixtureRoot.querySelector('[data-accounts-action="rebind"]').click();
  await new Promise(r=>setTimeout(r,0));
  const blocked=fixtureRoot.querySelector(".accounts-dialog-status")?.textContent||"";
@@ -80,12 +81,13 @@ try{
  const generated=fixtureRoot.querySelector(".accounts-advanced input")?.readOnly===true;
  const personaPicker=fixtureRoot.querySelector('.entity-picker [role="listbox"]')!==null;
  view.destroy();fixtureRoot.remove();original.id="accountsV2";
- return {first,second,third,initialSummary,lastHref,details,blocked,disabled,freeText,generated,personaPicker};
+ return {first,second,third,initialSummary,lastHref,heading,details,blocked,disabled,freeText,generated,personaPicker};
  `);
  assert.deepEqual([result.first,result.second,result.third],[25,25,2]);
  assert.match(result.initialSummary,/52 account/);
  assert.equal(result.lastHref,"#/accounts/acct-51");
- assert.match(result.details,/Account 01/);
+ assert.equal(result.heading,"Account 01");
+ assert.match(result.details,/acct-01/);
  assert.match(result.details,/Unknown/);
  assert.match(result.blocked,/unresolved operation/i);
  assert.equal(result.disabled,true);

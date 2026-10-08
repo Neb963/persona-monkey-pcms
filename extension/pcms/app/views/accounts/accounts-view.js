@@ -1,4 +1,5 @@
 import {createEntityPicker} from "../../ui/picker/entity-picker.js";
+import {pcmsV2Href} from "../../router-v2.js";
 import {suggestedAccountId,validateAccountDraft,visibleAccountPage,summarizePersona,unresolvedRebindReason} from "./model.js";
 const LIMIT=64;
 function e(doc,tag,cls,text){const n=doc.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
@@ -212,10 +213,11 @@ export function createPcmsAccountsView({documentRef,windowRef,runtime,onChanged=
   host.addEventListener("click",onClick);documentRef.addEventListener("keydown",onKey);
   search.addEventListener("input",()=>{page=1;draw();});
   sort.addEventListener("change",()=>{page=1;draw();});
-  filter.addEventListener("change",()=>{page=1;draw();});
+  filter.addEventListener("change",()=>{page=1;windowRef.location.hash=pcmsV2Href("accounts",{filter:filter.value});});
   return Object.freeze({
     async render({accounts:nextAccounts,revision:nextRevision,route:nextRoute}){
       if(dead)return;
+      if(nextRoute?.route&&nextRoute.route!=="accounts")return; // No account-directory scans on unrelated routes.
       const generation=++renderEpoch;
       accounts=Array.isArray(nextAccounts)?nextAccounts:[];revision=nextRevision;route=nextRoute;
       if(lastRoute!==route.id){page=1;lastRoute=route.id;}
