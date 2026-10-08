@@ -1,7 +1,7 @@
 # P033 evidence — Module UI contribution contract v1 for built-in and runtime modules
 
 Claim `CLM-P033-001` (epoch 1), base `9717eb215c7485bda84830d4a69c9cb610df0b76`.
-State: **CI_VERIFIED** on PR head `a4e8d971a34efd67af15d58c4e3f680e7f31f0c4` (PR #53; not yet MERGED or ACCEPTED).
+State: **ACCEPTED** — merged to `main` as `06cd88c26ecac403eaf9a35adedf30baefcc89ad` (PR #53) with green merged-main CI.
 
 ## What shipped
 
@@ -102,3 +102,10 @@ The first packaged runs found three defects; each is now a deterministic Node re
    page (`lifecycle.test.mjs`, `modulePageRenderKey`).
 3. A purged module's deep link was pre-resolved against built-in ids and redirected to Overview
    (`lifecycle.test.mjs`, `routableModuleIds` with the hash).
+
+## Merged-main CI (MERGED → ACCEPTED)
+
+Merge commit `06cd88c26ecac403eaf9a35adedf30baefcc89ad` on `main` (PR #53):
+
+- `firefox-developer-edition` run `37754190065` — success (`pinned-firefox` incl. `test:p033`, `p031`/`p032`/`p033`/`p034` packaged jobs).
+- `verify` run `37754190213` — success (`npm run verify` incl. `test:p033`).
