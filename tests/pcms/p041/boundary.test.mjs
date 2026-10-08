@@ -35,6 +35,8 @@ test("A041 shell wiring: Backup & restore and Modules management are mounted in 
   assert.match(html, /views\/settings\/settings\.css/);
   assert.match(app, /createPcmsSettingsView/);
   assert.match(app, /section==="backup"&&settingsBackup\) return "settingsBackup"/);
-  // Inherited P026 IDs stay until P040 removes them; their restore now fails closed in Core.
-  assert.match(html, /id="restoreApplyForm"/);
+  // P040 superseded the inherited P026 restore form: restore is only the previewed,
+  // typed-confirmation flow of Settings → Backup & restore, and the legacy form is gone.
+  assert.doesNotMatch(html, /id="restoreApplyForm"|id="backupPayload"/);
+  assert.match(html, /id="settingsBackup"/);
 });

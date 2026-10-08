@@ -35,15 +35,34 @@ const uiQuery = (name, args = []) => page(`return api.runtime.sendMessage({type:
   requestId:'ci-'+Date.now(),kind:'query',name:arguments[0],params:{args:arguments[1]}});`, [name, args]);
 const sessionValue = (key) => page('return api.storage.session.get(arguments[0]).then(v => v[arguments[0]] ?? null);', [key]);
 const switchTo = (handle) => h.client.command('WebDriver:SwitchToWindow', { handle });
+// P040 (A040-03): the P026 legacy forms are gone. Every feature module now contributes a live
+// page through Core (pcms.ui-contribution/v1), and backups are taken from Settings → Backup.
+const FEATURE_MODULES = ['deployer', 'refresher', 'explorer', 'statistics', 'provisioning'];
+const LEGACY_FORM_IDS = ['accountCreateForm', 'accountRebindForm', 'explorerLiveForm', 'deployerLiveForm',
+  'refresherLiveForm', 'provisioningLiveForm', 'backupCreateForm', 'restoreApplyForm', 'recoveryReleaseForm'];
 async function dashboard() {
   const handle = await h.openPage(PRODUCT, 'pcms/app/index.html');
   await waitFor(() => h.pageScript('return document.getElementById("brokerLiveStatus")?.dataset.state === "connected"'), 'packaged PCMS connects');
-  await waitFor(() => h.pageScript(`return ['Explorer','Deployer','Refresher','Statistics','Provisioning'].every(
-    name => document.getElementById('module'+name+'Status')?.dataset.state === 'connected');`), 'all packaged feature modules connect');
-  assert.equal(await h.pageScript(`return ['accountCreateForm','accountRebindForm','explorerLiveForm',
-    'deployerLiveForm','refresherLiveForm','provisioningLiveForm','backupCreateForm','restoreApplyForm',
-    'recoveryReleaseForm'].every(id => !!document.getElementById(id));`), true);
+  await waitFor(async () => {
+    const snapshot = await uiQuery('ui.snapshot');
+    const modules = snapshot.ok ? snapshot.result.modules : [];
+    return FEATURE_MODULES.every((id) => modules.some((m) => m.moduleId === id && m.presentation?.included === true && m.summary !== null));
+  }, 'all packaged feature modules contribute live pages');
+  assert.equal(await h.pageScript('return arguments[0].some(id => !!document.getElementById(id));', [LEGACY_FORM_IDS]), false);
+  assert.equal(await h.pageScript('return !!document.getElementById("settingsBackup") && !!document.getElementById("accountsV2");'), true);
   return handle;
+}
+// The P026/P028 backup check, driven through Settings → Backup & restore (P041).
+async function backupFromSettings() {
+  await h.pageScript('window.location.hash = "#/settings/backup";');
+  await waitFor(() => h.pageScript('return document.getElementById("viewSettingsBackup")?.hidden === false && !!document.querySelector("[data-backup-create]");'),
+    'Settings → Backup & restore renders');
+  const before = await h.pageScript('return document.querySelector("[data-backup-download]")?.href ?? null;');
+  await h.pageScript('document.querySelector("[data-backup-create]").click();');
+  await waitFor(() => h.pageScript('const n = document.querySelector("[data-backup-download]"); return !!n && n.href !== arguments[0];', [before]),
+    'packaged IndexedDB backup');
+  const text = await page('const href = document.querySelector("[data-backup-download]").href; return (await fetch(href)).text();');
+  return JSON.parse(text);
 }
 try {
   if (process.env.CI) assert.equal(report.osContentSandboxDisabled, false, 'CI acceptance must enable the OS content sandbox');
@@ -57,9 +76,8 @@ try {
   let tab = await dashboard();
   const product = await h.extension(PRODUCT);
   assert.equal(product.manifestVersion, 3); assert.equal(product.persistent, false);
-  await h.pageScript('document.getElementById("backupCreateForm").requestSubmit();');
-  await waitFor(() => h.pageScript('return document.getElementById("backupPayload").value.length > 0;'), 'packaged IndexedDB backup');
-  assert.equal(await h.pageScript('try { JSON.parse(document.getElementById("backupPayload").value); return true; } catch { return false; }'), true);
+  const firstBackup = await backupFromSettings();
+  assert.equal(firstBackup.kind, 'pcms-backup');
   report.checks.packagedIndexedDbBackup = true;
   await page('await api.storage.local.set({p027CiMarker:"installed-once"});');
 
@@ -82,8 +100,8 @@ try {
   assert.equal(secondCore.result.constructedCores, 1, 'a second dashboard never constructs another Core');
   assert.equal(secondCore.result.recoveryState, 'NORMAL', 'a second dashboard never triggers recovery');
   assert.deepEqual(await sessionValue('pcms.core.session'), coreSession);
-  await h.pageScript('document.querySelector("#backupCreateForm input[name=backupId]").value = "p028-second-tab"; document.getElementById("backupCreateForm").requestSubmit();');
-  await waitFor(() => h.pageScript('return document.getElementById("backupPayload").value.includes("p028-second-tab");'), 'second-tab command');
+  const secondBackup = await backupFromSettings();
+  assert.notEqual(secondBackup.backupId, firstBackup.backupId, 'second-tab command');
   await switchTo(tab);
   await waitFor(() => h.pageScript('return Number(document.body.dataset.pcmsRevision) > arguments[0];', [tabRevision]),
     'first dashboard refreshes on the other tab\'s command');

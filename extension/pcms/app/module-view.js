@@ -170,6 +170,19 @@ export async function renderModulePage(documentRef,container,model,ops){
     container.appendChild(bar);
   }
 
+  if(model.kind!=="frame"&&(model.listViews?.length||0)>1){
+    const tabs=el(documentRef,"nav","module-view-tabs");
+    tabs.setAttribute("aria-label",model.title+" views");
+    for(const item of model.listViews){
+      const link=el(documentRef,"a",null,item.title);
+      link.href="#/m/"+encodeURIComponent(model.moduleId)+"/"+encodeURIComponent(item.id);
+      link.dataset.viewId=item.id;
+      if(model.view?.id===item.id) link.setAttribute("aria-current","page");
+      tabs.appendChild(link);
+    }
+    container.appendChild(tabs);
+  }
+
   if(model.kind==="frame"){
     const frameContainer=el(documentRef,"div","module-frame-container");
     frameContainer.id="moduleFrameContainer";
@@ -221,6 +234,15 @@ export async function renderModulePage(documentRef,container,model,ops){
       const detail=await ops.getDetail(model.moduleId,model.view.id,model.objectId);
       section.appendChild(el(documentRef,"h3",null,detail.title));
       if(detail.status) section.appendChild(statusPill(documentRef,detail.status.token,detail.status.label));
+      // P040: the detail view's declared actions act on this module object.
+      const objectActions=(model.view.actions||[]).map((id)=>(model.allActions||[]).find((action)=>action.id===id))
+        .filter((action)=>action&&action.appliesTo==="module-object:"+model.view.id);
+      if(objectActions.length){
+        const bar=el(documentRef,"div","module-actions module-object-actions");
+        const target={kind:"module-object",moduleId:model.moduleId,view:model.view.id,id:model.objectId};
+        for(const action of objectActions) bar.appendChild(actionButton(documentRef,action,(chosen)=>ops.run(chosen,target)));
+        section.appendChild(bar);
+      }
       for(const part of detail.sections){
         section.appendChild(el(documentRef,"h4",null,part.title));
         section.appendChild(factsList(documentRef,part.facts));

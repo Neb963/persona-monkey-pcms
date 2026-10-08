@@ -35,7 +35,25 @@ export const PCMS_UI_CONFIRM_RISKS=Object.freeze(["EXTERNAL_MUTATION","BINDING",
 export const PCMS_UI_HOLD_BLOCKED_RISKS=Object.freeze(["EXTERNAL_MUTATION","BINDING","DESTRUCTIVE"]);
 export const PCMS_UI_ENTITY_KINDS=Object.freeze(["account","generator","persona","module","module-object"]);
 export const PCMS_UI_FACET_KINDS=Object.freeze(["account","generator"]);
-export const PCMS_UI_INPUT_KINDS=Object.freeze(["text","integer","choice","boolean","entity","file"]);
+export const PCMS_UI_INPUT_KINDS=Object.freeze(["text","integer","choice","boolean","entity","file","secret"]);
+// P040 (additive): a `secret` action field travels from the dashboard as {"$pcmsSecret": value} so
+// every hop can recognise and redact it; only a built-in module (background Core, in process)
+// receives the value, once, to hand it to the dedicated secret host. Never a setting, never a
+// preview input, never offered to a runtime module.
+export const PCMS_UI_SECRET_ENVELOPE_KEY="$pcmsSecret";
+export const PCMS_UI_SECRET_MAX_LENGTH=4096;
+export function wrapPcmsUiSecret(value){return Object.freeze({[PCMS_UI_SECRET_ENVELOPE_KEY]:value});}
+export function isPcmsUiSecretEnvelope(value){
+  return Boolean(value)&&typeof value==="object"&&!Array.isArray(value)&&Object.keys(value).length===1
+    &&Object.hasOwn(value,PCMS_UI_SECRET_ENVELOPE_KEY)&&typeof value[PCMS_UI_SECRET_ENVELOPE_KEY]==="string";
+}
+// Replaces every secret envelope in JSON data with a fixed marker (receipt hashing, logging).
+export function redactPcmsUiSecrets(value,depth=0){
+  if(depth>48||value===null||typeof value!=="object") return value;
+  if(isPcmsUiSecretEnvelope(value)) return {[PCMS_UI_SECRET_ENVELOPE_KEY]:"[redacted]"};
+  if(Array.isArray(value)) return value.map((item)=>redactPcmsUiSecrets(item,depth+1));
+  return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,redactPcmsUiSecrets(item,depth+1)]));
+}
 export const PCMS_UI_SETTING_KINDS=Object.freeze(["text","integer","choice","boolean","entity","duration"]);
 export const PCMS_UI_COLUMN_KINDS=Object.freeze(["text","status","time","count","entity"]);
 
@@ -233,6 +251,10 @@ function inputField(value,label,kinds){
     out.maxBytes=integer(raw.maxBytes??L.fileInputBytes,label+".maxBytes",1,L.fileInputBytes);
     if(raw.accept!==undefined) out.accept=pcmsUiText(raw.accept,80,label+".accept");
   }
+  if(kind==="secret"){
+    out.maxLength=integer(raw.maxLength??1024,label+".maxLength",1,PCMS_UI_SECRET_MAX_LENGTH);
+    if(raw.default!==undefined) invalid(label+".default is not allowed for a secret");
+  }
   if(raw.default!==undefined) out.default=coercePcmsUiFieldValue(out,raw.default,label+".default");
   return Object.freeze(out);
 }
@@ -255,6 +277,16 @@ export function coercePcmsUiFieldValue(field,value,label=field.key){
   if(field.kind==="file"){
     if(typeof value!=="string"||new TextEncoder().encode(value).byteLength>field.maxBytes||value.includes("\u0000")) invalid(label+" is invalid");
     return value;
+  }
+  if(field.kind==="secret"){
+    // Only the envelope is accepted, so a secret can never arrive as an unredactable plain string.
+    if(!isPcmsUiSecretEnvelope(value)) invalid(label+" is invalid");
+    const secret=value[PCMS_UI_SECRET_ENVELOPE_KEY];
+    if(secret.length<1||secret.length>field.maxLength||secret.includes("\u0000")){
+      if(field.required||secret.length>0) invalid(label+" is invalid");
+      return null;
+    }
+    return secret;
   }
   invalid(label+" is invalid");
 }
@@ -291,13 +323,15 @@ function actionSpec(value,label){
     bulk=Object.freeze({max:integer(item.max,label+".bulk.max",1,50)});
   }
   if(raw.preview!==undefined&&typeof raw.preview!=="boolean") invalid(label+".preview is invalid");
+  const input=inputSpec(raw.input,label+".input");
+  if(input?.some((field)=>field.kind==="secret")&&(raw.preview===true||bulk!==false)) invalid(label+" with a secret field cannot have a preview or bulk mode");
   return Object.freeze({
     id:raw.id,
     label:pcmsUiText(raw.label,L.label,label+".label"),
     appliesTo,
     risk:oneOf(raw.risk,PCMS_UI_ACTION_RISKS,label+".risk"),
     bulk,
-    input:inputSpec(raw.input,label+".input"),
+    input,
     preview:raw.preview===true
   });
 }
@@ -359,6 +393,7 @@ export function normalizePcmsUiDescriptor(value,{moduleId,kind="builtin"}={}){
   const actions=Object.freeze(list(raw.actions??[],"descriptor.actions",L.actions).map((item,index)=>actionSpec(item,"actions["+index+"]")));
   const actionIds=actions.map((action)=>action.id);
   if(new Set(actionIds).size!==actionIds.length) invalid("descriptor.actions has duplicate ids");
+  if(kind!=="builtin"&&actions.some((action)=>action.input?.some((field)=>field.kind==="secret"))) invalid("descriptor.actions: only built-in modules may take secret input");
   let nav=null;
   if(raw.nav!==null&&raw.nav!==undefined){
     const item=record(raw.nav,"descriptor.nav",["label"],["order","statusFrom"]);

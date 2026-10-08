@@ -16,6 +16,16 @@ import { createGithubRepositoryProvider } from "../providers/repository/github.j
 import { createSecretStore } from "../secrets/secret-store.js";
 import { createNativeSecretBackend, createFirefoxNativeSecretTransport } from "../secrets/native-secret-backend.js";
 import { createIntegrationRecoveryChecks } from "./recovery-checks.js";
+import { createRemoteOperationCanceller, createUnattendedRefreshCapability } from "./refresher-background.js";
+
+// Secrets are created and resolved in the privileged background only, through the dedicated
+// secret host; values never enter PCMS storage, receipts, audit or dashboard results.
+export function createNativeSecretStoreSession(){
+  const runtime=globalThis.browser?.runtime;
+  if(!runtime)throw new TypeError("Dedicated secret host is unavailable");
+  return createSecretStore({backend:createNativeSecretBackend({
+    sendNativeMessage:createFirefoxNativeSecretTransport(runtime)})});
+}
 
 export const PCMS_INTEGRATION_NAMESPACES=Object.freeze({
   accounts:"module.accounts",
@@ -71,6 +81,7 @@ export function createPcmsModuleIntegration({
   statisticsDefinitions=[],
   providerProbes=[],
   repositoryProvider=null,
+  secretStoreFactory=createNativeSecretStoreSession,
   clock=()=>new Date().toISOString()
 }={}) {
   if(!storageBroker||typeof storageBroker.namespace!=="function")throw new TypeError("PCMS integration requires storage");
@@ -83,6 +94,7 @@ export function createPcmsModuleIntegration({
   requireMethods(moduleRuntime,["listStates","prepareUpdate","recoverAll"],"Module runtime");
   const factories=normalizeFactories(featureFactories);
   if(typeof clock!=="function")throw new TypeError("PCMS integration clock is invalid");
+  if(typeof secretStoreFactory!=="function")throw new TypeError("PCMS secret store factory is invalid");
   if(!plain(provisioning))throw new TypeError("Provisioning integration is invalid");
   requireMethods(provisioning.sessionGuard,["acquire","validate","release"],"Provisioning session guard");
   requireMethods(provisioning.providerSession,["preflight"],"Provisioning provider session");
@@ -143,22 +155,21 @@ export function createPcmsModuleIntegration({
   });
 
   // P037: repository-only durable state, separate from the accepted Deployer
-  // v2 migration and independent of runtime sandbox modules.
+  // v2 migration and independent of runtime sandbox modules. The provider is shared with the
+  // Refresher, which reads the Deployer-confirmed release from the same pinned commit (P040).
+  const sharedRepositoryProvider=factories.repository?(repositoryProvider??createGithubRepositoryProvider({
+    // Secrets are resolved in the privileged background only, never stored in the
+    // repository state or returned to dashboard clients.
+    secretResolver:async(secretRef)=>{
+      const store=secretStoreFactory();
+      try{return await store.resolveForPrivilegedUse(secretRef);}
+      finally{store.close();}
+    }
+  })):null;
   const repository=factories.repository?factories.repository({
     stateStore:createSingletonStateStore({storageBroker,namespace:"module.deployer.repository"}),
     ledgerStore:storageBroker.namespace("module.deployer.repository.ledger"),
-    repositoryProvider:repositoryProvider??createGithubRepositoryProvider({
-      // Secrets are resolved in the privileged background only, never stored in the
-      // repository state or returned to dashboard clients.
-      secretResolver:async(secretRef)=>{
-        const runtime=globalThis.browser?.runtime;
-        if(!runtime)throw new TypeError("Dedicated secret host is unavailable");
-        const store=createSecretStore({backend:createNativeSecretBackend({
-          sendNativeMessage:createFirefoxNativeSecretTransport(runtime)})});
-        try{return await store.resolveForPrivilegedUse(secretRef);}
-        finally{store.close();}
-      }
-    }),
+    repositoryProvider:sharedRepositoryProvider,
     deployer,accounts,recoveryHold,auditJournal,clock
   }):null;
 
@@ -168,11 +179,16 @@ export function createPcmsModuleIntegration({
     clock
   });
 
+  // P040: refresh content comes from the Deployer's confirmed release (read-only), never pasted.
   const refresher=factories.refresher({
     stateStore:createSingletonStateStore({storageBroker,namespace:PCMS_INTEGRATION_NAMESPACES.refresher}),
     accountsService:accounts,
     providerGateResolver,
     remoteOperationReader,
+    remoteOperationCanceller:createRemoteOperationCanceller({remoteOps}),
+    deployer,
+    repository,
+    repositoryProvider:sharedRepositoryProvider,
     clock
   });
 
@@ -212,6 +228,23 @@ export function createPcmsModuleIntegration({
     clock
   });
 
+  // P040 module UI service bundles: each built-in contribution (bundled-modules.js) gets exactly one.
+  let refresherWake=async()=>null;
+  const refresherUnattended=createUnattendedRefreshCapability({providerProbes});
+  const refresherUi=Object.freeze({
+    refresher,accounts,deployer,unattended:refresherUnattended,
+    async wake(){try{return await refresherWake();}catch{return null;}}
+  });
+  const explorerUi=Object.freeze({explorer,explorerDeployer,deployer,accounts});
+  const provisioningUi=Object.freeze({
+    provisioning:accountProvisioning,accounts,
+    // Only create/delete: a UI action stores a credential and keeps its SecretRef, nothing else.
+    secrets:Object.freeze({
+      async create(value){const store=secretStoreFactory();try{return await store.create(value);}finally{store.close();}},
+      async delete(secretRef){const store=secretStoreFactory();try{return await store.delete(secretRef);}finally{store.close();}}
+    })
+  });
+
   return Object.freeze({
     accounts,
     deployer,
@@ -226,6 +259,14 @@ export function createPcmsModuleIntegration({
     generators,
     recoveryChecks,
     moduleLifecycle,
-    backupRestore
+    backupRestore,
+    refresherUi,
+    refresherUnattended,
+    explorerUi,
+    provisioningUi,
+    bindRefresherWake(handler){
+      if(typeof handler!=="function")throw new TypeError("Refresher wake handler is invalid");
+      refresherWake=handler;
+    }
   });
 }

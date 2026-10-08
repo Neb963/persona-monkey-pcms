@@ -4,7 +4,8 @@ import {
 } from "../../extension/pcms/providers/perchance/contract.js";
 import { REFRESHER_ERROR_CODES, refresherError } from "./errors.js";
 
-export const REFRESHER_SCHEMA_VERSION = 1;
+export const REFRESHER_SCHEMA_VERSION = 2;
+export const REFRESHER_SCHEMA_VERSION_V1 = 1;
 export const REFRESHER_PROVIDER_ID = PERCHANCE_PROVIDER_ID;
 export const REFRESHER_TARGET_KIND = PERCHANCE_GENERATOR_TARGET_KIND;
 export const REFRESHER_STATE_KIND = "refresher-state";
@@ -18,6 +19,12 @@ export const REFRESHER_MODE = Object.freeze({
   AUTO_RECENT: "AUTO_RECENT",
   MANUAL: "MANUAL"
 });
+// Where a member's refresh content comes from (MIG-P040-refresher-state-v2).
+export const REFRESHER_SOURCE_KIND = Object.freeze({
+  DEPLOYER_CONFIRMED: "DEPLOYER_CONFIRMED",
+  LEGACY_SOURCE: "LEGACY_SOURCE"
+});
+export const REFRESH_RELEASE_KIND = Object.freeze({ V1_SOURCE: "v1-source", V2_RELEASE: "v2-release" });
 export const REFRESH_OPERATION_STATUS = Object.freeze({
   IDLE: "IDLE",
   PENDING: "PENDING",
@@ -42,7 +49,7 @@ export const REFRESH_UNRESOLVED_STATUSES=new Set([
 ]);
 
 export function fail(code=REFRESHER_ERROR_CODES.INVALID_ARGUMENT){ throw refresherError(code); }
-function plain(value){
+export function plain(value){
   if(!value||typeof value!=="object"||Array.isArray(value))return false;
   const proto=Object.getPrototypeOf(value);return proto===Object.prototype||proto===null;
 }
@@ -88,19 +95,32 @@ export function normalizePolicy(value,code=REFRESHER_ERROR_CODES.INVALID_ARGUMEN
     activeHours:value.activeHours,sleepDays:value.sleepDays,anchorAt:normalizeTimestamp(value.anchorAt,code)
   });
 }
+// A member either follows the Deployer's confirmed release (P040, the normal case) or keeps an
+// accepted P017 legacy source hash that only the service API (never the UI) can still supply.
 function normalizeMemberInput(value){
+  if(plain(value)&&Object.keys(value).length===1){
+    exact(value,["generatorId"],REFRESHER_ERROR_CODES.INVALID_ARGUMENT);
+    return Object.freeze({generatorId:normalizeGeneratorId(value.generatorId),sourceHash:null});
+  }
   exact(value,["generatorId","sourceHash"],REFRESHER_ERROR_CODES.INVALID_ARGUMENT);
   return Object.freeze({generatorId:normalizeGeneratorId(value.generatorId),sourceHash:normalizeSourceHash(value.sourceHash)});
 }
+export const REFRESHER_MAX_NAME=80;
+export function normalizeCohortName(value,code=REFRESHER_ERROR_CODES.INVALID_ARGUMENT){
+  if(typeof value!=="string"||value.length<1||value.length>REFRESHER_MAX_NAME||value.trim()!==value||/[\u0000-\u001f\u007f]/.test(value))fail(code);
+  return value;
+}
 export function normalizeCohortCreateInput(value){
-  exact(value,["cohortId","accountId","enabled","policy","members"],REFRESHER_ERROR_CODES.INVALID_ARGUMENT);
+  const named=plain(value)&&Object.hasOwn(value,"name");
+  exact(value,named?["cohortId","name","accountId","enabled","policy","members"]:["cohortId","accountId","enabled","policy","members"],REFRESHER_ERROR_CODES.INVALID_ARGUMENT);
   if(typeof value.enabled!=="boolean")fail();
   denseArray(value.members,REFRESHER_ERROR_CODES.INVALID_ARGUMENT);
   if(value.members.length<1||value.members.length>REFRESHER_MAX_MEMBERS)fail();
   const members=value.members.map(normalizeMemberInput);const ids=new Set();
   for(const member of members){if(ids.has(member.generatorId))fail(REFRESHER_ERROR_CODES.TARGET_CONFLICT);ids.add(member.generatorId);}
+  const cohortId=normalizeCohortId(value.cohortId);
   return Object.freeze({
-    cohortId:normalizeCohortId(value.cohortId),accountId:normalizeAccountId(value.accountId),enabled:value.enabled,
+    cohortId,name:named?normalizeCohortName(value.name):cohortId,accountId:normalizeAccountId(value.accountId),enabled:value.enabled,
     policy:normalizePolicy(value.policy),members:Object.freeze(members)
   });
 }
