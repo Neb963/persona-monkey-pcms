@@ -6,7 +6,8 @@ export const ACCOUNTS_ERROR_CODES = Object.freeze({
   PERSONA_CONFLICT: "PCMS_ACCOUNTS_PERSONA_CONFLICT",
   PERSONA_UNAVAILABLE: "PCMS_ACCOUNTS_PERSONA_UNAVAILABLE",
   REVISION_CONFLICT: "PCMS_ACCOUNTS_REVISION_CONFLICT",
-  CAPACITY: "PCMS_ACCOUNTS_CAPACITY"
+  CAPACITY: "PCMS_ACCOUNTS_CAPACITY",
+  UNRESOLVED_OPERATION: "PCMS_ACCOUNTS_UNRESOLVED_OPERATION"
 });
 
 const MESSAGES = Object.freeze({
@@ -17,7 +18,8 @@ const MESSAGES = Object.freeze({
   [ACCOUNTS_ERROR_CODES.PERSONA_CONFLICT]: "Persona is already bound to another account",
   [ACCOUNTS_ERROR_CODES.PERSONA_UNAVAILABLE]: "Persona binding target is unavailable",
   [ACCOUNTS_ERROR_CODES.REVISION_CONFLICT]: "Accounts state revision changed",
-  [ACCOUNTS_ERROR_CODES.CAPACITY]: "Accounts capacity was reached"
+  [ACCOUNTS_ERROR_CODES.CAPACITY]: "Accounts capacity was reached",
+  [ACCOUNTS_ERROR_CODES.UNRESOLVED_OPERATION]: "Account binding is blocked by unresolved RemoteOperations"
 });
 
 export class PcmsAccountsError extends Error {
