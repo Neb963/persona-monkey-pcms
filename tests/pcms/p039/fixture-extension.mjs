@@ -12,6 +12,9 @@ import { promisify } from "node:util";
 const run = promisify(execFile);
 export const P039_FIXTURE_ID = "pcms-p039-fixture@tests";
 export const P039_FIXTURE_PAGE = "pcms/p039/probe.html";
+// Exercise delayed event delivery: a nominal timer deadline cannot prove that
+// both reads and the durable challenge transition have already completed.
+export const P039_ALARM_DELIVERY_DELAY_MS = 3000;
 
 const MANIFEST = {
   manifest_version:3,
@@ -37,7 +40,17 @@ const ready = (async () => {
   return background;
 })();
 ready.catch(() => {});
-browser.alarms.onAlarm.addListener((alarm) => { void ready.then((background) => background.handleAlarm(alarm.name)).catch(() => {}); });
+browser.alarms.onAlarm.addListener((alarm) => { void ready.then(async (background) => {
+  await new Promise(resolve => setTimeout(resolve, ${P039_ALARM_DELIVERY_DELAY_MS}));
+  await background.handleAlarm(alarm.name);
+  const status = await background.status();
+  if (status.attention.some(task => task.taskKind === "provider.observation-challenge")) {
+    // Fixture-only completion receipt, emitted after the timer and challenge
+    // writes settle. This does not send provider content or wake the event page.
+    const response = await fetch(${JSON.stringify(origin + "/__p039_sweep_complete")}, { method:"POST" });
+    if (!response.ok) throw new Error("Fixture completion receipt failed");
+  }
+}).catch(() => {}); });
 browser.runtime.onMessage.addListener((message) => {
   if (message?.type !== P039_FIXTURE_PROBE) return undefined;
   return ready.then((background) => background.status(), (error) => ({ error: String(error)+" | "+String(error && error.stack || "") }));
@@ -71,7 +84,7 @@ export async function buildP039FixtureExtension({ productXpi, workDir, backgroun
     hash.update(rel + "\0" + await sha(file) + "\n");
   }
   await mkdir(join(dir, "pcms/p039"), { recursive:true });
-  await writeFile(join(dir, "manifest.json"), JSON.stringify(MANIFEST, null, 2) + "\n");
+  await writeFile(join(dir, "manifest.json"), JSON.stringify({ ...MANIFEST, host_permissions:[origin + "/*"] }, null, 2) + "\n");
   await writeFile(join(dir, P039_FIXTURE_PAGE), PAGE);
   await writeFile(join(dir, "pcms/p039/background-entry.js"), entry(origin,personaUid));
   await writeFile(join(dir, "pcms/p039/fixture-background.js"), backgroundSource);
