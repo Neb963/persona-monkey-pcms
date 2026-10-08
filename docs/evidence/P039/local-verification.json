@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "P039",
+  "claimId": "CLM-P039-001",
+  "claimEpoch": 1,
+  "state": "COMMITTED",
+  "sourceCheckpointSha": "9996f36ad60f0ead25bc9026613a19e624573cf6",
+  "lastPublishedCheckpointSha": "bc1dbc5514993407060f6629ae5e52ab051be707",
+  "localResults": [
+    {
+      "command": "npm run verify",
+      "sourceSha": "eedc258b1910cb329085ad9fbb49226c54594d61",
+      "result": "PASS",
+      "skipped": [
+        "A035-01/A035-03 optional packaged popup layout and deep link"
+      ]
+    },
+    {
+      "command": "npm run test:p039",
+      "sourceSha": "9996f36ad60f0ead25bc9026613a19e624573cf6",
+      "result": "PASS",
+      "passed": 29,
+      "failed": 0
+    },
+    {
+      "command": "node --test tests/pcms/p028/*.test.mjs tests/pcms/p029/*.test.mjs",
+      "sourceSha": "eedc258b1910cb329085ad9fbb49226c54594d61",
+      "result": "PASS",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "command": "node --check tests/pcms/p039/packaged.mjs",
+      "sourceSha": "9996f36ad60f0ead25bc9026613a19e624573cf6",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run firefox:packaged:p039",
+      "sourceSha": "9996f36ad60f0ead25bc9026613a19e624573cf6",
+      "result": "LOCAL_DIAGNOSTIC_PASS",
+      "report": "packaged-local-diagnostic.json",
+      "contentSandboxDisabled": true
+    }
+  ],
+  "independentCI": {
+    "state": "PENDING",
+    "productPR": null,
+    "workflowRuns": []
+  },
+  "integrationVerification": "PENDING",
+  "merge": "PENDING",
+  "acceptance": "PENDING",
+  "publication": {
+    "state": "BLOCKED_BY_AUTOMATIC_APPROVAL_REVIEW",
+    "repository": "Neb963/persona-monkey-pcms",
+    "branch": "agent/gpt-6-p039-20261008/p039-t039-1",
+    "reason": "Automatic review did not recognize end-user authorization to publish repository contents to this public GitHub branch."
+  },
+  "liveProviderObservation": "DISABLED_PENDING_FINAL_LIVE_ACCEPTANCE"
+}
