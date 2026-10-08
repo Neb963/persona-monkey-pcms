@@ -9,14 +9,14 @@ import { createGeneratorIndexService } from "../../../extension/pcms/integration
 import { generatorPayloadHash } from "../../../extension/pcms/providers/perchance/contract.js";
 
 const CODE="lists\n  exact source",HTML="<main>exact HTML</main>",COMMIT="a".repeat(40);
-function harness({enabled=true,provider=null}={}){
+function harness({enabled=true,provider=null,failRead=false}={}){
   const h=setup();let time=Date.parse("2026-10-08T12:00:00.000Z");const clock=()=>new Date(time).toISOString();
   h.emulator.setCapabilities({observe:enabled});
   const store=h.storage.namespace(OBSERVATION_NAMESPACE);
   const repository={async deployFromRepository({deploymentId,expectedRevision}){
     return h.deployer.deploy(deploymentId,{expectedRevision,payload:{code:CODE,html:HTML,thumbnail:null}});
   }};
-  const options={deployer:h.deployer,accounts:h.accounts.service,provider:provider??h.adapter,store,humanTasks:h.humanTasks,
+  const options={deployer:h.deployer,accounts:h.accounts.service,provider:provider??(failRead?{...h.adapter,async observe(){throw new Error("Unreadable editor");}}:h.adapter),store,humanTasks:h.humanTasks,
     recoveryHold:h.recoveryHold,clock,repository,readDesiredPayload:async()=>({code:CODE,html:HTML,thumbnail:null})};
   const obs=createDeployerObservations(options);h.deployer.bindObservations(obs);
   const generators=createGeneratorIndexService({deployer:h.deployer,accounts:{...h.accounts.service,listAccounts:async()=>({accounts:[await h.accounts.service.getAccount("acct-1")]})},
@@ -53,6 +53,12 @@ test("A039-02 post-apply read establishes a baseline, without storing code or HT
   assert.ok((await h.generators.list()).rows[0].notes[0].startsWith("verified"));
   const records=JSON.stringify([...h.storage.shared.rows.values()]);
   assert.ok(!records.includes(CODE));assert.ok(!records.includes(HTML));
+});
+test("A039-01 an advertised but failed post-apply read remains visibly unverified",async()=>{
+  const h=harness({failRead:true}),result=await h.create();
+  assert.equal(result.deployment.confirmed.baselineHash,null);
+  assert.equal((await h.obs.get("gen:alpha")).observation.method,"OPERATOR_CONFIRMED");
+  assert.deepEqual((await h.generators.list()).rows[0].notes,["not verified"]);
 });
 test("A039-02 a failed post-apply baseline remains uncertain across reconciliation and cannot dispatch again",async()=>{
   const h=harness({enabled:false});await h.create();h.emulator.setCapabilities({observe:true});

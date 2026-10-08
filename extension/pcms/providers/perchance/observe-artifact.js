@@ -9,7 +9,7 @@ export function createObserveFixtureArtifact(origin, { includeContent = false } 
   }
   return `// ==UserScript==
 // @name PCMS Perchance fixture observation
-// @match ${origin}/*
+// @match ${url.protocol}//${url.hostname}/*
 // @grant Persona.signal
 // @run-at document-idle
 // ==/UserScript==

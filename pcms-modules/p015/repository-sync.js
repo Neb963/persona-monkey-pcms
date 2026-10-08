@@ -146,8 +146,9 @@ export function createDeployerRepositorySync({
     const next={...before.value,slot:1-before.value.slot,failureCount,nextDueAt,
       lastCheckedAt:repoAfter.lastCheckedAt??before.value.lastCheckedAt};
     await save(before,next);
-    if(result.done&&result.status!=="FAILED")await afterCheck(repoAfter.lastCheckedAt);
     await schedule(next,nowMs(clock));
+    // Observation work must not strand the independently durable repository timer.
+    if(result.done&&result.status!=="FAILED")await afterCheck(repoAfter.lastCheckedAt);
     return Object.freeze({status:result.status,done:result.done,nextDueAt});
   }
   return Object.freeze({declare,onTimer,readState});

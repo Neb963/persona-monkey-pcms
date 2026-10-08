@@ -163,7 +163,10 @@ export function createDeployerObservations({deployer,accounts,provider=null,stor
       return;
     }
     const result=await verifyNow(d.deploymentId);
-    if(["UNAVAILABLE","GATED"].includes(result.status))await enqueue(d.deploymentId);
+    if(["UNAVAILABLE","GATED"].includes(result.status)){
+      await saveObservation(d,account,{exists:null,payloadHash:null,thumbnailHash:null,listing:"UNKNOWN",challenge:false},"OPERATOR_CONFIRMED");
+      await enqueue(d.deploymentId);
+    }
   }
   async function enqueueSweep(cycle){
     if(!Number.isFinite(Date.parse(cycle))||!await available()||await held()||await challenged())return {queued:0};
@@ -171,7 +174,8 @@ export function createDeployerObservations({deployer,accounts,provider=null,stor
     const {deployments}=await deployer.listDeployments(),statuses=await listForStatus(deployments);
     const candidates=deployments.filter(d=>d.desired.payloadKind==="v2-release"&&d.confirmed.payloadHash!==null
       &&!["ACTIVE","RETRYABLE"].includes(d.operation.status));
-    candidates.sort((a,b)=>String(statuses.get(a.deploymentId)?.observedAt??"").localeCompare(String(statuses.get(b.deploymentId)?.observedAt??""))
+    const verifiedAt=id=>{const v=statuses.get(id);return v?.method==="PROVIDER_READ"&&!v.challenge?v.observedAt:"";};
+    candidates.sort((a,b)=>verifiedAt(a.deploymentId).localeCompare(verifiedAt(b.deploymentId))
       ||a.deploymentId.localeCompare(b.deploymentId));
     // A new scan cannot extend a still-running sweep indefinitely.
     await change(v=>({...v,cycle,queue:v.queue.length?v.queue:candidates.slice(0,v.sweepLimit).map(d=>d.deploymentId)}));

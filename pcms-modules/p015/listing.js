@@ -28,7 +28,7 @@ export function deployerGeneratorListing({ deployments, healthyAccounts = new Se
         recovery,
         mode,
         observation:observations.get(deployment.deploymentId)??null,
-        observeAvailable,
+        observeAvailable:observeAvailable&&observations.get(deployment.deploymentId)?.method!=="OPERATOR_CONFIRMED",
         now
       });
       const origin = deployment.desired.origin;

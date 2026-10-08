@@ -17,7 +17,7 @@
     "test:upstream-integrity": "node --test tests/upstream/import-integrity.test.mjs",
     "test:upstream-baseline": "node tests/upstream/run-baseline.mjs",
     "verify:upstream": "npm run test:upstream-integrity && npm run test:upstream-baseline",
-    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims && npm run test:p032 && npm run test:firefox && npm run verify:upstream && npm run test:p034 && npm run test:p033 && npm run test:p041 && npm run test:p036 && npm run test:p037 && npm run test:p038 && npm run test:p040",
+    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims && npm run test:p032 && npm run test:firefox && npm run verify:upstream && npm run test:p034 && npm run test:p033 && npm run test:p041 && npm run test:p036 && npm run test:p037 && npm run test:p038 && npm run test:p040 && npm run test:p039",
     "firefox:packaged": "node scripts/build-extension.mjs && node tools/firefox/packaged.mjs",
     "test:p027": "node --test tests/pcms/p027/*.test.mjs",
     "test:p028": "node --test tests/pcms/p028/*.test.mjs",
@@ -41,6 +41,8 @@
     "test:p038": "node --test tests/pcms/p038/*.test.mjs",
     "firefox:packaged:p038": "node scripts/build-extension.mjs && node tests/pcms/p038/packaged.mjs",
     "test:p040": "node --test tests/pcms/p040/*.test.mjs tests/pcms/p016/*.test.mjs tests/pcms/p017/*.test.mjs tests/pcms/p019/*.test.mjs",
-    "firefox:packaged:p040": "node scripts/build-extension.mjs && node tests/pcms/p040/packaged.mjs"
+    "firefox:packaged:p040": "node scripts/build-extension.mjs && node tests/pcms/p040/packaged.mjs",
+    "test:p039": "node --test tests/pcms/p039/*.test.mjs",
+    "firefox:packaged:p039": "node scripts/build-extension.mjs && node tests/pcms/p039/packaged.mjs"
   }
 }

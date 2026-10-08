@@ -6,11 +6,19 @@ import { createObserveFixtureArtifact } from "../../../extension/pcms/providers/
 import { normalizeProviderObservation } from "../../../extension/pcms/providers/perchance/observation.js";
 import { generatorPayloadHash } from "../../../extension/pcms/providers/perchance/contract.js";
 import { setup } from "../p036/harness.mjs";
+import { parseUserscriptMetadata } from "../../../extension/lib/userscripts.js";
+import { userScriptMatches } from "../../../extension/lib/policy.js";
 
 const UID="11111111-1111-4111-8111-111111111111";
 const ORIGIN="http://127.0.0.1:1234";
 const REQUIRED=["userscript.artifact.install","userscript.artifact.assign","persona.control.acquire",
   "persona.control.release","execution.start","execution.result.get","execution.result.ack","execution.cancel"];
+test("A039-01 the read artifact matches through PersonaMonkey's actual URL matcher at a fixture port",()=>{
+  const source=createObserveFixtureArtifact(ORIGIN),metadata=parseUserscriptMetadata(source);
+  assert.equal(userScriptMatches(metadata,ORIGIN+"/alpha"),true);
+  assert.equal(userScriptMatches(metadata,"https://perchance.org/alpha"),false);
+  assert.ok(source.includes("location.origin !== "+JSON.stringify(ORIGIN)));
+});
 function clientHarness({authorized=true,body=null,truncated=false,state="completed"}={}) {
   const calls=[];
   const client={async request(command,params,options){

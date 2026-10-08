@@ -193,6 +193,7 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
     banner.dataset.token = row.status.token;
     banner.append(badge(documentRef, row.status), e(documentRef, "span", "generators-next", row.next.text ? "Next: " + row.next.text : ""));
     content.appendChild(banner);
+    for(const note of row.notes??[])content.appendChild(e(documentRef,"p","generators-evidence",note));
     if (!facet) return;
 
     const cards = e(documentRef, "div", "generators-cards");
@@ -213,7 +214,7 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
 
     const actions = e(documentRef, "div", "generators-actions");
     const status = facet.operationStatus;
-    if (!["ACTIVE", "RECONCILE"].includes(status)) {
+    if (!["ACTIVE", "RECONCILE"].includes(status)&&!facet.observation?.drift) {
       const deploy = button(documentRef, "Deploy from file…", "deploy-file", "generators-primary");
       deploy.dataset.slug = row.slug; actions.appendChild(deploy);
     }
