@@ -18,6 +18,7 @@ const {createDeployerRepositorySync,REPOSITORY_SYNC_SERVICE,REPOSITORY_SYNC_OWNE
 import { createAccountProviderGateResolver } from "../integration/adapters.js";
 import { createPcmsBundledModuleLoader } from "../integration/bundled-modules.js";
 import { PCMS_UI_PUBLISH_CAPABILITY, createPcmsUiContributionHost } from "../integration/ui-contributions.js";
+import { REFRESHER_BACKGROUND_TIMER_ID, createRefresherBackgroundScheduler } from "../integration/refresher-background.js";
 import { createModuleCapabilityHandlers, createPerchanceModuleCapabilityHandlers } from "./modules/capabilities.js";
 import { createBackgroundModuleRuntimeOptions } from "./modules/host.js";
 import { createModuleScheduleStore } from "./modules/schedules.js";
@@ -105,6 +106,7 @@ export function createBackgroundPcmsCore({
   }),{ownerId:PCMS_CONTINUITY_FIXTURE_OWNER,generation:PCMS_CONTINUITY_FIXTURE_GENERATION});
   let timerAlarmRearm=null;
   let moduleSupervisor=null;
+  let refresherScheduler=null;
   const timers=createTimerService({
     storageBroker:core.storageBroker,
     auditJournal:core.auditJournal,
@@ -112,9 +114,25 @@ export function createBackgroundPcmsCore({
     clock,
     onChanged:async(change)=>{
       if(moduleSupervisor){try{await moduleSupervisor.afterTimerChange(change);}catch{}}
+      // A040-02: the Refresher re-declares its next pass once an occurrence is delivered.
+      if(refresherScheduler&&change.timerId===REFRESHER_BACKGROUND_TIMER_ID
+          &&(change.state?.value?.state==="FIRED"||change.state?.value?.state==="MISSED")){
+        try{await refresherScheduler.declare();}catch{}
+      }
       if(timerAlarmRearm)await timerAlarmRearm();
     }
   });
+  // P040: Refresher schedules run as a Core timer service with zero PCMS tabs (A040-02).
+  refresherScheduler=createRefresherBackgroundScheduler({
+    refresher:core.refresher,
+    timers,
+    recoveryHold:core.recoveryHold,
+    canDispatch:core.refresherUnattended,
+    clock
+  });
+  timerServices.register(refresherScheduler.serviceName,refresherScheduler.service,
+    {ownerId:refresherScheduler.ownerId,generation:refresherScheduler.generation});
+  core.bindRefresherWake?.(()=>refresherScheduler.declare());
   const continuityFixture=createPcmsContinuityFixture({timers,clock});
   // P038: built-in scheduler owns only repository checks, not provider deployments.
   const repositorySync=core.repository?createDeployerRepositorySync({
@@ -188,6 +206,7 @@ export function createBackgroundPcmsCore({
     const declared=await continuityFixture.declare(input);
     if(repositorySync)await repositorySync.declare();
     try{await moduleSupervisor.declare(input);}catch{}
+    try{await refresherScheduler.declare();}catch{}
     return declared;
   }
 
@@ -206,6 +225,7 @@ export function createBackgroundPcmsCore({
     timers,
     timerServices,
     repositorySync,
+    refresherScheduler,
     modules:moduleSupervisor.api,
     moduleSupervisor,
     ui:uiHost.api,
