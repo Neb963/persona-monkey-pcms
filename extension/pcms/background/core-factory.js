@@ -8,8 +8,13 @@ import { createHumanTaskService } from "../services/human-tasks.js";
 import { createCoreServiceRegistry } from "../services/registry.js";
 import { createTimerService } from "../services/timers.js";
 import { createSingletonStateStore } from "../integration/adapters.js";
-import {createDeployerRepositorySync,REPOSITORY_SYNC_SERVICE,REPOSITORY_SYNC_OWNER,REPOSITORY_SYNC_GENERATION}
-  from "/pcms-modules/p015/repository-sync.js";
+// The source tree and the packaged extension place pcms-modules at different
+// relative roots. Choose one of two fixed, reviewed specifiers at module load.
+const repositorySyncModuleUrl=import.meta.url.startsWith("file:")
+  ? new URL("../../../pcms-modules/p015/repository-sync.js",import.meta.url).href
+  : "/pcms-modules/p015/repository-sync.js";
+const {createDeployerRepositorySync,REPOSITORY_SYNC_SERVICE,REPOSITORY_SYNC_OWNER,
+  REPOSITORY_SYNC_GENERATION}=await import(repositorySyncModuleUrl);
 import { createAccountProviderGateResolver } from "../integration/adapters.js";
 import { createPcmsBundledModuleLoader } from "../integration/bundled-modules.js";
 import { PCMS_UI_PUBLISH_CAPABILITY, createPcmsUiContributionHost } from "../integration/ui-contributions.js";
