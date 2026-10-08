@@ -64,8 +64,8 @@ function renderPcms() {
     $("pcmsAccount").textContent = managed ? "No linked account for this Persona" : "";
   }
   $("pcmsAttention").textContent = held ? "PCMS on hold after restore" :
-    attention ? attention + " item" + (attention === 1 ? "" : "s") + " need attention" :
     managed && pcmsSummary?.state === "UNAVAILABLE" ? "PCMS unavailable — open for details" :
+    attention ? attention === 1 ? "1 item needs attention" : attention + " items need attention" :
     managed && pcmsSummary ? "No items need attention" : "";
   $("pcmsOpenAccount").hidden = !managed || !pcmsAccountId;
   $("pcmsOpenAccount").disabled = !pcmsAccountId;
