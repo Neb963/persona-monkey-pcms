@@ -50,12 +50,14 @@ export async function generatorsViewFlow({ base, documentRef, windowRef, hostId 
   const release = W(assistedMod.createPerchanceAssistedReleaseMethods({
     operator:handoff,
     async openTarget({ operationId, generatorId, phase }) {
+      trace.push("openTarget:" + phase);
       opened.push({ operationId, generatorId, phase });
       return realm({ targetRef:{ kind:"generator", id:generatorId } });
     }
   }));
   const driver = realm({
     async probe() {
+      trace.push("probe");
       return realm({ contractId:"pcms.perchance.driver", contractVersion:2, providerId:"perchance", operations:["generator.update"],
         capabilities:{ unattended:false, observe:false, listing:false, thumbnail:false, create:false } });
     },
@@ -82,7 +84,12 @@ export async function generatorsViewFlow({ base, documentRef, windowRef, hostId 
   }));
   const generators = W(indexMod.createGeneratorIndexService({ deployer, accounts, humanTasks, recoveryHold }));
   // UI-client facade: JSON round trip, exactly what crosses runtime.sendMessage.
-  const call = (target, name) => async (...args) => copy(await target[name](...args.map((arg) => realm(copy(arg)))));
+  const trace = [];
+  const call = (target, name) => async (...args) => {
+    trace.push(name + ":start");
+    try { const result = copy(await target[name](...args.map((arg) => realm(copy(arg))))); trace.push(name + ":ok"); return result; }
+    catch (error) { trace.push(name + ":error:" + String(error?.code || error?.message || error).slice(0, 120)); throw error; }
+  };
   const runtime = {
     generators:{ list:call(generators, "list"), get:call(generators, "get"), search:call(generators, "search") },
     deployer:Object.fromEntries(["listDeployments","createDeployment","setDesired","setPaused","prepareRetry","deploy","reconcileDeployment"].map((name) => [name, call(deployer, name)])),
@@ -108,7 +115,7 @@ export async function generatorsViewFlow({ base, documentRef, windowRef, hostId 
   const qa = (selector) => [...host.querySelectorAll(selector)];
   const wait = async (predicate, label) => {
     for (let index = 0; index < 400; index += 1) { if (predicate()) return; await new Promise((resolve) => setTimeout(resolve, 25)); }
-    throw new Error("timed out: " + label + " · feedback: " + (q(".generators-feedback")?.textContent || "") + " · dialog: " + (q(".generators-dialog-status")?.textContent || "") + " · " + host.textContent.slice(0, 400));
+    throw new Error("timed out: " + label + " · feedback: " + (q(".generators-feedback")?.textContent || "") + " · dialog: " + (q(".generators-dialog-status")?.textContent || "") + " · submitDisabled: " + q(".generators-modal button[type=submit]")?.disabled + " · trace: " + trace.join(",") + " · " + host.textContent.slice(0, 400));
   };
   const out = { steps:[] };
 
