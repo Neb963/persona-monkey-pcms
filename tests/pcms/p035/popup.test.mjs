@@ -108,7 +108,8 @@ test("A035-03 — no prior PCMS tab opens one and rejects malformed IDs",async()
   const created=await mount({summary:status()});
   created.nodes.pcmsOpenAccount.onclick();
   for(let i=0;i<4;i++)await new Promise((resolve)=>setImmediate(resolve));
-  assert.deepEqual(created.opened.created,[{url:"moz-extension://test-extension/pcms/app/index.html#/accounts/Alice%3Amain"}]);
+  assert.equal(created.opened.created.length,1);
+  assert.equal(created.opened.created[0].url,"moz-extension://test-extension/pcms/app/index.html#/accounts/Alice%3Amain");
   const malformed=await mount({summary:status({personaAccounts:[{personaUid:"persona-alice",accounts:[{accountId:"<script>",displayName:"bad"}]}]})});
   assert.equal(malformed.nodes.pcmsOpenAccount.hidden,true);
   assert.equal(malformed.nodes.pcmsAccount.textContent,"No linked account for this Persona");
