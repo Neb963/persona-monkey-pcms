@@ -8,8 +8,10 @@ import {
   humanTaskModuleState,
   modulePageModel,
   modulePageRenderKey,
+  routableModuleIds,
   overviewModuleCards
 } from "../../../extension/pcms/app/contributions.js";
+import { resolvePcmsRouteV2 } from "../../../extension/pcms/app/router-v2.js";
 import { PCMS_UI_PRESENTATION as P, createPcmsUiContributionHost } from "../../../extension/pcms/integration/ui-contributions.js";
 import { createPcmsStorageBroker } from "../../../extension/pcms/storage/storage-broker.js";
 import { makeMemoryBackend } from "../p023/harness.mjs";
@@ -116,6 +118,10 @@ test("A033-03 I disabled, removed and purged runtime modules leave the shell saf
   snapshot = await ctx.ui.snapshot();
   assert.equal(byId(snapshot, BOARD_ID), null);
   assert.deepEqual(page(snapshot), { kind: "missing", moduleId: BOARD_ID, title: BOARD_ID, message: "This module isn't installed", banner: null });
+  // Packaged-Firefox regression: the deep link resolves (no redirect to Overview).
+  const resolved = resolvePcmsRouteV2("#/m/" + BOARD_ID, { moduleIds: routableModuleIds(snapshot, "#/m/" + BOARD_ID) });
+  assert.deepEqual([resolved.valid, resolved.route.route, resolved.route.moduleId], [true, "module", BOARD_ID]);
+  assert.equal(routableModuleIds(snapshot, "#/m/../x").includes(".."), false);
 });
 
 test("A033-03 I a failed update keeps the last-known-good UI; incompatible updates grey the module out", async (t) => {

@@ -1,7 +1,7 @@
 // Dashboard view models over the Core-merged pcms.ui-contribution/v1 snapshot (P033).
 // Pure functions: the dashboard renders their output with textContent only. Core already
 // validated every module value; these functions decide only where it appears.
-import { PCMS_V2_BUILTIN_MODULE_IDS } from "./router-v2.js";
+import { PCMS_V2_BUILTIN_MODULE_IDS, parsePcmsRouteV2 } from "./router-v2.js";
 
 const PRIORITY=Object.freeze({CRITICAL:0,HIGH:1,NORMAL:2,LOW:3});
 
@@ -26,8 +26,17 @@ export function legacyModuleIds(snapshot){
 
 // Every module id a deep link may address: legacy built-ins plus every module Core knows,
 // including disabled or removed ones (their page explains the state instead of vanishing).
-export function routableModuleIds(snapshot){
-  return [...new Set([...PCMS_V2_BUILTIN_MODULE_IDS,...contributionModules(snapshot).map((item)=>item.moduleId)])];
+// A syntactically valid #/m/<id> link always resolves, so a purged or never-installed
+// module explains itself ("This module isn't installed") instead of redirecting.
+export function routableModuleIds(snapshot,rawHash=null){
+  const ids=new Set([...PCMS_V2_BUILTIN_MODULE_IDS,...contributionModules(snapshot).map((item)=>item.moduleId)]);
+  if(typeof rawHash==="string"){
+    try{
+      const route=parsePcmsRouteV2(rawHash);
+      if(route.route==="module") ids.add(route.moduleId);
+    }catch{}
+  }
+  return [...ids];
 }
 
 export function contributionNavItems(snapshot){

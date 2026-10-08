@@ -602,8 +602,7 @@ export function mountPcmsApp({
     lastContributions=contributions;
     // A syntactically valid module link always resolves: the module page explains a
     // disabled, removed or never-installed module instead of redirecting (03 §6).
-    const moduleIds=routableModuleIds(contributions);
-    if(contributionsLive&&parsed.route==="module"&&!moduleIds.includes(parsed.moduleId)) moduleIds.push(parsed.moduleId);
+    const moduleIds=routableModuleIds(contributions,windowRef.location.hash);
     const resolved=resolvePcmsRouteV2(windowRef.location.hash,{
       accountIds:snapshot.accounts.accounts.map((item)=>item.accountId),
       attentionIds:snapshot.notifications.items.map((item)=>item.taskId),
