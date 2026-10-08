@@ -221,10 +221,13 @@ export function createBackupRestoreService({
 
   function operationItem(row) {
     const value=row.value;
+    const target=value.targetRef&&typeof value.targetRef.kind==="string"&&typeof value.targetRef.id==="string"
+      ?Object.freeze({kind:value.targetRef.kind,id:value.targetRef.id})
+      :Object.freeze({kind:"operation",id:value.operationId});
     return Object.freeze({
       id:"operation:"+value.operationId,
       kind:"operation",
-      label:value.action+" · "+value.targetRef.kind+" "+value.targetRef.id,
+      label:(typeof value.action==="string"?value.action:"operation")+" · "+target.kind+" "+target.id,
       status:"FAIL",
       state:value.state,
       detail:value.state==="UNCERTAIN"
@@ -233,8 +236,8 @@ export function createBackupRestoreService({
           ?"Was being sent when PCMS stopped — check its outcome."
           :"Prepared but never confirmed — checking cancels it.",
       operationId:value.operationId,
-      providerId:value.providerId,
-      subject:Object.freeze({kind:value.targetRef.kind,id:value.targetRef.id}),
+      providerId:typeof value.providerId==="string"?value.providerId:null,
+      subject:target,
       reconcilable:true
     });
   }
