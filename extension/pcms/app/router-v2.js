@@ -4,7 +4,8 @@ export const PCMS_V2_SETTINGS_SECTIONS=Object.freeze(["modules","backup","diagno
 export const PCMS_V2_BUILTIN_MODULE_IDS=Object.freeze(["deployer","refresher","explorer","statistics","provisioning"]);
 
 const ENTITY=/^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$/;
-const MODULE=/^[a-z][a-z0-9-]{0,63}$/;
+// Built-in ids and runtime module package ids (pcms.module.archive/v1, e.g. "acme.reports").
+const MODULE=/^(?=.{1,96}$)[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 const FILTER_VALUE=/^[A-Za-z0-9._@/-]{1,96}$/;
 const MAX_HASH=1024;
 const MAX_QUERY=200;

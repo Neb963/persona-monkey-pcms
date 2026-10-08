@@ -43,6 +43,7 @@
           <article><strong id="overviewAccountCount">0</strong><span>Accounts</span></article>
           <article><strong id="overviewModuleCount">5</strong><span>Feature modules</span></article>
         </div>
+        <div id="overviewModuleCards" class="module-cards" aria-label="Module overview"></div>
         <p class="diagnostics-link"><a href="#/settings/diagnostics">Open Settings → Diagnostics for Core and Broker details.</a></p>
 
         <section class="core-status live-operations" aria-labelledby="recoveryHeading">        <section class="core-status live-operations" aria-labelledby="recoveryHeading">
@@ -66,6 +67,11 @@
           <h2 id="modulesHeading">PCMS modules</h2>
           <p>Accepted module state and representative P026 controls are wired into the live PCMS composition. Provider effects remain fenced by RemoteOperation and explicit operator confirmation.</p>
         </div>
+
+        <section class="core-status" aria-labelledby="installedModulesHeading">
+          <h3 id="installedModulesHeading">Installed modules</h3>
+          <div id="contributedModuleList" class="module-items"></div>
+        </section>
 
         <div class="module-grid">
           <article class="module-card">
@@ -140,6 +146,8 @@
         </div>
         <div id="attentionList" class="item-list"></div>
         <p id="attentionEmpty" class="empty-state">No open HumanTasks.</p>
+        <h3 id="attentionConditionsHeading" hidden>Module conditions</h3>
+        <div id="attentionConditions" class="item-list" aria-labelledby="attentionConditionsHeading"></div>
         <section id="handoffDetail" class="handoff-detail" hidden aria-labelledby="handoffTitle">
           <h3 id="handoffTitle">Waiting for your confirmation</h3>
           <p id="handoffInstructions"></p>
@@ -177,6 +185,7 @@
             <button type="submit">Rebind</button>
           </form>
         </div>
+        <div id="accountFacets" class="module-facets" aria-label="Module information for this account"></div>
         <div id="accountList" class="item-list" hidden></div>
         <p id="accountsEmpty" class="empty-state" hidden>No accounts are available.</p>
       </section>
@@ -227,8 +236,21 @@
           <h2 id="placeholderHeading">PCMS</h2>
           <p id="placeholderBody"></p>
         </div>
+        <div id="activityList" class="item-list" hidden></div>
       </section>
+
+      <section id="viewModulePage" class="module-page" hidden aria-live="polite"></section>
     </main>
+
+    <dialog id="moduleConfirmDialog" class="confirm-dialog" hidden aria-labelledby="moduleConfirmTitle" data-state="closed">
+      <h3 id="moduleConfirmTitle">Confirm</h3>
+      <p id="moduleConfirmModule" class="module-status"></p>
+      <ul id="moduleConfirmConsequences"></ul>
+      <div class="operator-actions">
+        <button type="button" id="moduleConfirmCancel">Cancel</button>
+        <button type="button" id="moduleConfirmAccept" class="danger">Confirm</button>
+      </div>
+    </dialog>
 
     <footer>
       <p>PCMS uses bounded services and Persona Broker Integration v1. It does not take raw browser, routing, native-RPC, or PersonaMonkey-internal authority.</p>
