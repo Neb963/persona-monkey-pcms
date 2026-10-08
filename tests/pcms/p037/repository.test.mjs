@@ -147,3 +147,39 @@ test("Deployer built-in page conforms to pcms.ui-contribution/v1",async()=>{
   const summary=await contribution.summary();
   assert.equal(summary.status.token,"INFO");
 });
+
+test("A037-03 linking after an unchanged commit resumes local preparation",async()=>{
+  const fx=fixture();
+  await fx.repo.configure({config,expectedRevision:0});
+  assert.equal((await finish(fx.repo)).status,"SUCCESS");
+  assert.equal((await fx.ctx.deployer.listDeployments()).deployments.length,0);
+  const current=await fx.repo.read();
+  await fx.repo.linkFolder({folder:"alice",accountId:"acct-1",expectedRevision:current.revision});
+  assert.equal((await finish(fx.repo)).status,"SUCCESS");
+  assert.equal((await fx.ctx.deployer.listDeployments()).deployments.length,1);
+  assert.equal((await finish(fx.repo)).status,"UNCHANGED");
+});
+test("A037-02 duplicate generator slug in two account folders is blocked for both",async()=>{
+  const fx=fixture({versions:{[sha1]:{...blobs({folder:"alice"}),...blobs({folder:"bob"})}}});
+  await configure(fx.repo);
+  const result=await finish(fx.repo);
+  assert.equal(result.status,"SUCCESS");
+  assert.equal(result.snapshot.items.length,0);
+  assert.equal(result.snapshot.problems.filter(p=>p.code==="GEN_DUPLICATE_SLUG").length,2);
+  assert.equal((await fx.ctx.deployer.listDeployments()).deployments.length,0);
+});
+test("A037-03 deploy:hold forbids dispatch and malformed changelog only warns",async()=>{
+  const b=blobs();
+  b["alice/example/generator.json"]=JSON.stringify({...JSON.parse(b["alice/example/generator.json"]),deploy:"hold"});
+  b["alice/example/releases/1.0.0/changelog.md"]=Uint8Array.from([255]);
+  const fx=fixture({versions:{[sha1]:b}});
+  await configure(fx.repo);
+  const result=await finish(fx.repo);
+  assert.equal(result.status,"SUCCESS");
+  assert.equal(result.snapshot.items.length,1);
+  assert.ok(result.snapshot.problems.some(p=>p.code==="GEN_CHANGELOG_INVALID"));
+  const deployment=(await fx.ctx.deployer.listDeployments()).deployments[0];
+  await assert.rejects(fx.repo.deployFromRepository({deploymentId:deployment.deploymentId,
+    expectedRevision:1}),{code:REPO_ERRORS.PROTOCOL});
+  assert.deepEqual(await fx.ctx.remoteOps.listUnresolved(),[]);
+});
