@@ -381,13 +381,13 @@ Merge wave: 16
 - [x] T041.3 — T041.3 Modules page driving live install/review/update/rollback/remove/purge
 
 ## P042 — Unattended Perchance automation via PersonaMonkey execution artifacts (gated)
-Status: **CLAIMED**  
+Status: **ACCEPTED**  
 Depends on: P039  
 Merge wave: 20
 
-- [ ] T042.1 — T042.1 Unattended generator.update v2 (and optional create) as PersonaMonkey execution artifacts under control lease
-- [ ] T042.2 — T042.2 Automatic-mode gates, eligibility and bounded serial background pass
-- [ ] T042.3 — T042.3 Emulator/FDE fixture end-to-end deploy-verify proof
+- [x] T042.1 — T042.1 Unattended generator.update v2 (and optional create) as PersonaMonkey execution artifacts under control lease
+- [x] T042.2 — T042.2 Automatic-mode gates, eligibility and bounded serial background pass
+- [x] T042.3 — T042.3 Emulator/FDE fixture end-to-end deploy-verify proof
 
 ## P043 — Live acceptance 3 — background continuity, runtime modules, repository/provider compatibility
 Status: **BLOCKED**  
