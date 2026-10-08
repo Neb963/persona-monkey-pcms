@@ -97,7 +97,7 @@ function method(value,name,label){
   return value[name].bind(value);
 }
 
-export function createGeneratorIndexService({deployer,accounts,humanTasks,recoveryHold=null,observations=null,listingSources=[],clock=()=>new Date().toISOString()}={}){
+export function createGeneratorIndexService({deployer,accounts,humanTasks,recoveryHold=null,observations=null,automatic=null,listingSources=[],clock=()=>new Date().toISOString()}={}){
   const listDeployments=method(deployer,"listDeployments","Generator index Deployer source");
   const deployerListing=method(deployer,"listGeneratorListing","Generator index Deployer listing");
   const listAccounts=method(accounts,"listAccounts","Generator index Accounts source");
@@ -111,6 +111,13 @@ export function createGeneratorIndexService({deployer,accounts,humanTasks,recove
     catch{return "NORMAL";}
   }
 
+  // P042: rows read "Deploys automatically" only while the operator has Automatic turned on.
+  async function deploymentMode(){
+    if(!automatic) return "ASSISTED";
+    try{return (await automatic.readControl()).value.enabled===true?"AUTOMATIC":"ASSISTED";}
+    catch{return "ASSISTED";}
+  }
+
   async function build(){
     const [deployed,accountList,tasks,recovery]=await Promise.all([listDeployments(),listAccounts(),listAttention({limit:500}),recoveryState()]);
     const accountMap=new Map(accountList.accounts.map((account)=>[account.accountId,account]));
@@ -120,7 +127,7 @@ export function createGeneratorIndexService({deployer,accounts,humanTasks,recove
     const handoffTask=new Map(tasks
       .filter((task)=>task.value.taskKind===PROVIDER_HANDOFF_TASK_KIND&&task.value.subjectRef?.kind==="generator")
       .map((task)=>[task.value.subjectRef.id,task.value.taskId]));
-    const listings=[await deployerListing({deployments:deployed.deployments,healthyAccounts:new Set(accountMap.keys()),openHandoffTargets,recovery,now:clock()})];
+    const listings=[await deployerListing({deployments:deployed.deployments,healthyAccounts:new Set(accountMap.keys()),openHandoffTargets,recovery,mode:await deploymentMode(),now:clock()})];
     for(const source of listingSources){
       try{
         const listing=await source();

@@ -72,6 +72,11 @@ export function createPerchanceEmulator({ contractVersion = PERCHANCE_DRIVER_CON
       receipts.set(input.operationId, { ...receipt, status:"NOT_APPLIED" });
       throw new Error("emulated pre-apply transport loss");
     }
+    // P042: the provider definitely rejected the save (for example a stale editor).
+    if (fault === "not-applied") {
+      receipts.set(input.operationId, { ...receipt, status:"NOT_APPLIED" });
+      return { status:"NOT_APPLIED" };
+    }
     generators.set(input.generatorId, {
       generatorId:input.generatorId, code:input.code, html:input.html, thumbnail:input.thumbnail,
       settings:clone(input.settings)
@@ -122,7 +127,7 @@ export function createPerchanceEmulator({ contractVersion = PERCHANCE_DRIVER_CON
     setSettingsShape(value) { settingsShape = value === null ? null : clone(value); },
     setChallenge(value) { challenge = value === true; },
     failNext(mode) {
-      if (!["before-apply","after-apply","malformed"].includes(mode)) throw new TypeError("Unknown emulator fault");
+      if (!["before-apply","after-apply","malformed","not-applied"].includes(mode)) throw new TypeError("Unknown emulator fault");
       nextFault = mode;
     },
     clearReceipts() { receipts.clear(); }

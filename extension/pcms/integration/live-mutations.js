@@ -2,6 +2,7 @@ import { getPersonaBrokerCommand } from "../core/persona-broker-contract.js";
 import { createPerchanceProviderAdapter } from "../providers/perchance/adapter.js";
 import { PERCHANCE_ASSISTED_CAPABILITIES, createPerchanceAssistedReleaseMethods } from "../providers/perchance/assisted-driver.js";
 import { createPerchanceExecutionReadDriver } from "../providers/perchance/execution-read-driver.js";
+import { createPerchanceExecutionUpdateDriver } from "../providers/perchance/execution-update-driver.js";
 import {
   PERCHANCE_DRIVER_CONTRACT_ID,
   PERCHANCE_DRIVER_CONTRACT_VERSION_V2,
@@ -10,6 +11,7 @@ import {
 } from "../providers/perchance/contract.js";
 
 const CONTEXT_NAMESPACE="integration.live-provider-context";
+const DISPATCH_MODE_NAMESPACE="integration.live-provider-dispatch-mode";
 const PROVISION_ACTION="account.provision";
 const ID_PATTERN=/^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,255}$/;
 const UID_PATTERN=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -256,12 +258,27 @@ export function createPcmsLiveMutationIntegration({
   storageBroker,
   personaBroker,
   operator,
-  observationProfile = null
+  observationProfile = null,
+  automationProfile = null,
+  allowDirect = false
 }={}){
   if(!operator||typeof operator.choose!=="function") throw new TypeError("Live mutations require an operator bridge");
   const client=createLiveBrokerClient({broker:personaBroker});
   const operationContext=createLiveOperationContext({storageBroker});
-  const readDriver=createPerchanceExecutionReadDriver({client,profile:observationProfile});
+  const readDriver=createPerchanceExecutionReadDriver({client,profile:observationProfile,allowDirect});
+  // P042: unattended generator.update v2 only through reviewed PersonaMonkey execution
+  // artifacts. Production composes no automation profile, so `unattended` stays false.
+  const updateDriver=createPerchanceExecutionUpdateDriver({client,profile:automationProfile,allowDirect});
+  const dispatchModes=storageBroker.namespace(DISPATCH_MODE_NAMESPACE);
+  async function markUnattended(operationId){
+    const current=await dispatchModes.get(operationId);
+    if(current?.value?.mode==="UNATTENDED") return;
+    if(current) throw new Error("Live provider dispatch mode conflict");
+    await dispatchModes.compareAndSwap(operationId,{expectedRevision:0,value:Object.freeze({schemaVersion:1,operationId,mode:"UNATTENDED"})});
+  }
+  async function dispatchedUnattended(operationId){
+    return (await dispatchModes.get(id(operationId,"operationId")))?.value?.mode==="UNATTENDED";
+  }
 
   // pcms.perchance.driver/v2 (P036): the same assisted generator.update also takes release
   // payloads. Every unattended/observe/listing capability stays off until live phases.
@@ -277,16 +294,34 @@ export function createPcmsLiveMutationIntegration({
     async probe(){
       await client.request("system.status",{});
       const observe=await readDriver.available();
+      const unattended=await updateDriver.available();
       return Object.freeze({
         contractId:PERCHANCE_DRIVER_CONTRACT_ID,
         contractVersion:PERCHANCE_DRIVER_CONTRACT_VERSION_V2,
         providerId:PERCHANCE_PROVIDER_ID,
         operations:Object.freeze([PERCHANCE_GENERATOR_UPDATE_ACTION,...(observe?["generator.observe"]:[])]),
-        capabilities:Object.freeze({...PERCHANCE_ASSISTED_CAPABILITIES,observe})
+        // The reviewed artifact sets listing and thumbnail itself; create is never offered.
+        capabilities:Object.freeze({...PERCHANCE_ASSISTED_CAPABILITIES,observe,unattended,
+          listing:unattended,thumbnail:unattended})
       });
     },
-    updateGeneratorRelease:release.updateGeneratorRelease,
-    reconcileGeneratorRelease:release.reconcileGeneratorRelease,
+    // The dispatch mode is durable before the artifact runs, so reconciliation asks the same
+    // authority that dispatched. Without the capability the assisted handoff is unchanged.
+    async updateGeneratorRelease(input){
+      if(!await updateDriver.available()) return release.updateGeneratorRelease(input);
+      const context=await requireContext(operationContext,input.operationId);
+      await markUnattended(input.operationId);
+      return updateDriver.updateGeneratorRelease({...input,personaUid:context.personaUid});
+    },
+    async reconcileGeneratorRelease(input){
+      if(await dispatchedUnattended(input.operationId)&&await updateDriver.available()){
+        const context=await requireContext(operationContext,input.operationId);
+        const answer=await updateDriver.reconcileGeneratorRelease({...input,personaUid:context.personaUid});
+        if(answer.status!=="UNKNOWN") return answer;
+      }
+      // An unanswered unattended operation falls back to the operator; it is never retried.
+      return release.reconcileGeneratorRelease(input);
+    },
     observeGenerator:readDriver.observeGenerator,
     async updateGenerator({operationId,generatorId,sourceHash,source}={}){
       const context=await requireContext(operationContext,operationId);
