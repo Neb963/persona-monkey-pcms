@@ -1824,7 +1824,7 @@
     {
       "id": "P040",
       "title": "Refresher, Explorer and Provisioning background services and UI migration",
-      "status": "BLOCKED",
+      "status": "CLAIMED",
       "dependsOn": [
         "P033",
         "P036",
