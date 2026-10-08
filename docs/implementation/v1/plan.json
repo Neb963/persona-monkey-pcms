@@ -1568,7 +1568,7 @@
     {
       "id": "P035",
       "title": "Toolbar popup PCMS status block",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P028",
         "P032"
