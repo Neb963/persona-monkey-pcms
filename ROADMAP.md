@@ -345,13 +345,13 @@ Merge wave: 17
 - [x] T037.3 — T037.3 Snapshot application to Deployer, account-folder linking, adoption and Deployer page
 
 ## P038 — Scheduled background repository synchronization
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P037, P029  
 Merge wave: 18
 
-- [ ] T038.1 — T038.1 Deployer repository-sync service on declared schedules
-- [ ] T038.2 — T038.2 Cadence, backoff, rate-limit and offline handling
-- [ ] T038.3 — T038.3 Interrupted-scan recovery and packaged continuity proof
+- [x] T038.1 — T038.1 Deployer repository-sync service on declared schedules
+- [x] T038.2 — T038.2 Cadence, backoff, rate-limit and offline handling
+- [x] T038.3 — T038.3 Interrupted-scan recovery and packaged continuity proof
 
 ## P039 — Perchance observation, verification and drift (capability-gated)
 Status: **BLOCKED**  

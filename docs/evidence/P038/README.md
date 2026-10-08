@@ -1,7 +1,7 @@
 # P038 evidence — scheduled background repository synchronization
 
 Claim: CLM-P038-001, epoch 1; dependencies P037 and P029 accepted. Claim base: `a65139971beb415242ecd88f2ca0c26557467ab4`; acquisition: `3816f9c0e7392bc279cf2d78d656b0f7edb922b3`.
-Implementation tested head: `cb6a8798bd6a0f3e8d98a3be7d7fe874741ebc89`. [PR #62](https://github.com/Neb963/persona-monkey-pcms/pull/62). State: **CI_VERIFIED on PR head; integration/acceptance pending**.
+Implementation tested head: `cb6a8798bd6a0f3e8d98a3be7d7fe874741ebc89`. [PR #62](https://github.com/Neb963/persona-monkey-pcms/pull/62). State: **ACCEPTED after independent merged-main verification**.
 
 ## Implementation
 
@@ -27,4 +27,7 @@ Implementation tested head: `cb6a8798bd6a0f3e8d98a3be7d7fe874741ebc89`. [PR #62]
 
 P037 manual deployment remains operator-confirmed. P039 drift observation, P042 unattended dispatch and final P043–P044 live acceptance remain separate. No live Perchance mutation, CAPTCHA automation or Firefox DevTools MCP used.
 
-Merged-main verification and ACCEPTED transition must be recorded separately after PR merge.
+**Merged-main acceptance:** PR #62 merged at `274a28b814c723295ff995777e38c19d0d76f8cd`.
+- [Merged-main verify #37786384369](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37786384369): SUCCESS.
+- [Merged-main pinned Firefox #37786384367](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37786384367): SUCCESS; all eight jobs, including P038 packaged offline and restart acceptance.
+This independent merged-main evidence justifies P038/claim `ACCEPTED`. No successor phase has been started.
