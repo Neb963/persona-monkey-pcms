@@ -1685,7 +1685,7 @@
     {
       "id": "P037",
       "title": "Generator repository provider, manual scan and assisted repository deployments",
-      "status": "IN_PROGRESS",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P036"
       ],
