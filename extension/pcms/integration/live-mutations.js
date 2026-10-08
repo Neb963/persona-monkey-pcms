@@ -1,6 +1,7 @@
 import { getPersonaBrokerCommand } from "../core/persona-broker-contract.js";
 import { createPerchanceProviderAdapter } from "../providers/perchance/adapter.js";
 import { PERCHANCE_ASSISTED_CAPABILITIES, createPerchanceAssistedReleaseMethods } from "../providers/perchance/assisted-driver.js";
+import { createPerchanceExecutionReadDriver } from "../providers/perchance/execution-read-driver.js";
 import {
   PERCHANCE_DRIVER_CONTRACT_ID,
   PERCHANCE_DRIVER_CONTRACT_VERSION_V2,
@@ -254,11 +255,13 @@ function providerDescriptor(adapter,accountProvisionBehavior){
 export function createPcmsLiveMutationIntegration({
   storageBroker,
   personaBroker,
-  operator
+  operator,
+  observationProfile = null
 }={}){
   if(!operator||typeof operator.choose!=="function") throw new TypeError("Live mutations require an operator bridge");
   const client=createLiveBrokerClient({broker:personaBroker});
   const operationContext=createLiveOperationContext({storageBroker});
+  const readDriver=createPerchanceExecutionReadDriver({client,profile:observationProfile});
 
   // pcms.perchance.driver/v2 (P036): the same assisted generator.update also takes release
   // payloads. Every unattended/observe/listing capability stays off until live phases.
@@ -273,16 +276,18 @@ export function createPcmsLiveMutationIntegration({
   const driver=Object.freeze({
     async probe(){
       await client.request("system.status",{});
+      const observe=await readDriver.available();
       return Object.freeze({
         contractId:PERCHANCE_DRIVER_CONTRACT_ID,
         contractVersion:PERCHANCE_DRIVER_CONTRACT_VERSION_V2,
         providerId:PERCHANCE_PROVIDER_ID,
-        operations:Object.freeze([PERCHANCE_GENERATOR_UPDATE_ACTION]),
-        capabilities:PERCHANCE_ASSISTED_CAPABILITIES
+        operations:Object.freeze([PERCHANCE_GENERATOR_UPDATE_ACTION,...(observe?["generator.observe"]:[])]),
+        capabilities:Object.freeze({...PERCHANCE_ASSISTED_CAPABILITIES,observe})
       });
     },
     updateGeneratorRelease:release.updateGeneratorRelease,
     reconcileGeneratorRelease:release.reconcileGeneratorRelease,
+    observeGenerator:readDriver.observeGenerator,
     async updateGenerator({operationId,generatorId,sourceHash,source}={}){
       const context=await requireContext(operationContext,operationId);
       await openPersona(client,context,"https://perchance.org/"+encodeURIComponent(generatorId),operationId,"open");

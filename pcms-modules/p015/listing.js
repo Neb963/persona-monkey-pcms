@@ -17,7 +17,7 @@ function perchanceColumn(deployment, status) {
   return status.token === "UNCERTAIN" ? label + " ?" : label;
 }
 
-export function deployerGeneratorListing({ deployments, healthyAccounts = new Set(), openHandoffTargets = new Set(), recovery = "NORMAL", mode = "ASSISTED", now }) {
+export function deployerGeneratorListing({ deployments, healthyAccounts = new Set(), openHandoffTargets = new Set(), recovery = "NORMAL", mode = "ASSISTED", now, observations=new Map(), observeAvailable=false }) {
   return Object.freeze({
     moduleId:"deployer",
     items:Object.freeze(deployments.map((deployment) => {
@@ -27,6 +27,8 @@ export function deployerGeneratorListing({ deployments, healthyAccounts = new Se
         accountHealthy:healthyAccounts.has(deployment.accountId),
         recovery,
         mode,
+        observation:observations.get(deployment.deploymentId)??null,
+        observeAvailable:observeAvailable&&observations.get(deployment.deploymentId)?.method!=="OPERATOR_CONFIRMED",
         now
       });
       const origin = deployment.desired.origin;

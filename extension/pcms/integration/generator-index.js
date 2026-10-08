@@ -97,7 +97,7 @@ function method(value,name,label){
   return value[name].bind(value);
 }
 
-export function createGeneratorIndexService({deployer,accounts,humanTasks,recoveryHold=null,listingSources=[],clock=()=>new Date().toISOString()}={}){
+export function createGeneratorIndexService({deployer,accounts,humanTasks,recoveryHold=null,observations=null,listingSources=[],clock=()=>new Date().toISOString()}={}){
   const listDeployments=method(deployer,"listDeployments","Generator index Deployer source");
   const deployerListing=method(deployer,"listGeneratorListing","Generator index Deployer listing");
   const listAccounts=method(accounts,"listAccounts","Generator index Accounts source");
@@ -185,6 +185,8 @@ export function createGeneratorIndexService({deployer,accounts,humanTasks,recove
         &&deployment.confirmed.thumbnailHash===deployment.desired.thumbnailHash&&deployment.confirmed.listing===deployment.desired.listing,
       operationStatus:deployment.operation.status,
       paused:deployment.policy.paused,
+      pauseReason:deployment.policy.pauseReason,
+      observation:observations?await observations.get(deployment.deploymentId):null,
       technical:Object.freeze({
         deploymentId:deployment.deploymentId,
         desiredRevision:deployment.desired.revision,

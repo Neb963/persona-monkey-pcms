@@ -37,7 +37,8 @@ export function repositorySyncBackoff({failureCount,error,resetAt=null,now}={}){
   return iso(Math.max(now+base,Number.isFinite(reset)&&reset>now?reset:0));
 }
 export function createDeployerRepositorySync({
-  repository,timers,stateStore,clock=()=>new Date().toISOString(),cadenceMinutes=REPOSITORY_SYNC_DEFAULT_MINUTES
+  repository,timers,stateStore,clock=()=>new Date().toISOString(),cadenceMinutes=REPOSITORY_SYNC_DEFAULT_MINUTES,
+  afterCheck=async()=>null
 }={}){
   if(typeof repository?.read!=="function"||typeof repository?.startScan!=="function"
     ||typeof repository?.scanStep!=="function"||typeof stateStore?.read!=="function"
@@ -146,6 +147,8 @@ export function createDeployerRepositorySync({
       lastCheckedAt:repoAfter.lastCheckedAt??before.value.lastCheckedAt};
     await save(before,next);
     await schedule(next,nowMs(clock));
+    // Observation work must not strand the independently durable repository timer.
+    if(result.done&&result.status!=="FAILED")await afterCheck(repoAfter.lastCheckedAt);
     return Object.freeze({status:result.status,done:result.done,nextDueAt});
   }
   return Object.freeze({declare,onTimer,readState});

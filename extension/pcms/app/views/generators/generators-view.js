@@ -193,6 +193,7 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
     banner.dataset.token = row.status.token;
     banner.append(badge(documentRef, row.status), e(documentRef, "span", "generators-next", row.next.text ? "Next: " + row.next.text : ""));
     content.appendChild(banner);
+    for(const note of row.notes??[])content.appendChild(e(documentRef,"p","generators-evidence",note));
     if (!facet) return;
 
     const cards = e(documentRef, "div", "generators-cards");
@@ -203,19 +204,31 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
         ? [["Deployed", shortTime(facet.confirmedAt)], ["Listing", listingLabel(facet.confirmedListing)],
           ["Matches wanted", facet.confirmedMatchesDesired ? "Yes" : "No"]]
         : [["Deployed", "Not yet deployed"]]),
-      card("Perchance now", [["Checked", "Not verified — reading Perchance isn't available yet"]])
+      card("Perchance now", facet.observation?.observation?.method==="PROVIDER_READ"
+        ? [["Checked",shortTime(facet.observation.observation.observedAt)],
+          ["Result",facet.observation.observation.challenge?"Needs your attention":facet.observation.observation.exists===false?"Missing":facet.observation.drift?"Changed":"Observed"],
+          ["Listing",listingLabel(facet.observation.observation.listing)]]
+        : [["Checked", "Not verified"], ["Reading",facet.observation?.available?"Available — choose Verify now":"Unavailable until compatibility is confirmed"]])
     );
     content.appendChild(cards);
 
     const actions = e(documentRef, "div", "generators-actions");
     const status = facet.operationStatus;
-    if (!["ACTIVE", "RECONCILE"].includes(status)) {
+    if (!["ACTIVE", "RECONCILE"].includes(status)&&!facet.observation?.drift) {
       const deploy = button(documentRef, "Deploy from file…", "deploy-file", "generators-primary");
       deploy.dataset.slug = row.slug; actions.appendChild(deploy);
     }
     if (status === "RECONCILE" && !detail.handoffTaskId) actions.appendChild(button(documentRef, "Check Perchance…", "reconcile"));
     if (!["ACTIVE", "RECONCILE"].includes(status)) {
-      actions.appendChild(button(documentRef, facet.paused ? "Resume" : "Pause", facet.paused ? "resume" : "pause"));
+      if(!facet.observation?.drift)actions.appendChild(button(documentRef, facet.paused ? "Resume" : "Pause", facet.paused ? "resume" : "pause"));
+    }
+    if(runtime.observations&&facet.observation?.available){
+      const verify=button(documentRef,"Verify now","verify");verify.disabled=facet.observation.automaticBlocked;actions.appendChild(verify);
+      if(facet.observation.drift){
+        if(facet.origin.kind==="REPOSITORY")actions.appendChild(button(documentRef,"Compare changes","compare"));
+        if(facet.observation.observation?.exists===true)actions.appendChild(button(documentRef,"Keep Perchance version…","keep"));
+        if(facet.origin.kind==="REPOSITORY")actions.appendChild(button(documentRef,"Overwrite with repository version…","overwrite"));
+      }
     }
     content.appendChild(actions);
 
@@ -467,6 +480,59 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
 
   // --- events -----------------------------------------------------------------------------
 
+  async function openDriftDialog(action){
+    closeModal();const facet=lastDetail?.deployer,slug=lastDetail?.row?.slug;
+    if(!facet||!slug)return;
+    const mask=e(documentRef,"div","generators-modal-backdrop"),panel=e(documentRef,"section","generators-modal");
+    panel.setAttribute("role","dialog");panel.setAttribute("aria-modal","true");panel.setAttribute("aria-label","Review Perchance changes");
+    panel.appendChild(e(documentRef,"h3",null,action==="compare"?"Compare "+slug:action==="keep"?"Keep Perchance version":"Overwrite Perchance version"));
+    const state={busy:false};modal=state;mask.appendChild(panel);dialogHost.appendChild(mask);
+    const status=e(documentRef,"p","generators-dialog-status");status.setAttribute("role","status");
+    const cancel=button(documentRef,"Close",null);cancel.addEventListener("click",closeModal);
+    if(action==="compare"){
+      panel.append(status,cancel);status.textContent="Reading current Perchance content…";
+      try{
+        const comparison=await runtime.observations.compare(facet.deploymentId);
+        if(modal!==state)return;status.textContent="Repository release and current Perchance content. Nothing is changed by this comparison.";
+        for(const role of ["code","html"]){
+          const section=e(documentRef,"section","generators-comparison");section.appendChild(e(documentRef,"h4",null,role==="code"?"Code panel":"HTML panel"));
+          const pair=e(documentRef,"div","generators-comparison-pair");
+          for(const [key,label] of [["desired","Repository"],["observed","Perchance"]]){
+            const side=e(documentRef,"div");side.append(e(documentRef,"strong",null,label),e(documentRef,"pre",null,comparison[key][role]));pair.appendChild(side);
+          }section.appendChild(pair);panel.insertBefore(section,cancel);
+        }
+        panel.insertBefore(e(documentRef,"p",null,"Listing: repository "+listingLabel(comparison.desiredListing)+" · Perchance "+listingLabel(comparison.observedListing)),cancel);
+        panel.insertBefore(e(documentRef,"p",null,"Thumbnail: "+(comparison.desired.thumbnail===comparison.observed.thumbnail?"matches":"differs")),cancel);
+        for(const role of ["code","html","thumbnail"]){
+          if(comparison.observed[role]===null)continue;
+          const download=button(documentRef,"Download Perchance "+role,null);
+          download.addEventListener("click",()=>{
+            const bytes=role==="thumbnail"?base64ToBytes(comparison.observed.thumbnail):comparison.observed[role];
+            const blob=new windowRef.Blob([bytes],{type:role==="thumbnail"?"image/jpeg":"text/plain;charset=utf-8"});
+            const url=windowRef.URL.createObjectURL(blob),link=e(documentRef,"a");link.href=url;
+            link.download=slug+(role==="code"?".perchance":role==="html"?".html":".jpeg");link.click();
+            windowRef.setTimeout(()=>windowRef.URL.revokeObjectURL(url),1000);
+          });panel.insertBefore(download,cancel);
+        }
+      }catch(error){if(modal===state)status.textContent=error?.message||"Comparison unavailable";}
+      return;
+    }
+    panel.appendChild(e(documentRef,"p",null,action==="keep"
+      ?"Keep the last observed Perchance content as the baseline. This generator stays paused and diverged from the repository until you resume or the repository releases a newer version. Download its Perchance files from Compare changes to commit them yourself."
+      :"Replace the current Perchance code, HTML, thumbnail and listing with the repository release. Changes made on Perchance will be lost. PCMS creates a new deployment and checks the saved result."));
+    const label=e(documentRef,"label",null,"Type "+slug+" to confirm"),input=e(documentRef,"input");input.autocomplete="off";label.appendChild(input);
+    const apply=button(documentRef,action==="keep"?"Keep version":"Overwrite with repository",null,"generators-primary");apply.disabled=true;
+    input.addEventListener("input",()=>{apply.disabled=state.busy||input.value!==slug;});
+    apply.addEventListener("click",async()=>{
+      if(state.busy||input.value!==slug)return;state.busy=true;apply.disabled=true;cancel.disabled=true;
+      try{
+        const evidence={expectedRevision:facet.revision,expectedObservedAt:facet.observation.observation.observedAt,confirmation:input.value};
+        await runtime.observations[action](facet.deploymentId,evidence);closeModal();say(action==="keep"?"Perchance version kept. This generator remains paused.":"Repository deployment prepared. Complete any Perchance confirmation task.","ok");
+      }catch(error){status.textContent=error?.message||"The generator changed; refresh and try again.";}
+      finally{state.busy=false;apply.disabled=input.value!==slug;cancel.disabled=false;await refresh();await onChanged();}
+    });panel.append(label,status,apply,cancel);input.focus();
+  }
+
   async function onClick(event) {
     const target = event.target.closest?.("[data-generators-action]");
     if (!target) return;
@@ -474,6 +540,11 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
     try {
       if (action === "deploy-new") await openDeployDialog(target.dataset.slug || null);
       if (action === "deploy-file") await openDeployDialog(target.dataset.slug);
+      if(action==="verify"&&lastDetail?.deployer){
+        const result=await runtime.observations.verifyNow(lastDetail.deployer.deploymentId);
+        say(result.status==="OBSERVED"?"Perchance observation recorded.":result.status==="DEFERRED"?"Verification queued; reads are spaced by at least 10 seconds.":"Verification unavailable or waiting for your attention.",result.status==="OBSERVED"?"ok":"warning");
+      }
+      if(["compare","keep","overwrite"].includes(action))await openDriftDialog(action);
       if (action === "reconcile" && lastDetail?.deployer) {
         await settle(lastDetail.deployer.deploymentId);
         say("Checking Perchance. Answer the task when it appears.", "ok");

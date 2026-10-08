@@ -2,6 +2,10 @@
 // how Perchance serialises a generator's listing. Domain records, UI, audit text and module
 // contracts use GeneratorListing ("PUBLICLY_LISTED" | "UNLISTED") and ObservedListing (+ "UNKNOWN").
 import { normalizeGeneratorListing } from "./contract.js";
+// Reviewed fixture-page wire mapping, embedded in the immutable read artifact.
+// Keep provider field knowledge here, including code sent to PersonaMonkey.
+export const OBSERVE_FIXTURE_LISTING_SOURCE = `const setting = page.dataset.isPrivate;
+  const settings = setting === "true" ? { isPrivate:true } : setting === "false" ? { isPrivate:false } : {};`;
 
 // desired → provider
 export function serializeGeneratorListing(listing) {

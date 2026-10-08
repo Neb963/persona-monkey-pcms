@@ -20,6 +20,8 @@ export function createUiContribution({moduleId="deployer",service}={}){
     ]},
     {id:"check",label:"Check now",appliesTo:"module",risk:"LOCAL"},
     {id:"continue",label:"Continue scan",appliesTo:"module",risk:"LOCAL"},
+    {id:"verification",label:"Verification settings",appliesTo:"module",risk:"LOCAL",input:[
+      {key:"sweepLimit",label:"Verify up to this many generators per check",kind:"integer",required:true,min:1,max:100,default:20}]},
     {id:"link",label:"Link account folder",appliesTo:"module",risk:"BINDING",input:[
       {key:"folder",label:"Repository folder",kind:"text",required:true,maxLength:100},
       {key:"account",label:"PCMS account",kind:"entity",entityKind:"account",required:true}]},
@@ -40,7 +42,7 @@ export function createUiContribution({moduleId="deployer",service}={}){
       {id:"release",label:"Release",kind:"text"},
       {id:"folder",label:"Folder",kind:"text"},
       {id:"state",label:"State",kind:"text"}],rowHref:"generator",
-      actions:["connect","check","continue","link"]},
+      actions:["connect","check","continue","link","verification"]},
       {id:"generator",title:"Generator",type:"detail",actions:["adopt","deploy"]}]},
     async summary(){
       const {value}=await service.read();
@@ -56,10 +58,19 @@ export function createUiContribution({moduleId="deployer",service}={}){
     },
     async conditions(){
       const {value}=await service.read();
-      if(!value.lastFailure)return [];
-      return [{key:"repo-scan-failed",priority:"HIGH",status:{token:"ERROR",label:"Repository unavailable"},
+      const out=value.lastFailure?[{key:"repo-scan-failed",priority:"HIGH",status:{token:"ERROR",label:"Repository unavailable"},
         title:"Last repository scan failed ("+String(value.lastFailure.code).slice(0,80)+")",
-        subject:{kind:"module",id:moduleId}}];
+        subject:{kind:"module",id:moduleId}}]:[];
+      if(service.observations){
+        for(const item of value.snapshot?.items??[]){
+          const {deployment}=await service.getDeploymentForSlug(item.slug);if(!deployment)continue;
+          const observed=await service.observations.get(deployment.deploymentId);
+          if(observed?.drift)out.push({key:"drift:"+item.slug,priority:"HIGH",status:{token:"WARNING",label:"Changed on Perchance"},
+            title:item.slug+" changed on Perchance. Compare and choose; automatic deployment is paused.",subject:{kind:"generator",id:"perchance:"+item.slug}});
+          if(out.length>=50)break;
+        }
+      }
+      return out;
     },
     async listRows(_ctx,viewId,cursor=null){
       if(viewId!=="releases")throw new TypeError("Unknown Deployer view");
@@ -112,6 +123,11 @@ export function createUiContribution({moduleId="deployer",service}={}){
         const next=await service.scanStep();
         return receipt(next.done?"Repository check complete.":"Scan checkpoint saved; continue until complete.",
           next.status==="FAILED"?"WARNING":"INFO",next.status==="FAILED"?"Check failed":"Scan");
+      }
+      if(actionId==="verification"){
+        if(!service.observations)throw new TypeError("Verification is unavailable");
+        await service.observations.configure({sweepLimit:input.sweepLimit});
+        return receipt("Verification limit saved. Compatible reads are spaced by at least 10 seconds; real Perchance reads remain gated.");
       }
       if(!ref||ref.kind!=="module-object"||ref.view!=="generator")throw new TypeError("A generator is required");
       const current=await service.read();

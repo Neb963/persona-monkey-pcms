@@ -22,6 +22,7 @@ import {
 } from "./schema.js";
 import { readDeployerState } from "./migration.js";
 import { deployerGeneratorListing } from "./listing.js";
+import { deriveDrift } from "./status.js";
 import {
   PERCHANCE_GENERATOR_UPDATE_ACTION,
   PERCHANCE_PROVIDER_ID,
@@ -150,6 +151,7 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
   const remote=snapshotMethods(remoteOperationReader,["get"],"Deployer RemoteOperation reader",{allowExtra:true});
   if(typeof clock!=="function") throw new TypeError("Deployer clock must be a function");
   if(DEPLOYER_PROVIDER_ID!==PERCHANCE_PROVIDER_ID) throw new TypeError("Deployer provider identity is incompatible");
+  let observations=null;
 
   async function read() {
     let raw; try { raw=await store.read(); } catch { fail(DEPLOYER_ERROR_CODES.CORRUPT_STATE); }
@@ -212,7 +214,8 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
       else if(remoteStatus==="CANCELLED") status=DEPLOYMENT_OPERATION_STATUS.CANCELLED;
       else if(remoteStatus==="SUCCEEDED") {
         status=DEPLOYMENT_OPERATION_STATUS.SUCCEEDED;
-        confirmed=Object.freeze({payloadHash:existing.desired.payloadHash,thumbnailHash:existing.desired.thumbnailHash,
+        // Re-reading an already settled operation cannot erase a verified baseline.
+        if(confirmed.operationId!==existing.operation.operationId) confirmed=Object.freeze({payloadHash:existing.desired.payloadHash,thumbnailHash:existing.desired.thumbnailHash,
           listing:existing.desired.listing,confirmedAt:isoNow(clock),operationId:existing.operation.operationId,baselineHash:null});
       } else fail(DEPLOYER_ERROR_CODES.REMOTE_STATE);
       const updated=Object.freeze({...existing,confirmed,operation:Object.freeze({...existing.operation,status}),updatedAt:isoNow(clock)});
@@ -276,9 +279,11 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     if(existing.desired.revision!==expectedDesired) fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
     if(BUSY_STATUSES.includes(existing.operation.status)) fail(DEPLOYER_ERROR_CODES.OPERATION_BUSY);
     if(sameIntent(existing.desired,intent)) return Object.freeze({revision:current.revision,changed:false,deployment:existing});
+    const resumeKept=observations&&await observations.canResumeForRelease(existing,intent.origin);
     const nextDesiredRevision=existing.desired.revision+1;
     const next=Object.freeze({...existing,desired:Object.freeze({revision:nextDesiredRevision,...intent}),
       operation:Object.freeze({sequence:1,operationId:operationIdFor(existing.deploymentId,nextDesiredRevision,1),status:DEPLOYMENT_OPERATION_STATUS.PENDING}),
+      policy:resumeKept?Object.freeze({paused:false,pauseReason:null}):existing.policy,
       updatedAt:isoNow(clock)});
     const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
     return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find((item)=>item.deploymentId===deploymentId)});
@@ -292,8 +297,13 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     if(current.revision!==expected) fail(DEPLOYER_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
     const existing=current.value.deployments.find((item)=>item.deploymentId===deploymentId);
     if(!existing) fail(DEPLOYER_ERROR_CODES.NOT_FOUND);
+    if(!paused&&observations&&await observations.isDrifted(existing)) fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
     if(existing.policy.paused===paused) return Object.freeze({revision:current.revision,changed:false,deployment:existing});
-    const next=Object.freeze({...existing,policy:Object.freeze(paused?{paused:true,pauseReason:"OPERATOR"}:{paused:false,pauseReason:null}),updatedAt:isoNow(clock)});
+    const resumedKeep=!paused&&observations&&await observations.keptCurrent(existing);
+    if(resumedKeep&&BUSY_STATUSES.includes(existing.operation.status))fail(DEPLOYER_ERROR_CODES.OPERATION_BUSY);
+    const desired=resumedKeep?{...existing.desired,revision:existing.desired.revision+1}:existing.desired;
+    const operation=resumedKeep?{sequence:1,operationId:operationIdFor(deploymentId,desired.revision,1),status:DEPLOYMENT_OPERATION_STATUS.PENDING}:existing.operation;
+    const next=Object.freeze({...existing,desired,operation,policy:Object.freeze(paused?{paused:true,pauseReason:"OPERATOR"}:{paused:false,pauseReason:null}),updatedAt:isoNow(clock)});
     const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
     return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find((item)=>item.deploymentId===deploymentId)});
   }
@@ -335,7 +345,14 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     if(BUSY_STATUSES.includes(existing.operation.status))fail(DEPLOYER_ERROR_CODES.OPERATION_BUSY);
     if(JSON.stringify(existing.desired.origin)===JSON.stringify(origin.origin))
       return Object.freeze({revision:current.revision,changed:false,deployment:existing});
-    const next=Object.freeze({...existing,desired:Object.freeze({...existing.desired,origin:origin.origin}),updatedAt:isoNow(clock)});
+    const resumeKept=observations&&await observations.canResumeForRelease(existing,origin.origin);
+    const desired=Object.freeze({...existing.desired,origin:origin.origin,
+      revision:existing.desired.revision+(resumeKept?1:0)});
+    // A new release resumes an adopted provider baseline in the same CAS. Even
+    // identical repository bytes need a fresh operation after an explicit Keep.
+    const next=Object.freeze({...existing,desired,
+      operation:resumeKept?Object.freeze({sequence:1,operationId:operationIdFor(deploymentId,desired.revision,1),status:DEPLOYMENT_OPERATION_STATUS.PENDING}):existing.operation,
+      policy:resumeKept?Object.freeze({paused:false,pauseReason:null}):existing.policy,updatedAt:isoNow(clock)});
     const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
     return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find(v=>v.deploymentId===deploymentId)});
   }
@@ -388,6 +405,7 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     if(current.revision!==expected) fail(DEPLOYER_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
     const existing=current.value.deployments.find((item)=>item.deploymentId===deploymentId);
     if(!existing) fail(DEPLOYER_ERROR_CODES.NOT_FOUND);
+    if(existing.policy.pauseReason==="DRIFT"||observations&&await observations.isDrifted(existing)&&!await observations.canOverwrite(existing)) fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
     const previousStatus=existing.operation.status;
     if(![DEPLOYMENT_OPERATION_STATUS.PENDING,DEPLOYMENT_OPERATION_STATUS.RETRYABLE].includes(previousStatus)) fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
     await requireAccount(existing.accountId);
@@ -415,6 +433,11 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     if(!plain(result) || !["APPLIED","NOT_APPLIED","ALREADY_APPLIED"].includes(result.status)) fail(DEPLOYER_ERROR_CODES.REMOTE_STATE);
     const remoteStatus=result.status==="NOT_APPLIED" ? "FAILED" : "SUCCEEDED";
     const settled=await settleOperation(deploymentId,activeDeployment.operation.operationId,remoteStatus);
+    if(remoteStatus==="SUCCEEDED"&&observations) {
+      await observations.afterConfirmed(settled.deployment);
+      const latest=await read();
+      return Object.freeze({revision:latest.revision,status:result.status,deployment:latest.value.deployments.find(d=>d.deploymentId===deploymentId)});
+    }
     return Object.freeze({revision:settled.revision,status:result.status,deployment:settled.deployment});
   }
   async function reconcileDeployment(rawDeploymentId,{expectedRevision}={}) {
@@ -432,16 +455,79 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
       catch { return settleOperation(deploymentId,existing.operation.operationId,"UNCERTAIN"); }
       const state=reconciled?.value?.state;
       if(!REMOTE_STATES.has(state)) fail(DEPLOYER_ERROR_CODES.REMOTE_STATE);
-      return settleOperation(deploymentId,existing.operation.operationId,state);
+      const settled=await settleOperation(deploymentId,existing.operation.operationId,state);
+      if(state==="SUCCEEDED"&&observations){
+        await observations.afterConfirmed(settled.deployment);
+        const latest=await read();return {revision:latest.revision,deployment:latest.value.deployments.find(d=>d.deploymentId===deploymentId)};
+      }
+      return settled;
     }
-    return settleOperation(deploymentId,existing.operation.operationId,snapshot.state);
+    if(snapshot.state==="SUCCEEDED"&&observations&&existing.confirmed.operationId===existing.operation.operationId) {
+      await observations.verifyNow(deploymentId);
+      const latest=await read();return {revision:latest.revision,deployment:latest.value.deployments.find(d=>d.deploymentId===deploymentId)};
+    }
+    const settled=await settleOperation(deploymentId,existing.operation.operationId,snapshot.state);
+    if(snapshot.state==="SUCCEEDED"&&observations)await observations.afterConfirmed(settled.deployment);
+    return settled;
+  }
+
+  // P039: CAS- and confirmation-fenced metadata transition. Content never enters this row.
+  async function recordProviderObservation(rawDeploymentId,{expectedRevision,confirmedOperationId,observation,mode="READ"}={}) {
+    const deploymentId=normalizeDeploymentId(rawDeploymentId),current=await read();
+    if(current.revision!==revision(expectedRevision))fail(DEPLOYER_ERROR_CODES.REVISION_CONFLICT);
+    const existing=current.value.deployments.find(d=>d.deploymentId===deploymentId);
+    if(!existing)fail(DEPLOYER_ERROR_CODES.NOT_FOUND);
+    if(existing.confirmed.operationId!==confirmedOperationId)fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
+    if(!["READ","KEEP"].includes(mode)||observation?.method!=="PROVIDER_READ"
+      ||![true,false,null].includes(observation.exists)||typeof observation.challenge!=="boolean"
+      ||!Number.isFinite(Date.parse(observation.observedAt)))fail(DEPLOYER_ERROR_CODES.INVALID_ARGUMENT);
+    let confirmed=existing.confirmed,policy=existing.policy,operation=existing.operation;
+    if(mode==="KEEP"){
+      if(!confirmed.baselineHash||observation.exists!==true||observation.challenge)fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
+      confirmed={...confirmed,baselineHash:normalizeSourceHash(observation.payloadHash),confirmedAt:observation.observedAt};
+      policy={paused:true,pauseReason:"OPERATOR"};
+    }else if(!observation.challenge&&isConfirmed(confirmed)){
+      if(confirmed.baselineHash===null){
+        const equal=observation.exists===true&&observation.payloadHash===confirmed.payloadHash
+          &&observation.thumbnailHash===confirmed.thumbnailHash
+          &&(observation.listing==="UNKNOWN"||confirmed.listing===null||observation.listing===confirmed.listing);
+        if(equal){
+          confirmed={...confirmed,baselineHash:observation.payloadHash};
+          if(operation.status===DEPLOYMENT_OPERATION_STATUS.RECONCILE&&confirmed.operationId===operation.operationId)
+            operation={...operation,status:DEPLOYMENT_OPERATION_STATUS.SUCCEEDED};
+        }else{
+          // RemoteOps retains the provider's original confirmation. The domain remains
+          // outcome-uncertain until a provider read reconciles that confirmation.
+          if(confirmed.operationId===operation.operationId)operation={...operation,status:DEPLOYMENT_OPERATION_STATUS.RECONCILE};
+          policy={paused:true,pauseReason:"DRIFT"};
+        }
+      }else if(deriveDrift({deployment:existing,observation}))policy={paused:true,pauseReason:"DRIFT"};
+    }
+    const next={...existing,confirmed,policy,operation,updatedAt:isoNow(clock)};
+    const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
+    return {revision:saved.revision,deployment:saved.value.deployments.find(d=>d.deploymentId===deploymentId)};
+  }
+  async function prepareOverwrite(rawDeploymentId,{expectedRevision}={}){
+    const deploymentId=normalizeDeploymentId(rawDeploymentId),current=await read();
+    if(current.revision!==revision(expectedRevision))fail(DEPLOYER_ERROR_CODES.REVISION_CONFLICT);
+    const existing=current.value.deployments.find(d=>d.deploymentId===deploymentId);
+    if(!existing||existing.desired.origin.kind!=="REPOSITORY"||!observations
+      ||!await observations.isDrifted(existing)||BUSY_STATUSES.includes(existing.operation.status))fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
+    const desired={...existing.desired,revision:existing.desired.revision+1};
+    const next={...existing,desired,policy:{paused:false,pauseReason:null},
+      operation:{sequence:1,operationId:operationIdFor(deploymentId,desired.revision,1),status:DEPLOYMENT_OPERATION_STATUS.PENDING},updatedAt:isoNow(clock)};
+    const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
+    return {revision:saved.revision,deployment:saved.value.deployments.find(d=>d.deploymentId===deploymentId)};
   }
   // GeneratorListing for the Core generator index (pcms.generator-index/v1). Deployments are
   // passed by the index when it already read them; otherwise they are read here.
   async function listGeneratorListing({deployments=null,healthyAccounts=new Set(),openHandoffTargets=new Set(),recovery="NORMAL",now=null}={}) {
     const source=deployments ?? (await read()).value.deployments;
-    return deployerGeneratorListing({deployments:source,healthyAccounts,openHandoffTargets,recovery,now:now ?? isoNow(clock)});
+    const observationMap=observations?await observations.listForStatus(source):new Map();
+    const observeAvailable=observations?await observations.available():false;
+    return deployerGeneratorListing({deployments:source,healthyAccounts,openHandoffTargets,recovery,now:now ?? isoNow(clock),observations:observationMap,observeAvailable});
   }
-  return Object.freeze({createDeployment,getDeployment,listDeployments,listDeploymentViews,listGeneratorListing,setDesired,setPaused,adoptRepository,setRepositoryOrigin,prepareRetry,deploy,reconcileDeployment,migrateState});
+  return Object.freeze({createDeployment,getDeployment,listDeployments,listDeploymentViews,listGeneratorListing,setDesired,setPaused,adoptRepository,setRepositoryOrigin,prepareRetry,deploy,reconcileDeployment,migrateState,
+    recordProviderObservation,prepareOverwrite,bindObservations(service){if(observations)throw new Error("Observations already bound");observations=service;}});
 }
 export { DEPLOYMENT_OPERATION_STATUS };
