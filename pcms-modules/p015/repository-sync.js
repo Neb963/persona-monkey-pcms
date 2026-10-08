@@ -93,6 +93,14 @@ export function createDeployerRepositorySync({
       state={...state,nextDueAt:iso(nowMs(clock)),failureCount:0,lastCheckedAt:null};
       current=await save(current,state);
     }
+    // A callback can fail after P029 claimed its timer but before the P038
+    // state CAS. Generic delivery-failed/overdue MISSED timers are not replayed
+    // by ensure(v1), so explicitly mint one new occurrence here.
+    const previous=await timers.get(REPOSITORY_SYNC_TIMERS[state.slot]);
+    if(previous?.value?.state==="MISSED"&&previous.value.missedReason!=="interrupted"){
+      state={...state,slot:1-state.slot,nextDueAt:iso(nowMs(clock)+CONTINUATION_MS)};
+      current=await save(current,state);
+    }
     return Object.freeze({enabled:true,...await schedule(state,nowMs(clock))});
   }
   async function onTimer({timerId}={}){
@@ -102,11 +110,21 @@ export function createDeployerRepositorySync({
     if(!repoBefore.config)return {disabled:true};
     const now=nowMs(clock);
     let result;
-    try{
-      if(!repoBefore.scan)await repository.startScan();
-      result=await repository.scanStep({batchSize:8});
-    }catch(error){
-      result={done:true,status:"FAILED",error:typeof error?.code==="string"?error.code:REPO_ERRORS.UNAVAILABLE};
+    // The final P037 scan checkpoint may commit before this sync state CAS.
+    // A resumed timer observes that completion and cannot prepare releases twice.
+    const finishedSinceLastSync=repoBefore.scan===null&&repoBefore.lastCheckedAt!==null
+      &&(before.value.lastCheckedAt===null
+        ||Date.parse(repoBefore.lastCheckedAt)>Date.parse(before.value.lastCheckedAt));
+    if(finishedSinceLastSync){
+      result={done:true,status:repoBefore.lastFailure?"FAILED":"UNCHANGED",
+        error:repoBefore.lastFailure?.code};
+    }else{
+      try{
+        if(!repoBefore.scan)await repository.startScan();
+        result=await repository.scanStep({batchSize:8});
+      }catch(error){
+        result={done:true,status:"FAILED",error:typeof error?.code==="string"?error.code:REPO_ERRORS.UNAVAILABLE};
+      }
     }
     const repoAfter=(await repository.read()).value;
     let failureCount=before.value.failureCount;
