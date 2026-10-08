@@ -1454,7 +1454,7 @@
     {
       "id": "P033",
       "title": "Module UI contribution contract v1 for built-in and runtime modules",
-      "status": "CLAIMED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P031",
         "P032"
