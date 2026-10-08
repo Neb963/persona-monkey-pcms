@@ -1873,8 +1873,8 @@
     {
       "destinationPath": "extension/popup/popup.js",
       "upstreamBlobSha": "dce9344adac4825bae77030cd73b5e99029266fb",
-      "derivativeBlobSha": "b51bd7ba50f93814db72a418e04418a290ef8f28",
-      "derivativeSize": 12930,
+      "derivativeBlobSha": "cd471af4f384692ae6a96dedee33257417170fee",
+      "derivativeSize": 12940,
       "reason": "P035 preserves the frozen PersonaMonkey popup source while adding read-only PCMS status and account deep linking"
     }
   ]
