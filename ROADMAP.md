@@ -372,13 +372,13 @@ Merge wave: 17
 - [ ] T040.3 — T040.3 Removal of P026 legacy operator forms with superseding assertions
 
 ## P041 — Backup/restore and module management UX
-Status: **CLAIMED**  
+Status: **ACCEPTED**  
 Depends on: P033, P031  
 Merge wave: 16
 
-- [ ] T041.1 — T041.1 File-based backup and previewed restore with typed confirmation
-- [ ] T041.2 — T041.2 Recovery checklist with per-item reconciliation
-- [ ] T041.3 — T041.3 Modules page driving live install/review/update/rollback/remove/purge
+- [x] T041.1 — T041.1 File-based backup and previewed restore with typed confirmation
+- [x] T041.2 — T041.2 Recovery checklist with per-item reconciliation
+- [x] T041.3 — T041.3 Modules page driving live install/review/update/rollback/remove/purge
 
 ## P042 — Unattended Perchance automation via PersonaMonkey execution artifacts (gated)
 Status: **BLOCKED**  

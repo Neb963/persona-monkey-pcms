@@ -1852,7 +1852,7 @@
     {
       "id": "P041",
       "title": "Backup/restore and module management UX",
-      "status": "CLAIMED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P033",
         "P031"
