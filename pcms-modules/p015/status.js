@@ -35,7 +35,10 @@ function normalizeObservation(value) {
     method:value.method, observedAt:time(value.observedAt, "observation.observedAt"), exists:value.exists,
     payloadHash:hash(value.payloadHash ?? null, "observation.payloadHash"),
     thumbnailHash:hash(value.thumbnailHash ?? null, "observation.thumbnailHash"),
-    listing:value.listing, challenge:bool(value.challenge ?? false, "observation.challenge")
+    listing:value.listing, challenge:bool(value.challenge ?? false, "observation.challenge"),
+    baselineListing:OBSERVED_LISTINGS.has(value.baselineListing)?value.baselineListing:null,
+    baselineThumbnailHash:hash(value.baselineThumbnailHash ?? null,"baselineThumbnailHash"),
+    keptDesiredRevision:Number.isSafeInteger(value.keptDesiredRevision)?value.keptDesiredRevision:null
   });
 }
 
@@ -72,11 +75,16 @@ export function normalizeGeneratorStatusInput(raw) {
 // 04 §E.8.2, compared against the baseline PCMS last confirmed, never against the repository.
 export function deriveDrift({ deployment, observation }) {
   if (!observation || observation.method !== "PROVIDER_READ" || !isConfirmed(deployment.confirmed)) return null;
+  if(observation.challenge)return null;
   if (Date.parse(observation.observedAt) <= Date.parse(deployment.confirmed.confirmedAt)) return null;
   if (observation.exists === false) return "MISSING";
   if (deployment.confirmed.baselineHash !== null && observation.payloadHash !== null
       && observation.payloadHash !== deployment.confirmed.baselineHash) return "CONTENT";
-  if (observation.listing !== "UNKNOWN" && deployment.confirmed.listing !== null && observation.listing !== deployment.confirmed.listing) return "LISTING";
+  const listing=observation.keptDesiredRevision!==null&&observation.keptDesiredRevision!==undefined
+    ?observation.baselineListing:deployment.confirmed.listing;
+  if (observation.listing !== "UNKNOWN" && listing!==null&&listing!=="UNKNOWN"&&observation.listing !== listing) return "LISTING";
+  const thumb=observation.keptDesiredRevision!=null?observation.baselineThumbnailHash:deployment.confirmed.thumbnailHash;
+  if(observation.exists===true&&observation.thumbnailHash!==thumb)return "THUMBNAIL";
   return null;
 }
 
@@ -106,7 +114,7 @@ function versionLabel(deployment) {
   return deployment.desired.origin.kind === "REPOSITORY" ? deployment.desired.origin.version : null;
 }
 
-const DRIFT_LABEL = Object.freeze({ CONTENT:"Changed on Perchance", LISTING:"Listing differs", MISSING:"Missing on Perchance" });
+const DRIFT_LABEL = Object.freeze({ CONTENT:"Changed on Perchance", LISTING:"Listing differs", THUMBNAIL:"Thumbnail differs", MISSING:"Missing on Perchance" });
 
 function select(input) {
   const { deployment } = input;
@@ -147,7 +155,7 @@ function select(input) {
     return { rule:9, status:{ token:"INFO", label:"No longer in repository" }, next:{ kind:"none", text:"Nothing changes on Perchance." } };
   }
   if (input.repository?.hold || deployment.policy.paused) {
-    return { rule:10, status:{ token:"INFO", label:"Paused" }, next:{ kind:"resume", text:"Resume to deploy updates." } };
+    return { rule:10, status:{ token:"INFO", label:input.observation?.keptDesiredRevision===deployment.desired.revision?"Diverged from repository":"Paused" }, next:{ kind:"resume", text:"Resume to deploy updates." } };
   }
   if (!isConfirmed(deployment.confirmed)) {
     const missing = input.observation?.exists === false;
@@ -158,7 +166,10 @@ function select(input) {
       && deployment.confirmed.thumbnailHash === deployment.desired.thumbnailHash;
     return { rule:12, status:{ token:"WARNING", label:listingOnly ? "Listing change ready" : "Update ready" }, next:modeNext(input) };
   }
-  const verified = input.observation?.method === "PROVIDER_READ" && Date.parse(input.observation.observedAt) > Date.parse(deployment.confirmed.confirmedAt);
+  const verified = deployment.confirmed.baselineHash!==null
+    &&input.observation?.method === "PROVIDER_READ"&&!input.observation.challenge&&input.observation.exists===true
+    &&input.observation.payloadHash===deployment.confirmed.baselineHash
+    &&Date.parse(input.observation.observedAt) >= Date.parse(deployment.confirmed.confirmedAt);
   return { rule:13, status:{ token:"OK", label:"In sync" }, next:{ kind:"none", text:"Nothing to do." },
     notes:[verified ? "verified " + age(input.observation.observedAt, input.now) + " ago" : "not verified"] };
 }

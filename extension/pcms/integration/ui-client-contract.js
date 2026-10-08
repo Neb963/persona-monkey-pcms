@@ -58,6 +58,13 @@ export const PCMS_UI_OPERATIONS=Object.freeze({
   "deployer.deploy":command(2,["modules","attention","recovery"]),
   "deployer.reconcileDeployment":command(2,["modules","attention","recovery"]),
   "deployer.setPaused":command(2,["modules"]),
+  // P039 content comparisons are read-only, ephemeral queries: never receipt results.
+  "observations.get":query(1),
+  "observations.compare":query(1),
+  "observations.verifyNow":command(1,["modules","attention"]),
+  "observations.keep":command(2,["modules"]),
+  "observations.overwrite":command(2,["modules","attention","recovery"]),
+  "observations.configure":command(1,["modules"]),
 
   // P036 pcms.generator-index/v1: the rebuildable Core view behind the Generators pages.
   "generators.list":query(1),

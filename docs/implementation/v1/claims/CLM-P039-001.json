@@ -27,7 +27,8 @@
   ],
   "contractReads": [],
   "contractWrites": [
-    "pcms.perchance.driver/v2"
+    "pcms.perchance.driver/v2",
+    "pcms.ui-client/v1"
   ],
   "resources": [
     {
@@ -41,5 +42,5 @@
     "A039-02",
     "A039-03"
   ],
-  "lastCheckpointSha": "6a9f9f43ddf6289ec1e902b4317b4f350911d72b"
+  "lastCheckpointSha": "545459665c10e6fb3848b4e04acd1fe0182ae629"
 }

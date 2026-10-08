@@ -250,5 +250,12 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
       snapshotItem:item,commitId:state.snapshot.commitId});
     return deployer.deploy(deploymentId,{expectedRevision,payload});
   }
-  return Object.freeze({read,configure,linkFolder,unlinkFolder,startScan,scanStep,scanNow,getDeploymentForSlug,adopt,deployFromRepository});
+  async function readDesiredPayload(deploymentId){
+    const state=(await read()).value,existing=await deployer.getDeployment(deploymentId);
+    const item=state.snapshot?.items.find(v=>v.slug===existing?.targetRef.id);
+    if(!existing||existing.desired.origin.kind!=="REPOSITORY"||!item||existing.desired.origin.commitId!==state.snapshot.commitId
+      ||item.payloadHash!==existing.desired.payloadHash||item.thumbnailHash!==existing.desired.thumbnailHash)fail(REPO_ERRORS.PROTOCOL);
+    return readRepositoryRelease({provider:repositoryProvider,config:state.config,snapshotItem:item,commitId:state.snapshot.commitId});
+  }
+  return Object.freeze({read,configure,linkFolder,unlinkFolder,startScan,scanStep,scanNow,getDeploymentForSlug,adopt,deployFromRepository,readDesiredPayload});
 }

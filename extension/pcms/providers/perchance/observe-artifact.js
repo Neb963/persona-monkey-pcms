@@ -1,5 +1,6 @@
 // Reviewed, immutable PersonaMonkey execution artifact for deterministic fixture pages.
 // This is deliberately not a guessed Perchance editor selector contract (P043).
+import { OBSERVE_FIXTURE_LISTING_SOURCE } from "./listing.js";
 export const PERCHANCE_OBSERVE_FIXTURE_FORMAT = "pcms.perchance.observe-fixture/v1";
 export function createObserveFixtureArtifact(origin, { includeContent = false } = {}) {
   const url = new URL(origin);
@@ -45,8 +46,7 @@ export function createObserveFixtureArtifact(origin, { includeContent = false } 
     if (b.length > 1024 * 1024 || b[0] !== 255 || b[1] !== 216 || b[2] !== 255) fail();
     thumbnailHash = await hash(b);
   }
-  const setting = page.dataset.isPrivate;
-  const settings = setting === "true" ? { isPrivate:true } : setting === "false" ? { isPrivate:false } : {};
+  ${OBSERVE_FIXTURE_LISTING_SOURCE}
   const observation = { exists:true, challenge:false, payloadHash:await hash(bytes), thumbnailHash, settings };
   // PersonaMonkey's result mailbox is 64 KiB. Hash reads support 4 MiB; content
   // comparison is explicitly bounded and never silently truncates a panel.

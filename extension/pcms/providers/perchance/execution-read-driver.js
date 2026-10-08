@@ -3,6 +3,7 @@
 import { createObserveFixtureArtifact } from "./observe-artifact.js";
 import { normalizeGeneratorSlug, sha256Hex } from "./contract.js";
 import { PERCHANCE_PROVIDER_ERROR_CODES as E, perchanceProviderError } from "./errors.js";
+import { normalizeProviderObservation } from "./observation.js";
 
 const REQUIRED = ["userscript.artifact.install", "userscript.artifact.assign", "persona.control.acquire",
   "persona.control.release", "execution.start", "execution.result.get", "execution.result.ack", "execution.cancel"];
@@ -13,8 +14,10 @@ function protocol() { throw perchanceProviderError(E.PROTOCOL); }
 export function createPerchanceExecutionReadDriver({ client, profile = null, allowDirect = false,
   clock = () => Date.now(), pause = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
   if (typeof client?.request !== "function") throw new TypeError("Observation requires a Persona Broker client");
+  if(typeof allowDirect!=="boolean"||typeof clock!=="function"||typeof pause!=="function")protocol();
   if (profile !== null && (profile.kind !== "fixture" || Object.keys(profile).length !== 2)) unavailable();
   if (profile) createObserveFixtureArtifact(profile.origin);
+  profile=profile?Object.freeze({kind:"fixture",origin:profile.origin}):null;
   async function available() {
     if (!profile) return false;
     try {
@@ -59,6 +62,7 @@ export function createPerchanceExecutionReadDriver({ client, profile = null, all
           const body = Object.values(task.result)[0];
           if (body?.generatorId !== generatorId || !body.observation || Object.keys(body).length !== 2) protocol();
           const observation = structuredClone(body.observation);
+          await normalizeProviderObservation(observation,{includeContent});
           await client.request("execution.result.ack", { executionId }, { operationId:readId + ":ack" });
           executionId = null;
           return observation;

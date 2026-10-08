@@ -1807,7 +1807,8 @@
         ],
         "contractReads": [],
         "contractWrites": [
-          "pcms.perchance.driver/v2"
+          "pcms.perchance.driver/v2",
+          "pcms.ui-client/v1"
         ],
         "resources": [
           {

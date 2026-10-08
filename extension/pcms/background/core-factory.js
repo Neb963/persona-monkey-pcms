@@ -15,6 +15,10 @@ const repositorySyncModuleUrl=import.meta.url.startsWith("file:")
   : "/pcms-modules/p015/repository-sync.js";
 const {createDeployerRepositorySync,REPOSITORY_SYNC_SERVICE,REPOSITORY_SYNC_OWNER,
   REPOSITORY_SYNC_GENERATION}=await import(repositorySyncModuleUrl);
+const verificationModuleUrl=import.meta.url.startsWith("file:")
+  ?new URL("../../../pcms-modules/p015/verification-sweep.js",import.meta.url).href
+  :"/pcms-modules/p015/verification-sweep.js";
+const {createVerificationSweep,VERIFICATION_SERVICE}=await import(verificationModuleUrl);
 import { createAccountProviderGateResolver } from "../integration/adapters.js";
 import { createPcmsBundledModuleLoader } from "../integration/bundled-modules.js";
 import { PCMS_UI_PUBLISH_CAPABILITY, createPcmsUiContributionHost } from "../integration/ui-contributions.js";
@@ -134,6 +138,8 @@ export function createBackgroundPcmsCore({
     {ownerId:refresherScheduler.ownerId,generation:refresherScheduler.generation});
   core.bindRefresherWake?.(()=>refresherScheduler.declare());
   const continuityFixture=createPcmsContinuityFixture({timers,clock});
+  const verificationSweep=core.observations?createVerificationSweep({observations:core.observations,timers,clock}):null;
+  if(verificationSweep)timerServices.register(VERIFICATION_SERVICE,{onTimer:verificationSweep.onTimer},{ownerId:"core",generation:0});
   // P038: built-in scheduler owns only repository checks, not provider deployments.
   const repositorySync=core.repository?createDeployerRepositorySync({
     repository:core.repository,
@@ -141,7 +147,8 @@ export function createBackgroundPcmsCore({
     stateStore:createSingletonStateStore({
       storageBroker:core.storageBroker,namespace:"module.deployer.repository.sync"
     }),
-    clock
+    clock,
+    afterCheck:cycle=>core.observations?.enqueueSweep(cycle)
   }):null;
   if(repositorySync)timerServices.register(REPOSITORY_SYNC_SERVICE,Object.freeze({
     onTimer:event=>repositorySync.onTimer(event)
@@ -205,6 +212,11 @@ export function createBackgroundPcmsCore({
   async function declareTimerSchedules(input){
     const declared=await continuityFixture.declare(input);
     if(repositorySync)await repositorySync.declare();
+    if(core.observations&&core.repository){
+      const repo=(await core.repository.read()).value;
+      if(repo.lastCheckedAt)await core.observations.enqueueSweep(repo.lastCheckedAt);
+    }
+    if(verificationSweep){await core.observations.recover();await verificationSweep.declare();}
     try{await moduleSupervisor.declare(input);}catch{}
     try{await refresherScheduler.declare();}catch{}
     return declared;
@@ -225,6 +237,7 @@ export function createBackgroundPcmsCore({
     timers,
     timerServices,
     repositorySync,
+    verificationSweep,
     refresherScheduler,
     modules:moduleSupervisor.api,
     moduleSupervisor,

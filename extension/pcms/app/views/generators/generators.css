@@ -32,3 +32,6 @@
   .generators-table tr { display: grid; padding: 0.4rem 0; border-bottom: 1px solid rgba(127, 127, 127, 0.25); }
   .generators-table td { border: 0; padding: 0.1rem 0.25rem; }
 }
+.generators-comparison-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.generators-comparison-pair pre { max-height:240px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; padding:8px; background:var(--pcms-bg,#1d2028); }
+@media (max-width:700px) { .generators-comparison-pair { grid-template-columns:1fr; } }
