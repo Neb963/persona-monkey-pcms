@@ -345,7 +345,7 @@ Merge wave: 17
 - [x] T037.3 — T037.3 Snapshot application to Deployer, account-folder linking, adoption and Deployer page
 
 ## P038 — Scheduled background repository synchronization
-Status: **CLAIMED**  
+Status: **PR_OPEN**  
 Depends on: P037, P029  
 Merge wave: 18
 
