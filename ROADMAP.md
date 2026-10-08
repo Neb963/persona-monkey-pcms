@@ -363,13 +363,13 @@ Merge wave: 19
 - [ ] T039.3 — T039.3 Drift detection, comparison and operator choices
 
 ## P040 — Refresher, Explorer and Provisioning background services and UI migration
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P033, P036, P029  
 Merge wave: 17
 
-- [ ] T040.1 — T040.1 Refresher background schedules and content from Deployer confirmed release
-- [ ] T040.2 — T040.2 Explorer and Provisioning contribution UIs with pickers and SecretRef creation
-- [ ] T040.3 — T040.3 Removal of P026 legacy operator forms with superseding assertions
+- [x] T040.1 — T040.1 Refresher background schedules and content from Deployer confirmed release
+- [x] T040.2 — T040.2 Explorer and Provisioning contribution UIs with pickers and SecretRef creation
+- [x] T040.3 — T040.3 Removal of P026 legacy operator forms with superseding assertions
 
 ## P041 — Backup/restore and module management UX
 Status: **ACCEPTED**  
