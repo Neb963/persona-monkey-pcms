@@ -1,7 +1,7 @@
 # P037 evidence — repository provider, manual scan, assisted deployments
 
 Claim: CLM-P037-001, epoch 1. Dependency P036 accepted. Claim base: 14c58d1201cd8cd65ea82a71e1e8a5ff8f02fb7a. Published acquisition on main: d6fd3bbe1168d3c268f429b6daf25a3da43b329e.
-Implementation head: da8dc6d7386cb3c98c33a2eeccb853b3e8b3a5f3. [PR #60](https://github.com/Neb963/persona-monkey-pcms/pull/60). State: PR_OPEN, not yet merged or accepted.
+Implementation head: da8dc6d7386cb3c98c33a2eeccb853b3e8b3a5f3. [PR #60](https://github.com/Neb963/persona-monkey-pcms/pull/60). State: ACCEPTED after merged-main verification.
 
 ## Implementation
 
@@ -25,4 +25,7 @@ Implementation head: da8dc6d7386cb3c98c33a2eeccb853b3e8b3a5f3. [PR #60](https://
 
 P038 owns timers/cadence/restart scheduling; P039 owns drift observation; P042 owns unattended dispatch; P043-P044 own final live checks. None are included. No live Perchance testing occurred.
 
-Integration and merged-main CI are distinct from these successful PR-head checks. Do not mark MERGED or ACCEPTED before integration evidence.
+**Merged main and acceptance:** PR #60 merged at `9b5b2ad89f2616221397d6beb9349d28793d6cd5`.
+- [Merged-main verify run 37780053251](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37780053251): SUCCESS.
+- [Merged-main Firefox run 37780053264](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37780053264): SUCCESS; all seven jobs green.
+Phase and claim accepted on this independent merged-main evidence. Final operator-environment Perchance live acceptance remains in the later designated phases.

@@ -336,13 +336,13 @@ Merge wave: 16
 - [x] T036.3 — T036.3 Generator index, Generators list/detail and assisted manual deploy
 
 ## P037 — Generator repository provider, manual scan and assisted repository deployments
-Status: **PR_OPEN**  
+Status: **ACCEPTED**  
 Depends on: P036  
 Merge wave: 17
 
-- [ ] T037.1 — T037.1 Repository provider boundary, GitHub implementation and fixture provider
-- [ ] T037.2 — T037.2 Repository format validation, payload identity, release ledger and snapshot
-- [ ] T037.3 — T037.3 Snapshot application to Deployer, account-folder linking, adoption and Deployer page
+- [x] T037.1 — T037.1 Repository provider boundary, GitHub implementation and fixture provider
+- [x] T037.2 — T037.2 Repository format validation, payload identity, release ledger and snapshot
+- [x] T037.3 — T037.3 Snapshot application to Deployer, account-folder linking, adoption and Deployer page
 
 ## P038 — Scheduled background repository synchronization
 Status: **BLOCKED**  

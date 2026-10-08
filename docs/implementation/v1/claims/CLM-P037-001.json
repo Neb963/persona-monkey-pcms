@@ -4,7 +4,7 @@
   "phaseId": "P037",
   "taskId": "T037.1",
   "claimEpoch": 1,
-  "state": "PR_OPEN",
+  "state": "ACCEPTED",
   "owner": {
     "agentId": "gpt-6-p037-20261008"
   },
@@ -39,5 +39,5 @@
     "A037-02",
     "A037-03"
   ],
-  "lastCheckpointSha": "da8dc6d7386cb3c98c33a2eeccb853b3e8b3a5f3"
+  "lastCheckpointSha": "9b5b2ad89f2616221397d6beb9349d28793d6cd5"
 }
