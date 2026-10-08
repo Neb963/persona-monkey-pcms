@@ -354,13 +354,13 @@ Merge wave: 18
 - [x] T038.3 — T038.3 Interrupted-scan recovery and packaged continuity proof
 
 ## P039 — Perchance observation, verification and drift (capability-gated)
-Status: **IN_PROGRESS**  
+Status: **ACCEPTED**  
 Depends on: P038  
 Merge wave: 19
 
-- [ ] T039.1 — T039.1 generator.observe contract and PersonaMonkey execution-artifact read driver (fixture page)
-- [ ] T039.2 — T039.2 Post-apply baseline, bounded background verification sweep
-- [ ] T039.3 — T039.3 Drift detection, comparison and operator choices
+- [x] T039.1 — T039.1 generator.observe contract and PersonaMonkey execution-artifact read driver (fixture page)
+- [x] T039.2 — T039.2 Post-apply baseline, bounded background verification sweep
+- [x] T039.3 — T039.3 Drift detection, comparison and operator choices
 
 ## P040 — Refresher, Explorer and Provisioning background services and UI migration
 Status: **ACCEPTED**  

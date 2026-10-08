@@ -5,7 +5,7 @@
   "claimEpoch": 1,
   "state": "COMMITTED",
   "sourceCheckpointSha": "9996f36ad60f0ead25bc9026613a19e624573cf6",
-  "lastPublishedCheckpointSha": "bc1dbc5514993407060f6629ae5e52ab051be707",
+  "lastPublishedCheckpointSha": "c91f8961e9af0d1359a487d016813e91b94a42af",
   "localResults": [
     {
       "command": "npm run verify",
@@ -40,21 +40,66 @@
       "result": "LOCAL_DIAGNOSTIC_PASS",
       "report": "packaged-local-diagnostic.json",
       "contentSandboxDisabled": true
+    },
+    {
+      "command": "npm run firefox:packaged:p039",
+      "sourceSha": "229b856a0c7bae55c429cb7b670c5929f5a2c90e",
+      "result": "NOT_EXECUTED_BROWSER_UNAVAILABLE",
+      "reason": "The earlier temporary Firefox installation was absent (ENOENT). No browser pass is claimed for this attempt; the final hosted report proves the delayed-alarm regression."
     }
   ],
   "independentCI": {
-    "state": "PENDING",
-    "productPR": null,
-    "workflowRuns": []
+    "state": "CI_VERIFIED",
+    "productPR": 66,
+    "timingFixPR": 67,
+    "workflowRuns": [
+      {
+        "id": 37810887281,
+        "name": "verify",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "pull_request",
+        "headSha": "c91f8961e9af0d1359a487d016813e91b94a42af",
+        "url": "https://github.com/Neb963/persona-monkey-pcms/actions/runs/37810887281"
+      },
+      {
+        "id": 37810887573,
+        "name": "firefox-developer-edition",
+        "status": "completed",
+        "conclusion": "success",
+        "event": "pull_request",
+        "headSha": "c91f8961e9af0d1359a487d016813e91b94a42af",
+        "url": "https://github.com/Neb963/persona-monkey-pcms/actions/runs/37810887573"
+      }
+    ],
+    "evidence": "independent-ci.json"
   },
-  "integrationVerification": "PENDING",
-  "merge": "PENDING",
-  "acceptance": "PENDING",
+  "integrationVerification": {
+    "state": "INTEGRATION_VERIFIED",
+    "candidateSha": "f2816d6412815b035ea97bfacc1a7228103200ad"
+  },
+  "merge": {
+    "state": "MERGED",
+    "sourceSha": "29f2fcec3a19a661abf871d779e57634650dfba1",
+    "productPR": 66,
+    "timingFixPR": 67
+  },
+  "acceptance": {
+    "state": "ACCEPTED",
+    "sourceSha": "29f2fcec3a19a661abf871d779e57634650dfba1",
+    "workflowRuns": [
+      37811636044,
+      37811636104
+    ]
+  },
   "publication": {
-    "state": "BLOCKED_BY_AUTOMATIC_APPROVAL_REVIEW",
+    "state": "PUBLISHED",
     "repository": "Neb963/persona-monkey-pcms",
     "branch": "agent/gpt-6-p039-20261008/p039-t039-1",
-    "reason": "Automatic review did not recognize end-user authorization to publish repository contents to this public GitHub branch."
+    "method": "connected-github-git-data-api",
+    "productHeadSha": "c91f8961e9af0d1359a487d016813e91b94a42af",
+    "mapping": "api-publication.json"
   },
-  "liveProviderObservation": "DISABLED_PENDING_FINAL_LIVE_ACCEPTANCE"
+  "liveProviderObservation": "DISABLED_PENDING_FINAL_LIVE_ACCEPTANCE",
+  "recordScope": "Historical local checks; independent-ci.json is authoritative for acceptance."
 }
