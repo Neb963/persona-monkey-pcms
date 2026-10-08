@@ -105,10 +105,8 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
     const intent={payloadHash:item.payloadHash,thumbnailHash:item.thumbnailHash,listing:item.listing,
       origin:{...item.origin,commitId:state.snapshot.commitId}};
     if(!existing){
-      try{await deployer.createDeployment({deploymentId:"gen:"+item.slug,accountId,generatorId:item.slug,...intent},
-        {expectedRevision:current.revision});}
-      catch(e){if(e?.code!==DEPLOYER_ERROR_CODES.TARGET_CONFLICT&&e?.code!==DEPLOYER_ERROR_CODES.INVALID_ARGUMENT)
-        throw e;}
+      await deployer.createDeployment({deploymentId:"gen:"+item.slug,accountId,generatorId:item.slug,...intent},
+        {expectedRevision:current.revision});
       return "CREATED";
     }
     try{

@@ -12,8 +12,8 @@ export function createUiContribution({moduleId="deployer",service}={}){
       {key:"repo",label:"Repository name",kind:"text",required:true,maxLength:100},
       {key:"ref",label:"Branch or tag",kind:"text",required:true,maxLength:200,default:"main"},
       {key:"accessType",label:"Access",kind:"choice",required:true,default:"public",
-        options:[{id:"public",label:"Public"},{id:"private",label:"Private (SecretRef)"}]},
-      {key:"secretRef",label:"SecretRef for private access (not token)",kind:"text",maxLength:100},
+        options:[{id:"public",label:"Public"},{id:"token",label:"Token reference (SecretRef)"}]},
+      {key:"secretRef",label:"SecretRef for authenticated access (not raw token)",kind:"text",maxLength:100},
       {key:"root",label:"Root folder (optional)",kind:"text",maxLength:256},
       {key:"listing",label:"Default listing",kind:"choice",required:true,options:[
         {id:"unlisted",label:"Unlisted"},{id:"public",label:"Publicly listed"}]}
@@ -93,7 +93,7 @@ export function createUiContribution({moduleId="deployer",service}={}){
         const current=await service.read();
         await service.configure({expectedRevision:current.revision,defaultListing:input.listing==="public"?"PUBLICLY_LISTED":"UNLISTED",
           config:{provider:"github",owner:input.owner,repo:input.repo,ref:input.ref,root:input.root??"",
-            access:input.accessType==="private"?{kind:"token",secretRef:input.secretRef??""}:{kind:"public"},
+            access:input.accessType==="token"?{kind:"token",secretRef:input.secretRef??""}:{kind:"public"},
             network:"default"}});
         return receipt("Repository configured. Select Check now to read the pinned commit.");
       }

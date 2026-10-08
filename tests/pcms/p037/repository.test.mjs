@@ -183,3 +183,20 @@ test("A037-03 deploy:hold forbids dispatch and malformed changelog only warns",a
     expectedRevision:1}),{code:REPO_ERRORS.PROTOCOL});
   assert.deepEqual(await fx.ctx.remoteOps.listUnresolved(),[]);
 });
+
+test("A037-02 binary JPEG round-trips as a base64 release without changing fingerprint",async()=>{
+  const original=blobs();
+  original["alice/example/releases/1.0.0/thumbnail.jpeg"]=Uint8Array.from([255,216,255,224,0,1,2,3,255,217]);
+  const fx=fixture({versions:{[sha1]:original}});
+  await configure(fx.repo);
+  const result=await finish(fx.repo);
+  assert.equal(result.status,"SUCCESS");
+  assert.equal(result.snapshot.items.length,1);
+  assert.match(result.snapshot.items[0].thumbnailHash,/^[a-f0-9]{64}$/);
+  assert.equal(result.snapshot.problems.length,0);
+  const record=(await fx.ctx.deployer.listDeployments()).deployments[0];
+  assert.equal(record.desired.thumbnailHash,result.snapshot.items[0].thumbnailHash);
+  // Content is recovered from the exact release commit only at dispatch; no blob
+  // bytes or token contents are persisted in the immutable repository snapshot.
+  assert.equal(JSON.stringify(result.snapshot).includes("/9j/"),false);
+});

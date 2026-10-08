@@ -23,6 +23,15 @@ const MARKER="pcms-generators.json";
 const encoder=new TextEncoder();
 const decoder=new TextDecoder("utf-8",{fatal:true,ignoreBOM:true});
 const MAX_MANIFEST=16*1024,MAX_CHANGELOG=256*1024,MAX_MARKER=1024;
+// Perchance's v2 thumbnail contract accepts base64, while repository files are bytes.
+// Chunking prevents argument-stack overflow for images up to 1 MiB.
+function encodeThumbnail(bytes){
+  if(!(bytes instanceof Uint8Array)||bytes.length>PERCHANCE_MAX_THUMBNAIL_BYTES)
+    throw issue(GENERATOR_REPO_PROBLEM_CODES.THUMBNAIL);
+  const blocks=[];
+  for(let i=0;i<bytes.length;i+=8192)blocks.push(String.fromCharCode(...bytes.subarray(i,i+8192)));
+  return btoa(blocks.join(""));
+}
 const MAX_LEDGER_VERSIONS=20;
 function issue(code,detail=null){return Object.freeze({code,...(detail===null?{}:{detail:String(detail).slice(0,160)})});}
 function exact(value,required,optional=[]){
@@ -150,7 +159,7 @@ export async function validateRepositorySlice({
       if(fileAt(index,thumbPath)){
         const raw=await blob(provider,c,sha,thumbPath,index,PERCHANCE_MAX_THUMBNAIL_BYTES,GENERATOR_REPO_PROBLEM_CODES.THUMBNAIL);
         if(raw.length<4||raw[0]!==255||raw[1]!==216||raw[2]!==255)throw issue(GENERATOR_REPO_PROBLEM_CODES.THUMBNAIL);
-        thumb=await thumbnailHash(raw);
+        thumb=await thumbnailHash(encodeThumbnail(raw));
       }
       const changelogPath=join(c.root,releasePath+"/changelog.md");
       if(fileAt(index,changelogPath)){
@@ -212,7 +221,7 @@ export async function readRepositoryRelease({provider,config,snapshotItem,commit
   const html=decode(await blob(provider,c,sha,htmlPath,index,PERCHANCE_MAX_SOURCE_BYTES,REPO_ERRORS.PROTOCOL),
     PERCHANCE_MAX_SOURCE_BYTES,GENERATOR_REPO_PROBLEM_CODES.TEXT);
   let thumbnail=null;
-  if(fileAt(index,thumbPath))thumbnail=await blob(provider,c,sha,thumbPath,index,PERCHANCE_MAX_THUMBNAIL_BYTES,REPO_ERRORS.PROTOCOL);
+  if(fileAt(index,thumbPath))thumbnail=encodeThumbnail(await blob(provider,c,sha,thumbPath,index,PERCHANCE_MAX_THUMBNAIL_BYTES,REPO_ERRORS.PROTOCOL));
   if(await generatorPayloadHash(code,html)!==snapshotItem.payloadHash
      ||(thumbnail===null?null:await thumbnailHash(thumbnail))!==snapshotItem.thumbnailHash)
     throw repositoryFailure(REPO_ERRORS.PROTOCOL);
