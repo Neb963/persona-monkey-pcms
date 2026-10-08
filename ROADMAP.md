@@ -354,7 +354,7 @@ Merge wave: 18
 - [x] T038.3 — T038.3 Interrupted-scan recovery and packaged continuity proof
 
 ## P039 — Perchance observation, verification and drift (capability-gated)
-Status: **BLOCKED**  
+Status: **CLAIMED**  
 Depends on: P038  
 Merge wave: 19
 
