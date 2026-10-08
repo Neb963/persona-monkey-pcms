@@ -298,6 +298,47 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find((item)=>item.deploymentId===deploymentId)});
   }
   // Persists MIG-P036-deployer-state-v2 when the stored state is still v1. Idempotent.
+  // P037: explicit LOCAL adoption of an existing manual target. No provider call.
+  async function adoptRepository(rawDeploymentId,input={}){
+    const deploymentId=normalizeDeploymentId(rawDeploymentId);
+    const expected=revision(input.expectedRevision),expectedDesired=desiredRevision(input.expectedDesiredRevision);
+    const intent=normalizeDesiredIntent({payloadKind:DEPLOYMENT_PAYLOAD_KINDS.V2_RELEASE,
+      payloadHash:input.payloadHash,thumbnailHash:input.thumbnailHash,listing:input.listing,origin:input.origin});
+    if(intent.origin.kind!=="REPOSITORY")fail(DEPLOYER_ERROR_CODES.INVALID_ARGUMENT);
+    const current=await read();
+    if(current.revision!==expected)fail(DEPLOYER_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
+    const existing=current.value.deployments.find(v=>v.deploymentId===deploymentId);
+    if(!existing)fail(DEPLOYER_ERROR_CODES.NOT_FOUND);
+    if(existing.desired.revision!==expectedDesired||existing.desired.origin.kind!=="MANUAL")
+      fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
+    if(BUSY_STATUSES.includes(existing.operation.status))fail(DEPLOYER_ERROR_CODES.OPERATION_BUSY);
+    const nextDesiredRevision=existing.desired.revision+1;
+    const next=Object.freeze({...existing,desired:Object.freeze({revision:nextDesiredRevision,...intent}),
+      operation:Object.freeze({sequence:1,operationId:operationIdFor(deploymentId,nextDesiredRevision,1),
+        status:DEPLOYMENT_OPERATION_STATUS.PENDING}),updatedAt:isoNow(clock)});
+    const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
+    return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find(v=>v.deploymentId===deploymentId)});
+  }
+  // Relocating an identical repository release does not create a new RemoteOperation.
+  async function setRepositoryOrigin(rawDeploymentId,input={}){
+    const deploymentId=normalizeDeploymentId(rawDeploymentId),expected=revision(input.expectedRevision);
+    const expectedDesired=desiredRevision(input.expectedDesiredRevision);
+    const origin=normalizeDesiredIntent({payloadKind:DEPLOYMENT_PAYLOAD_KINDS.V2_RELEASE,
+      payloadHash:input.payloadHash,thumbnailHash:input.thumbnailHash,listing:input.listing,origin:input.origin});
+    if(origin.origin.kind!=="REPOSITORY")fail(DEPLOYER_ERROR_CODES.INVALID_ARGUMENT);
+    const current=await read();
+    if(current.revision!==expected)fail(DEPLOYER_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
+    const existing=current.value.deployments.find(v=>v.deploymentId===deploymentId);
+    if(!existing)fail(DEPLOYER_ERROR_CODES.NOT_FOUND);
+    if(existing.desired.revision!==expectedDesired||existing.desired.origin.kind!=="REPOSITORY"
+      ||!sameIntent(existing.desired,origin))fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
+    if(BUSY_STATUSES.includes(existing.operation.status))fail(DEPLOYER_ERROR_CODES.OPERATION_BUSY);
+    if(JSON.stringify(existing.desired.origin)===JSON.stringify(origin.origin))
+      return Object.freeze({revision:current.revision,changed:false,deployment:existing});
+    const next=Object.freeze({...existing,desired:Object.freeze({...existing.desired,origin:origin.origin}),updatedAt:isoNow(clock)});
+    const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
+    return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find(v=>v.deploymentId===deploymentId)});
+  }
   async function migrateState() {
     for(let attempt=0;attempt<4;attempt+=1) {
       const current=await read();
@@ -401,6 +442,6 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     const source=deployments ?? (await read()).value.deployments;
     return deployerGeneratorListing({deployments:source,healthyAccounts,openHandoffTargets,recovery,now:now ?? isoNow(clock)});
   }
-  return Object.freeze({createDeployment,getDeployment,listDeployments,listDeploymentViews,listGeneratorListing,setDesired,setPaused,prepareRetry,deploy,reconcileDeployment,migrateState});
+  return Object.freeze({createDeployment,getDeployment,listDeployments,listDeploymentViews,listGeneratorListing,setDesired,setPaused,adoptRepository,setRepositoryOrigin,prepareRetry,deploy,reconcileDeployment,migrateState});
 }
 export { DEPLOYMENT_OPERATION_STATUS };

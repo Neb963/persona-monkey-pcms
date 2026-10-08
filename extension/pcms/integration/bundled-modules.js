@@ -5,6 +5,7 @@
 //
 // `ui` is an extension-absolute path: the background imports it lazily, so this list stays
 // importable outside the packaged extension (tests inject their own loader).
+export const PCMS_DEPLOYER_BUNDLED_MODULE=Object.freeze({moduleId:"deployer",service:"repository",ui:"/pcms-modules/p015/ui.js",dependsOn:Object.freeze([])});
 export const PCMS_BUNDLED_MODULES=Object.freeze([
   Object.freeze({moduleId:"statistics",service:"statistics",ui:"/pcms-modules/p018/ui.js",dependsOn:Object.freeze([])})
 ]);
@@ -22,7 +23,10 @@ export function createPcmsBundledModuleLoader({core,entries=PCMS_BUNDLED_MODULES
   if(!Array.isArray(entries)||typeof importModule!=="function") throw new TypeError("Bundled module list is invalid");
   return async function loadBundled(){
     const out=[];
-    for(const entry of entries){
+    // Deployer v2 is a background built-in. Keep the old default fixtures stable
+    // when the optional repository service was not registered.
+    const requested=core.repository?[...entries,PCMS_DEPLOYER_BUNDLED_MODULE]:entries;
+    for(const entry of requested){
       if(!plain(entry)||typeof entry.moduleId!=="string"||typeof entry.ui!=="string"||!entry.ui.startsWith("/pcms-modules/")) continue;
       out.push(Object.freeze({
         moduleId:entry.moduleId,

@@ -336,7 +336,7 @@ Merge wave: 16
 - [x] T036.3 — T036.3 Generator index, Generators list/detail and assisted manual deploy
 
 ## P037 — Generator repository provider, manual scan and assisted repository deployments
-Status: **CLAIMED**  
+Status: **PR_OPEN**  
 Depends on: P036  
 Merge wave: 17
 

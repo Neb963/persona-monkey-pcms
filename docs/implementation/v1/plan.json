@@ -1685,7 +1685,7 @@
     {
       "id": "P037",
       "title": "Generator repository provider, manual scan and assisted repository deployments",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P036"
       ],
@@ -1697,14 +1697,22 @@
           "extension/pcms/integration/**",
           "extension/pcms/app/views/settings/connections/**",
           "tests/pcms/p037/**",
-          "docs/evidence/P037/**"
+          "docs/evidence/P037/**",
+          "package.json",
+          ".github/workflows/firefox.yml",
+          "extension/pcms/background/feature-factories.js"
         ],
         "contractReads": [],
         "contractWrites": [
           "pcms.repository-provider/v1",
           "pcms.generator-repository/v1"
         ],
-        "resources": [],
+        "resources": [
+          {
+            "key": "ci-workflows",
+            "mode": "exclusive"
+          }
+        ],
         "migrationSlots": []
       },
       "tasks": [
