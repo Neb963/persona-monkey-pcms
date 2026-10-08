@@ -20,6 +20,7 @@
     "extension/pcms/background/core-factory.js",
     "pcms-modules/p018/**",
     "tests/pcms/p033/**",
+    "tests/pcms/p030/manifest.test.mjs",
     "docs/evidence/P033/**",
     "package.json",
     ".github/workflows/firefox.yml",
