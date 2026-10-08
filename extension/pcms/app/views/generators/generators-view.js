@@ -331,7 +331,7 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
     panel.setAttribute("role", "dialog"); panel.setAttribute("aria-modal", "true"); panel.setAttribute("aria-label", "Deploy from file");
     panel.appendChild(e(documentRef, "h3", null, existing ? "Deploy " + slug + " from file" : "Deploy a generator from file"));
     const form = e(documentRef, "form", "generators-dialog-form");
-    const state = { accountId:existing?.accountId ?? null, busy:false, picker:null };
+    const state = { accountId:existing?.accountId ?? null, busy:false, picker:null, error:null };
 
     let address = null;
     if (existing) {
@@ -343,7 +343,7 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
       addressLabel.appendChild(address); form.appendChild(addressLabel);
       const chosen = e(documentRef, "p", "generators-chosen", "No account selected");
       const picker = createEntityPicker({ documentRef, kind:"account", onSelect:(item) => {
-        state.accountId = item.id; chosen.textContent = "Account: " + item.label; update();
+        state.accountId = item.id; chosen.textContent = "Account: " + item.label; edited();
       } });
       const taken = new Set(listedDeployments.deployments.map((item) => item.targetRef.id));
       picker.setOptions(listedAccounts.accounts.map((account) => ({ id:account.accountId, label:account.displayName, detail:account.providerId })));
@@ -360,7 +360,7 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
       const wrap = e(documentRef, "label", null, label);
       const input = e(documentRef, "input"); input.type = "file"; input.accept = accept; input.name = key;
       wrap.appendChild(input); form.appendChild(wrap); inputs[key] = input;
-      input.addEventListener("change", update);
+      input.addEventListener("change", edited);
     }
     const listing = e(documentRef, "fieldset", "generators-listing");
     listing.appendChild(e(documentRef, "legend", null, "Listing"));
@@ -387,6 +387,8 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
     modal = state;
 
     function targetSlug() { return existing ? slug : parsePerchanceAddress(address.value); }
+    // A failed attempt stays visible until the operator changes the form.
+    function edited() { state.error = null; update(); }
     function update() {
       const target = targetSlug();
       let problem = "";
@@ -395,10 +397,12 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
       else if (!state.accountId) problem = "Choose the account to deploy with.";
       else if (!inputs.code.files?.length) problem = "Choose the code panel file.";
       preview.textContent = target ? "Target: perchance.org/" + target : "";
-      reason.textContent = problem; reason.dataset.tone = problem ? "warning" : "";
+      reason.textContent = problem || state.error || "";
+      reason.dataset.tone = problem ? "warning" : state.error ? "error" : "";
       submit.disabled = state.busy || Boolean(problem);
     }
-    address?.addEventListener("input", update);
+    address?.addEventListener("input", edited);
+    listing.addEventListener("change", edited);
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (state.busy || submit.disabled) return;
@@ -416,7 +420,7 @@ export function createPcmsGeneratorsView({ documentRef, windowRef, runtime, moun
         closeModal();
         if (!route?.id) windowRef.location.hash = pcmsV2Href("generators", { id:target });
       } catch (error) {
-        reason.textContent = generatorDeployError(error); reason.dataset.tone = "error";
+        state.error = generatorDeployError(error);
       } finally {
         if (modal === state) { state.busy = false; update(); }
         await refresh();
