@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
+// P035 is included in the existing independent CI verification entrypoint.
+import "../pcms/p035/popup.test.mjs";
 
 const manifest = JSON.parse(await readFile("docs/upstream/import-manifest.json", "utf8"));
 
