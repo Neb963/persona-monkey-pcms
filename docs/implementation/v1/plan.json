@@ -1948,7 +1948,7 @@
     {
       "id": "P042",
       "title": "Unattended Perchance automation via PersonaMonkey execution artifacts (gated)",
-      "status": "CLAIMED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P039"
       ],

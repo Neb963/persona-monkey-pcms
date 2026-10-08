@@ -4,7 +4,7 @@
   "phaseId": "P042",
   "taskId": "T042.1",
   "claimEpoch": 1,
-  "state": "ACTIVE",
+  "state": "ACCEPTED",
   "owner": {
     "agentId": "claude-hopeful-bell-kga3ze"
   },
@@ -41,5 +41,5 @@
     "A042-02",
     "A042-03"
   ],
-  "lastCheckpointSha": null
+  "lastCheckpointSha": "51bac5b402b30ce7c2ee9f69f090d642481065e2"
 }
