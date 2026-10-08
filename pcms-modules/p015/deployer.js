@@ -301,7 +301,11 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     if(!existing) fail(DEPLOYER_ERROR_CODES.NOT_FOUND);
     if(!paused&&observations&&await observations.isDrifted(existing)) fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
     if(existing.policy.paused===paused) return Object.freeze({revision:current.revision,changed:false,deployment:existing});
-    const next=Object.freeze({...existing,policy:Object.freeze(paused?{paused:true,pauseReason:"OPERATOR"}:{paused:false,pauseReason:null}),updatedAt:isoNow(clock)});
+    const resumedKeep=!paused&&observations&&await observations.keptCurrent(existing);
+    if(resumedKeep&&BUSY_STATUSES.includes(existing.operation.status))fail(DEPLOYER_ERROR_CODES.OPERATION_BUSY);
+    const desired=resumedKeep?{...existing.desired,revision:existing.desired.revision+1}:existing.desired;
+    const operation=resumedKeep?{sequence:1,operationId:operationIdFor(deploymentId,desired.revision,1),status:DEPLOYMENT_OPERATION_STATUS.PENDING}:existing.operation;
+    const next=Object.freeze({...existing,desired,operation,policy:Object.freeze(paused?{paused:true,pauseReason:"OPERATOR"}:{paused:false,pauseReason:null}),updatedAt:isoNow(clock)});
     const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
     return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find((item)=>item.deploymentId===deploymentId)});
   }

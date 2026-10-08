@@ -110,6 +110,31 @@ test("A039-02 Keep adopts the observed baseline, stays paused, and a newer repos
     origin:{kind:"REPOSITORY",commitId:COMMIT,path:"alice/alpha",version:"2.0"}});
   assert.equal(next.deployment.policy.paused,false);assert.equal(next.revision,(await h.deployer.listDeployments()).revision);
 });
+test("A039-02 explicit resume after Keep prepares a fresh operation and reports the remaining repository change",async()=>{
+  for(const [change,label] of [
+    [{code:"kept provider edit"},"Update ready"],
+    [{settings:{isPrivate:true}},"Listing change ready"],
+    [{thumbnail:"/9j/AA=="},"Update ready"]
+  ]){
+    const h=harness();await h.create("alpha","REPOSITORY");h.advance();await h.alter("alpha",change);
+    await h.obs.verifyNow("gen:alpha");await h.obs.keep("gen:alpha",await h.choice());
+    const before=await h.deployer.listDeployments(),old=before.deployments[0],dispatches=h.emulator.dispatched().length;
+    const resumed=await h.deployer.setPaused("gen:alpha",{expectedRevision:before.revision,paused:false});
+    assert.equal(resumed.deployment.desired.revision,old.desired.revision+1);
+    assert.notEqual(resumed.deployment.operation.operationId,old.operation.operationId);
+    assert.equal(resumed.deployment.operation.status,"PENDING");
+    assert.equal(resumed.deployment.confirmed.baselineHash,old.confirmed.baselineHash);
+    assert.equal(h.emulator.dispatched().length,dispatches);
+    assert.equal((await h.obs.get("gen:alpha")).drift,false);
+    assert.equal((await h.generators.list()).rows[0].status.label,label);
+    const unchanged=await h.deployer.setPaused("gen:alpha",{expectedRevision:resumed.revision,paused:false});
+    assert.equal(unchanged.changed,false);assert.equal(unchanged.revision,resumed.revision);
+    h.advance();const applied=await h.deployer.deploy("gen:alpha",{expectedRevision:resumed.revision,payload:{code:CODE,html:HTML,thumbnail:null}});
+    assert.equal(applied.deployment.confirmed.operationId,resumed.deployment.operation.operationId);
+    assert.equal((await h.generators.list()).rows[0].status.label,"In sync");
+    assert.equal(h.emulator.dispatched().length,dispatches+1);
+  }
+});
 test("A039-02 only explicit, current, typed overwrite creates a new revision and operation",async()=>{
   const h=harness();await h.create("alpha","REPOSITORY");h.advance();await h.alter("alpha",{code:"provider edit"});await h.obs.verifyNow("gen:alpha");
   const d=await h.deployer.getDeployment("gen:alpha"),choice=await h.choice();

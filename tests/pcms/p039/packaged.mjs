@@ -63,6 +63,13 @@ try{
     ExtensionPermissions.add(extension.id,{permissions:["userScripts"],origins:[]},extension).then(()=>done(true),error=>done({error:String(error)}));`,[PRODUCT],{async:true});
   assert.equal(permission,true);
   await h.closePage(productTab);productTab=null;
+  // The optional userscript signal listener is established at PersonaMonkey
+  // context initialization. Start a fresh context with the permission present.
+  await h.stop();await h.start();
+  productTab=await h.openPage(PRODUCT,"options/options.html");
+  await waitFor(()=>page('try{return (await api.runtime.sendMessage({type:"GET_INTEGRATION_POLICY"}))?.policy?.enabled??false;}catch{return false;}'),
+    "reviewed execution policy survives a profile restart");
+  await h.closePage(productTab);productTab=null;
   assert.equal(await h.install(fixture.xpi),P039_FIXTURE_ID);
   probe=await h.openPage(P039_FIXTURE_ID,P039_FIXTURE_PAGE);
   const seeded=await waitFor(async()=>{const s=await status();if(s?.error)throw new Error(s.error);return s?.seed&&s.timers.some(t=>t.state==="SCHEDULED")?s:null;},"real broker verifies fixture and schedules bounded sweep",45000);

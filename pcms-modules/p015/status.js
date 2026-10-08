@@ -161,9 +161,13 @@ function select(input) {
     const missing = input.observation?.exists === false;
     return { rule:11, status:{ token:"WARNING", label:missing ? "Not yet deployed · needs creation" : "Not yet deployed" }, next:modeNext(input) };
   }
-  if (!confirmedMatchesDesired(deployment.confirmed, deployment.desired)) {
-    const listingOnly = deployment.confirmed.payloadHash === deployment.desired.payloadHash
-      && deployment.confirmed.thumbnailHash === deployment.desired.thumbnailHash;
+  const keptMismatch=input.observation?.keptDesiredRevision!==null&&input.observation?.keptDesiredRevision!==undefined
+    &&(deployment.confirmed.baselineHash!==deployment.desired.payloadHash
+      ||input.observation.baselineThumbnailHash!==deployment.desired.thumbnailHash
+      ||input.observation.baselineListing!=="UNKNOWN"&&input.observation.baselineListing!==null&&input.observation.baselineListing!==deployment.desired.listing);
+  if (!confirmedMatchesDesired(deployment.confirmed, deployment.desired)||keptMismatch) {
+    const listingOnly = (keptMismatch?deployment.confirmed.baselineHash:deployment.confirmed.payloadHash) === deployment.desired.payloadHash
+      && (keptMismatch?input.observation.baselineThumbnailHash:deployment.confirmed.thumbnailHash) === deployment.desired.thumbnailHash;
     return { rule:12, status:{ token:"WARNING", label:listingOnly ? "Listing change ready" : "Update ready" }, next:modeNext(input) };
   }
   const verified = deployment.confirmed.baselineHash!==null

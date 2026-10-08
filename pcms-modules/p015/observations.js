@@ -92,6 +92,7 @@ export function createDeployerObservations({deployer,accounts,provider=null,stor
     const out=new Map();for(const d of deployments){const v=await statusObservation(d);if(v)out.set(d.deploymentId,v);}return out;
   }
   async function isDrifted(d){return Boolean(deriveDrift({deployment:d,observation:await statusObservation(d)}));}
+  async function keptCurrent(d){return (await statusObservation(d))?.keptDesiredRevision===d.desired.revision;}
   async function canOverwrite(d){
     const waiver=(await store.get("overwrite:"+d.deploymentId))?.value,v=await statusObservation(d);
     return Boolean(waiver&&v&&!v.challenge&&waiver.operationId===d.operation.operationId
@@ -253,6 +254,6 @@ export function createDeployerObservations({deployer,accounts,provider=null,stor
       catch(error){if(error?.code!=="PCMS_DEPLOYER_REVISION_CONFLICT"&&error?.code!=="PCMS_DEPLOYER_INVALID_TRANSITION")throw error;}
     }
   }
-  return Object.freeze({get,available,listForStatus,isDrifted,canOverwrite,readControl,verifyNow,afterConfirmed,enqueueSweep,verifyNext,configure,
+  return Object.freeze({get,available,listForStatus,isDrifted,keptCurrent,canOverwrite,readControl,verifyNow,afterConfirmed,enqueueSweep,verifyNext,configure,
     keep,overwrite,compare,desiredChanged,recover,challenged,held,bindWake(fn){wake=fn;}});
 }
