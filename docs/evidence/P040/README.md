@@ -26,3 +26,8 @@ Claim history: the claim was narrowed while P038 held the background Core factor
 ## Scope and limits
 
 No real Perchance mutation, CAPTCHA automation or Firefox DevTools MCP. Enabling unattended refresh against real Perchance stays with P042/P044 (capability gate). The Deployer's `connect` action (P037/P038, `pcms-modules/p015/**`, outside this claim) still accepts a typed SecretRef for private repositories; public access needs none.
+
+**Merged-main acceptance:** PR #63 merged at `110c820fd99970487fc1a31fa5515f0abc21e749`.
+- [Merged-main verify #37789786058](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37789786058): SUCCESS.
+- [Merged-main pinned Firefox #37789785927](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37789785927): SUCCESS; all jobs, including `pinned-firefox` and the P040 packaged zero-tab Refresher proof.
+This independent merged-main evidence justifies P040 and claim CLM-P040-001 `ACCEPTED`. No successor phase has been started.

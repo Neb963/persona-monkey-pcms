@@ -4,7 +4,7 @@
   "phaseId": "P040",
   "taskId": "T040.1",
   "claimEpoch": 1,
-  "state": "PR_OPEN",
+  "state": "ACCEPTED",
   "owner": {
     "agentId": "claude-cool-darwin-ot93tn"
   },
@@ -69,5 +69,5 @@
     "A040-02",
     "A040-03"
   ],
-  "lastCheckpointSha": "2f92dca136f353ff359be2dd5ac7e21d53a07a52"
+  "lastCheckpointSha": "110c820fd99970487fc1a31fa5515f0abc21e749"
 }
