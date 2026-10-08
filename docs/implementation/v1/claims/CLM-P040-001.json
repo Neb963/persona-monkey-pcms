@@ -8,7 +8,7 @@
   "owner": {
     "agentId": "claude-cool-darwin-ot93tn"
   },
-  "baseMainSha": "3816f9c0e7392bc279cf2d78d656b0f7edb922b3",
+  "baseMainSha": "ddf7cee38c6c9a41e500d7086f10f2eb39a82460",
   "branch": "agent/claude-cool-darwin-ot93tn/p040-t040-1",
   "writePaths": [
     "pcms-modules/p016/**",
@@ -16,6 +16,7 @@
     "pcms-modules/p019/**",
     "extension/pcms/integration/**",
     "extension/pcms/app/**",
+    "extension/pcms/background/core-factory.js",
     "extension/pcms/background/ui-dispatcher.js",
     "tests/pcms/p040/**",
     "tests/pcms/p016/**",
@@ -28,31 +29,38 @@
     "tests/pcms/p025/live-wiring.test.mjs",
     "tools/firefox/packaged.mjs",
     "docs/evidence/P040/**",
-    "docs/implementation/v1/claims/CLM-P040-001.json"
+    "docs/implementation/v1/claims/CLM-P040-001.json",
+    "package.json",
+    ".github/workflows/firefox.yml"
   ],
   "contractReads": [
     {
       "id": "pcms.timers.ensure/v1",
-      "sha": "3816f9c0e7392bc279cf2d78d656b0f7edb922b3"
+      "sha": "ddf7cee38c6c9a41e500d7086f10f2eb39a82460"
     },
     {
       "id": "pcms.deployer.state/v2",
-      "sha": "3816f9c0e7392bc279cf2d78d656b0f7edb922b3"
+      "sha": "ddf7cee38c6c9a41e500d7086f10f2eb39a82460"
     },
     {
       "id": "pcms.generator-repository/v1",
-      "sha": "3816f9c0e7392bc279cf2d78d656b0f7edb922b3"
+      "sha": "ddf7cee38c6c9a41e500d7086f10f2eb39a82460"
     },
     {
       "id": "pcms.generator-index/v1",
-      "sha": "3816f9c0e7392bc279cf2d78d656b0f7edb922b3"
+      "sha": "ddf7cee38c6c9a41e500d7086f10f2eb39a82460"
     }
   ],
   "contractWrites": [
     "pcms.ui-contribution/v1",
     "pcms.ui-client/v1"
   ],
-  "resources": [],
+  "resources": [
+    {
+      "key": "ci-workflows",
+      "mode": "exclusive"
+    }
+  ],
   "migrationSlots": [
     "MIG-P040-refresher-state-v2"
   ],
