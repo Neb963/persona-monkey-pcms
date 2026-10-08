@@ -74,22 +74,6 @@ jobs:
           FIREFOX_PACKAGED_REPORT: ${{ runner.temp }}/firefox-packaged-report.json
         run: npm run firefox:packaged
 
-      - name: Verify P032 receipts across two packaged Firefox dashboards and after forced unload
-        env:
-          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
-          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged
-          FIREFOX_P032_REPORT: ${{ runner.temp }}/firefox-p032-report.json
-        run: npm run firefox:packaged:p032
-
-      - name: Upload P032 packaged receipt evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: firefox-packaged-p032
-          path: ${{ runner.temp }}/firefox-p032-report.json
-          if-no-files-found: warn
-          retention-days: 7
-
       - name: Prove P029 timers with zero PCMS tabs across unload and restart
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
@@ -103,6 +87,22 @@ jobs:
         with:
           name: firefox-packaged-p029
           path: ${{ runner.temp }}/firefox-p029-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Verify P032 receipts across two packaged Firefox dashboards and after forced unload
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged
+          FIREFOX_P032_REPORT: ${{ runner.temp }}/firefox-p032-report.json
+        run: npm run firefox:packaged:p032
+
+      - name: Upload P032 packaged receipt evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-packaged-p032
+          path: ${{ runner.temp }}/firefox-p032-report.json
           if-no-files-found: warn
           retention-days: 7
 
