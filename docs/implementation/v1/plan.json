@@ -1615,7 +1615,7 @@
     {
       "id": "P036",
       "title": "Deployer v2 domain, Perchance contract v2 and Generators views",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P033",
         "P034"
