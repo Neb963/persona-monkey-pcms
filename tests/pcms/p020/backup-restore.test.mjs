@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { createBackupRestoreService } from "../../../extension/pcms/recovery/backup-restore.js";
 import { BACKUP_ERROR_CODES } from "../../../extension/pcms/recovery/errors.js";
-import { PCMS_BACKUP_EXCLUDED_NAMESPACES } from "../../../extension/pcms/recovery/schema.js";
+import { PCMS_BACKUP_EXCLUDED_NAMESPACES, confirmStagedRestore } from "../../../extension/pcms/recovery/schema.js";
 import { makeChecks, makeHold, makeProviderGate, makeRemoteOps, makeRuntime, makeStorage, NOW, record, sha256Hex } from "./harness.mjs";
 
 function fixture({records,remoteRows=[],checks}={}){
@@ -57,7 +57,7 @@ test("A020-02 staged restore enters hold, quiesces runtime, preserves excluded n
     record("core.backups","meta",{kept:"current"}, {revision:3})
   ]);
   const staged=await f.service.stageRestore(backup);
-  const report=await f.service.applyStagedRestore(staged);
+  const report=await f.service.applyStagedRestore(confirmStagedRestore(staged,"RESTORE"));
   assert.equal(f.hold.state,"RECOVERY_HOLD");
   assert.deepEqual(report.quiescedModuleIds,["live.module"]);
   assert.deepEqual(report.recoveredModuleIds,["restored.module"]);
@@ -73,7 +73,7 @@ test("A020-02 replacement failure leaves recovery hold active",async()=>{
   const backup=await f.service.createBackup({backupId:"b-fail"});
   const staged=await f.service.stageRestore(backup);
   f.storage.failReplace(true);
-  await assert.rejects(()=>f.service.applyStagedRestore(staged));
+  await assert.rejects(()=>f.service.applyStagedRestore(confirmStagedRestore(staged,"RESTORE")));
   assert.equal(f.hold.state,"RECOVERY_HOLD");
   assert.equal(f.events.includes("hold.release"),false);
 });

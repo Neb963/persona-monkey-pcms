@@ -372,7 +372,7 @@ Merge wave: 17
 - [ ] T040.3 — T040.3 Removal of P026 legacy operator forms with superseding assertions
 
 ## P041 — Backup/restore and module management UX
-Status: **BLOCKED**  
+Status: **CLAIMED**  
 Depends on: P033, P031  
 Merge wave: 16
 

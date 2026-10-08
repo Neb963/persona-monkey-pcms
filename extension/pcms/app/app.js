@@ -6,6 +6,7 @@ import { startPcmsRuntimeWithRetry } from "./startup-retry.js";
 import { createPcmsModuleProjectionService } from "./module-projections.js";
 import { bindPcmsLiveControls } from "./live-controls.js";
 import { createPcmsAccountsView } from "./views/accounts/accounts-view.js";
+import { createPcmsSettingsView } from "./views/settings/settings-view.js";
 import {
   contributionNavItems,
   derivedAttention,
@@ -122,6 +123,7 @@ export function mountPcmsApp({
   const accounts=section(documentRef,"viewAccounts");
   const search=section(documentRef,"viewSearch");
   const diagnostics=section(documentRef,"viewDiagnostics");
+  const settingsBackup=documentRef.getElementById("viewSettingsBackup");
   const placeholder=section(documentRef,"viewPlaceholder");
   const modulePage=documentRef.getElementById("viewModulePage");
   const searchForm=section(documentRef,"searchForm");
@@ -131,6 +133,10 @@ export function mountPcmsApp({
   let refreshGeneration=0;
   const accountsView=runtime?.accounts && documentRef.getElementById("accountsV2")
     ?createPcmsAccountsView({runtime,documentRef,windowRef,onChanged:()=>refresh()})
+    :null;
+  // P041: Settings → Backup & restore and Settings → Modules drive Core through the UI client.
+  const settingsView=runtime?.backupRestore&&runtime?.modules&&settingsBackup&&documentRef.getElementById("settingsModulesManager")
+    ?createPcmsSettingsView({runtime,documentRef,windowRef,onChanged:()=>refresh()})
     :null;
   // P033: module contributions are read from Core (pcms.ui-contribution/v1 via ui.*).
   const contributionsLive=typeof runtime?.ui?.snapshot==="function"&&modulePage!==null;
@@ -146,7 +152,8 @@ export function mountPcmsApp({
   function setVisible(route) {
     for(const [name,node] of [
       ["overview",overview],["modules",modules],["attention",attention],["accounts",accounts],
-      ["search",search],["diagnostics",diagnostics],["placeholder",placeholder],["modulePage",modulePage]
+      ["search",search],["diagnostics",diagnostics],["placeholder",placeholder],["modulePage",modulePage],
+      ["settingsBackup",settingsBackup]
     ]) if(node) node.hidden=name!==route;
     if(route!=="modulePage"&&modulePageKey!==null){
       modulePageKey=null;
@@ -175,6 +182,7 @@ export function mountPcmsApp({
       ...contributionNavItems(contributions).map((item)=>({...item,badge:null})),
       {id:"activity",label:"Activity",href:"#/activity"},
       {id:"settings-modules",label:"Module settings",href:"#/settings/modules"},
+      {id:"settings-backup",label:"Backup & restore",href:"#/settings/backup"},
       {id:"settings-diagnostics",label:"Diagnostics",href:"#/settings/diagnostics"}
     ];
     for(const item of items) {
@@ -472,6 +480,7 @@ export function mountPcmsApp({
     if(route.route==="module"&&contributionsLive&&!legacyModuleIds(contributions).includes(route.moduleId)) return "modulePage";
     if(route.route==="module"||(route.route==="settings"&&route.section==="modules")) return "modules";
     if(route.route==="settings"&&route.section==="diagnostics") return "diagnostics";
+    if(route.route==="settings"&&route.section==="backup"&&settingsBackup) return "settingsBackup";
     return "placeholder";
   }
 
@@ -640,7 +649,8 @@ export function mountPcmsApp({
     await Promise.all([
       renderModuleRoute(route,contributions,generation).catch(()=>{}),
       renderAccountFacets(route,contributions,generation).catch(()=>{}),
-      renderActivityLines(route,generation).catch(()=>{})
+      renderActivityLines(route,generation).catch(()=>{}),
+      settingsView?.refresh(route).catch(()=>{})
     ]);
   }
 
@@ -667,6 +677,7 @@ export function mountPcmsApp({
       disposed=true;
       refreshGeneration+=1;
       accountsView?.destroy();
+      settingsView?.destroy();
       frameHost?.dispose();
       windowRef.removeEventListener("hashchange",onHashChange);
       searchForm.removeEventListener("submit",onSubmit);
@@ -687,6 +698,7 @@ export function mountUnavailablePcmsShell({
     ["Accounts","#/accounts"],
     ["Generators","#/generators"],
     ["Modules","#/settings/modules"],
+    ["Backup & restore","#/settings/backup"],
     ["Activity","#/activity"],
     ["Diagnostics","#/settings/diagnostics"]
   ];
@@ -707,7 +719,7 @@ export function mountUnavailablePcmsShell({
     const route=resolved.route;
     if(!resolved.valid||resolved.canonicalized) windowRef.history.replaceState(null,"",route.href);
     const diagnostics=route.route==="settings"&&route.section==="diagnostics";
-    for(const id of ["viewOverview","viewModules","viewAttention","viewAccounts","viewSearch","viewDiagnostics","viewPlaceholder"]){
+    for(const id of ["viewOverview","viewModules","viewAttention","viewAccounts","viewSearch","viewDiagnostics","viewPlaceholder","viewSettingsBackup"]){
       section(documentRef,id).hidden=id!==(diagnostics?"viewDiagnostics":"viewPlaceholder");
     }
     section(documentRef,"placeholderHeading").textContent="PCMS Core unavailable";
