@@ -21,6 +21,7 @@ import {
   sameIntent
 } from "./schema.js";
 import { readDeployerState } from "./migration.js";
+import { deployerGeneratorListing } from "./listing.js";
 import {
   PERCHANCE_GENERATOR_UPDATE_ACTION,
   PERCHANCE_PROVIDER_ID,
@@ -394,6 +395,12 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     }
     return settleOperation(deploymentId,existing.operation.operationId,snapshot.state);
   }
-  return Object.freeze({createDeployment,getDeployment,listDeployments,listDeploymentViews,setDesired,setPaused,prepareRetry,deploy,reconcileDeployment,migrateState});
+  // GeneratorListing for the Core generator index (pcms.generator-index/v1). Deployments are
+  // passed by the index when it already read them; otherwise they are read here.
+  async function listGeneratorListing({deployments=null,healthyAccounts=new Set(),openHandoffTargets=new Set(),recovery="NORMAL",now=null}={}) {
+    const source=deployments ?? (await read()).value.deployments;
+    return deployerGeneratorListing({deployments:source,healthyAccounts,openHandoffTargets,recovery,now:now ?? isoNow(clock)});
+  }
+  return Object.freeze({createDeployment,getDeployment,listDeployments,listDeploymentViews,listGeneratorListing,setDesired,setPaused,prepareRetry,deploy,reconcileDeployment,migrateState});
 }
 export { DEPLOYMENT_OPERATION_STATUS };

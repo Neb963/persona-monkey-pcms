@@ -11,6 +11,7 @@ import {
   createSingletonStateStore
 } from "./adapters.js";
 import { createExplorerDeployerBridge } from "./explorer-deployer.js";
+import { createGeneratorIndexService } from "./generator-index.js";
 import { createIntegrationRecoveryChecks } from "./recovery-checks.js";
 
 export const PCMS_INTEGRATION_NAMESPACES=Object.freeze({
@@ -168,6 +169,8 @@ export function createPcmsModuleIntegration({
 
   const uiProjection=createPcmsUiProjectionService({humanTasks,accounts});
   const explorerDeployer=createExplorerDeployerBridge({explorer,deployer});
+  // pcms.generator-index/v1: a rebuildable Core view joined from module listings (P036).
+  const generators=createGeneratorIndexService({deployer,accounts,humanTasks,recoveryHold,clock});
   const recoveryChecks=createIntegrationRecoveryChecks({accounts,providerProbes});
   const moduleLifecycle=createModuleLifecycleService({storageBroker,moduleRegistry,moduleRuntime});
   const backupRestore=createBackupRestoreService({
@@ -190,6 +193,7 @@ export function createPcmsModuleIntegration({
     humanTasks,
     uiProjection,
     explorerDeployer,
+    generators,
     recoveryChecks,
     moduleLifecycle,
     backupRestore

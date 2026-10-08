@@ -99,6 +99,11 @@ export function pcmsV2Href(route,options={}){
     return path+(filter?"?"+qs([["f",filter]]):"");
   }
   if(route==="generators"){
+    // P036 generator detail: #/generators/perchance/<slug> (02 §2.3).
+    if(options.id!=null){
+      if(!ENTITY.test(String(options.id))||options.filter||options.page!=null) invalid();
+      return "#/generators/perchance/"+encodeURIComponent(String(options.id));
+    }
     const filter=normalizePcmsV2Filter("generators",String(options.filter||""));
     let page=null;
     if(options.page!==null&&options.page!==undefined&&options.page!==""){
@@ -171,6 +176,11 @@ export function parsePcmsRouteV2(rawHash){
     return baseRoute("accounts",{id,filter,href:pcmsV2Href("accounts",{id,filter})});
   }
   if(parts[0]==="generators"){
+    if(parts.length===3&&parts[1]==="perchance"){
+      if(rawQuery) invalid();
+      const id=entity(parts[2]);
+      return baseRoute("generators",{id,href:pcmsV2Href("generators",{id})});
+    }
     if(parts.length!==1) invalid();
     const params=query(rawQuery,["f","p"]);
     const filter=normalizePcmsV2Filter("generators",params.f||"");
