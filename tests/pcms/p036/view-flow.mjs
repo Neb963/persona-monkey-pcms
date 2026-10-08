@@ -1,14 +1,14 @@
-// A036-03 Generators view flow, run inside the packaged extension page (pinned Firefox in CI).
-// It is serialised with Function.prototype.toString(), so it must stay self-contained: every
-// module is imported from `base`, the packaged extension root. Real shipped modules are used
+// A036-03 Generators view flow, run in the P036 fixture add-on page (pinned Firefox in CI; see
+// fixture-extension.mjs). Every module is imported from `base`, the fixture root, which holds
+// the product XPI's pcms/ and pcms-modules/ trees byte for byte. Real shipped modules are used
 // (Deployer, RemoteOps, ProviderGate, HumanTasks, Audit Journal, provider handoff, assisted
 // driver, generator index and the Generators view) over in-memory storage, so the page drives
 // the real view code with real File inputs, TextDecoder, crypto.subtle and Blob URLs while the
 // product Core and PersonaMonkey state are never mutated.
 export async function generatorsViewFlow({ base, documentRef, windowRef, hostId = "p036Fixture", nonce = String(Date.now()) }) {
-  // Firefox runs this in a Marionette sandbox whose realm differs from the page modules'.
-  // W() waives Xrays (identity elsewhere); objects handed to shipped modules are built with
-  // the modules' own Object/Array constructors so their plain-data checks see their realm.
+  // W() waives Xrays if a caller ever runs this from a privileged sandbox (identity in a page);
+  // objects handed to shipped modules are built with the modules' own Object/Array constructors
+  // so their plain-data checks hold in whichever realm the modules live.
   const W = (value) => (value && typeof value === "object" && value.wrappedJSObject) || value;
   const load = async (path) => W(await import(base + path));
   const [deployerMod, remoteMod, holdMod, gateMod, adapterMod, assistedMod, handoffMod, indexMod, tasksMod, journalMod,

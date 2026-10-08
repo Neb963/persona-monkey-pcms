@@ -6,19 +6,18 @@
 // real Perchance (provider-live work belongs to P043/P044).
 //
 // Part B runs the shipped Generators view and the shipped Deployer, RemoteOps, ProviderGate,
-// HumanTask, Audit Journal, provider handoff and assisted driver modules inside the packaged
-// page over a separate IndexedDB database: real File inputs, TextDecoder, crypto.subtle and
+// HumanTask, Audit Journal, provider handoff and assisted driver modules, copied byte for
+// byte from the product XPI into a separate fixture add-on page, over its own IndexedDB: real File inputs, TextDecoder, crypto.subtle and
 // Blob URLs; a durable assisted handoff; an "I'm not sure" answer that is never replayed; and
 // an Applied answer that settles to "In sync". Product Core and PersonaMonkey are untouched.
 import assert from "node:assert/strict";
-import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { execFileText, loadBrowserPin, sha256File, writeJson } from "../../../tools/firefox/lib.mjs";
 import { PackagedFirefox, waitFor } from "../../../tools/firefox/packaged-harness.mjs";
-import { generatorsViewFlow } from "./view-flow.mjs";
+import { P036_FIXTURE_ID, P036_FIXTURE_PAGE, assertP036Flow, buildP036FixtureExtension } from "./fixture-extension.mjs";
 
 const PRODUCT = "persona-route-manager@local";
 const root = resolve(process.env.FIREFOX_PACKAGED_DIR || join(tmpdir(), "pcms-firefox-p036"));
@@ -131,31 +130,24 @@ try {
   report.checks.generatorDetailDeepLink = true;
   assert.equal((await ui("generators.list", [{}])).total, 0, "Part A deployed nothing");
 
-  // Part B — shipped modules and view in this page, separate IndexedDB database.
-  const nonce = randomBytes(8).toString("hex");
-  const flow = await page(`return (${generatorsViewFlow.toString()})({ base: api.runtime.getURL(""), documentRef: document, windowRef: window, nonce: arguments[0] });`, [nonce]);
+  // Part B — shipped modules and view in a separate fixture add-on page (own IndexedDB).
+  const fixture = await buildP036FixtureExtension({
+    productXpi: xpi,
+    workDir: join(root, "fixture-p036"),
+    flowSource: await readFile("tests/pcms/p036/view-flow.mjs", "utf8")
+  });
+  report.facts.fixture = { copiedProductFiles: fixture.copiedFiles, copiedProductDigest: fixture.digest };
+  assert.equal(await h.install(fixture.xpi), P036_FIXTURE_ID);
+  const fixtureTab = await h.openPage(P036_FIXTURE_ID, P036_FIXTURE_PAGE);
+  const outcome = await waitFor(async () => {
+    const text = await h.pageScript("return document.body?.dataset.p036Result ?? null;");
+    return text ? JSON.parse(text) : null;
+  }, "P036 fixture flow completes", 90000);
+  if (!outcome.ok) throw new Error("P036 fixture flow failed: " + outcome.error);
+  const flow = outcome.value;
+  await h.closePage(fixtureTab);
   report.facts.flow = { ...flow, storedDeployer: undefined, handoffPanels: flow.handoffPanels?.map((panel) => ({ label: panel.label, chars: panel.value.length })) };
-  assert.match(flow.emptyText, /No generators yet/);
-  assert.deepEqual(flow.dialogTextInputs, ["address"]);
-  assert.equal(flow.previewText, "Target: perchance.org/tavern-names");
-  assert.equal(flow.submitEnabled, true);
-  assert.deepEqual(flow.waiting, { banner: "WAITING_HUMAN", label: "Waiting for you in Perchance" });
-  assert.deepEqual(flow.handoffPanels.map((panel) => panel.label), ["Code panel", "HTML panel"]);
-  assert.equal(flow.handoffPanels[0].value, "// tavern-names 1.1.0\ntitle\n  The [adjective] [noun]\n");
-  assert.equal(flow.handoffPanels[1].value, "<h1>[title]</h1>\n");
-  assert.equal(flow.handoffListing, "Listing: Unlisted");
-  assert.equal(flow.thumbnailLink, "thumbnail.jpeg");
-  assert.equal(flow.copiedCode, true);
-  assert.equal(flow.storedDeployer.includes("adjective"), false, "content never enters the Deployer row");
-  assert.match(flow.storedDeployer, /"payloadKind":"v2-release"/);
-  assert.equal(flow.afterUnknown, "WAITING_HUMAN");
-  assert.equal(flow.dispatchOpens, 1);
-  assert.equal(flow.dispatchOpensFinal, 1, "UNCERTAIN is never replayed");
-  assert.equal(flow.final.label, "In sync");
-  assert.equal(flow.final.handoff, false);
-  assert.deepEqual(flow.listRow[0].slice(0, 3), ["tavern-names", "Alice", "In sync · not verified"]);
-  assert.equal(flow.listRow[0][5], "Unlisted");
-  assert.equal(flow.rowHref, "#/generators/perchance/tavern-names");
+  assertP036Flow(flow);
   report.checks.manualDeployDurableHandoffInFirefox = true;
   report.checks.unknownAnswerNeverReplayed = true;
   report.checks.appliedAnswerSettlesInSync = true;
