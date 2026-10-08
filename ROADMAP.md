@@ -300,7 +300,7 @@ Merge wave: 13
 - [x] T032.3 — T032.3 Diagnostics page and multi-tab behaviour
 
 ## P033 — Module UI contribution contract v1 for built-in and runtime modules
-Status: **BLOCKED**  
+Status: **CLAIMED**  
 Depends on: P031, P032  
 Merge wave: 15
 
