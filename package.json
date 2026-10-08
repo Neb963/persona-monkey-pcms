@@ -28,6 +28,8 @@
     "test:p032": "node --test tests/pcms/p032/*.test.mjs",
     "firefox:packaged:p032": "node scripts/build-extension.mjs && node tests/pcms/p032/packaged.mjs",
     "test:p034": "node --test tests/pcms/p034/*.test.mjs",
-    "firefox:packaged:p034": "node scripts/build-extension.mjs && node tests/pcms/p034/packaged.mjs"
+    "firefox:packaged:p034": "node scripts/build-extension.mjs && node tests/pcms/p034/packaged.mjs",
+    "test:p031": "node --test tests/pcms/p031/*.test.mjs",
+    "firefox:packaged:p031": "node scripts/build-extension.mjs && node tests/pcms/p031/packaged.mjs"
   }
 }

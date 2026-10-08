@@ -542,9 +542,24 @@ export function createModuleRuntimeBroker({
     return Object.freeze(out);
   }
 
+  // In-memory only: whether this background context hosts a live generation.
+  function isRunning(moduleId) {
+    const runtime = runtimes.get(assertModuleId(moduleId));
+    return Boolean(runtime && runtime.accepting);
+  }
+
+  function listRunning() {
+    return Object.freeze([...runtimes.values()]
+      .filter((runtime) => runtime.accepting)
+      .map((runtime) => Object.freeze({ moduleId:runtime.moduleId, generation:runtime.generation, packageHash:runtime.packageHash }))
+      .sort((a, b) => a.moduleId.localeCompare(b.moduleId)));
+  }
+
   return Object.freeze({
     activate,
     invoke,
+    isRunning,
+    listRunning,
     prepareUpdate,
     disable,
     enable,

@@ -74,7 +74,8 @@ export function createPcmsLiveCore({
   liveMutationFactory=null,
   clock=()=>new Date().toISOString(),
   storageBroker:injectedStorageBroker=null,
-  auditJournal:injectedAuditJournal=null
+  auditJournal:injectedAuditJournal=null,
+  moduleRuntimeOptions=null
 }={}) {
   if(!personaBroker||typeof personaBroker.request!=="function") throw new TypeError("PCMS live Core requires Persona Broker");
   if(!featureFactories||typeof featureFactories!=="object") throw new TypeError("PCMS live Core requires feature factories");
@@ -83,6 +84,9 @@ export function createPcmsLiveCore({
   if(!Array.isArray(providerProbes)) throw new TypeError("PCMS live Core provider probes are invalid");
   if(liveMutationFactory!==null&&typeof liveMutationFactory!=="function") throw new TypeError("PCMS live mutation factory is invalid");
   if(typeof clock!=="function") throw new TypeError("PCMS live Core clock is invalid");
+  if(moduleRuntimeOptions!==null&&(typeof moduleRuntimeOptions!=="object"||Array.isArray(moduleRuntimeOptions))) {
+    throw new TypeError("PCMS live module runtime options are invalid");
+  }
 
   // Injection exists for deterministic Node tests over one shared durable store.
   const storageBroker=injectedStorageBroker||createPcmsStorageBroker({clock});
@@ -102,7 +106,16 @@ export function createPcmsLiveCore({
     providers:activeProviders
   });
   const moduleRegistry=createModulePackageRegistry({storageBroker,clock});
-  const moduleRuntime=createModuleRuntimeBroker({storageBroker,moduleRegistry,recoveryHold});
+  // ADR-003 §1: the background supplies the sandbox frame factory, browser-floor
+  // support detection and the capability set v1 handlers (P031 live wiring).
+  const moduleRuntime=createModuleRuntimeBroker({
+    storageBroker,
+    moduleRegistry,
+    recoveryHold,
+    frameFactory:moduleRuntimeOptions?.frameFactory??null,
+    capabilities:moduleRuntimeOptions?.capabilities??{},
+    support:moduleRuntimeOptions?.support??null
+  });
 
   const integration=createPcmsModuleIntegration({
     storageBroker,

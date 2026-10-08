@@ -7,6 +7,11 @@ import { createProviderHandoff } from "../integration/provider-handoff.js";
 import { createHumanTaskService } from "../services/human-tasks.js";
 import { createCoreServiceRegistry } from "../services/registry.js";
 import { createTimerService } from "../services/timers.js";
+import { createAccountProviderGateResolver } from "../integration/adapters.js";
+import { createModuleCapabilityHandlers, createPerchanceModuleCapabilityHandlers } from "./modules/capabilities.js";
+import { createBackgroundModuleRuntimeOptions } from "./modules/host.js";
+import { createModuleScheduleStore } from "./modules/schedules.js";
+import { createModuleSupervisor } from "./modules/supervisor.js";
 import {
   PCMS_CONTINUITY_FIXTURE_GENERATION,
   PCMS_CONTINUITY_FIXTURE_OWNER,
@@ -43,10 +48,20 @@ export function createBackgroundPcmsCore({
   featureFactories,
   clock=()=>new Date().toISOString(),
   storageBroker=null,
-  auditJournal=null
+  auditJournal=null,
+  moduleHost=null
 }={}) {
   const personaBroker=createPersonaBroker({transport});
   let handoff=null;
+  // Capability set v1 handlers are bound before the services they front exist.
+  let moduleDeps=null;
+  const moduleRuntimeOptions=createBackgroundModuleRuntimeOptions({
+    ...(moduleHost||{}),
+    capabilities:{
+      ...createModuleCapabilityHandlers({resolve:()=>moduleDeps}),
+      ...createPerchanceModuleCapabilityHandlers({resolve:()=>moduleDeps})
+    }
+  });
   const core=createPcmsLiveCore({
     personaBroker,
     featureFactories,
@@ -55,6 +70,7 @@ export function createBackgroundPcmsCore({
     clock,
     storageBroker,
     auditJournal,
+    moduleRuntimeOptions,
     liveMutationFactory:({storageBroker,auditJournal})=>{
       handoff=createProviderHandoff({
         storageBroker,
@@ -70,14 +86,63 @@ export function createBackgroundPcmsCore({
     async onTimer(){return Object.freeze({completed:true});}
   }),{ownerId:PCMS_CONTINUITY_FIXTURE_OWNER,generation:PCMS_CONTINUITY_FIXTURE_GENERATION});
   let timerAlarmRearm=null;
+  let moduleSupervisor=null;
   const timers=createTimerService({
     storageBroker:core.storageBroker,
     auditJournal:core.auditJournal,
     serviceRegistry:timerServices,
     clock,
-    onChanged:async()=>{if(timerAlarmRearm)await timerAlarmRearm();}
+    onChanged:async(change)=>{
+      if(moduleSupervisor){try{await moduleSupervisor.afterTimerChange(change);}catch{}}
+      if(timerAlarmRearm)await timerAlarmRearm();
+    }
   });
   const continuityFixture=createPcmsContinuityFixture({timers,clock});
+
+  // ADR-003 §2/§3/§5: runtime modules run live in this background Core.
+  const moduleSchedules=createModuleScheduleStore({storageBroker:core.storageBroker});
+  const providerGates=createAccountProviderGateResolver({
+    accountsService:core.accounts,
+    providerGate:core.providerGate,
+    operationContext:core.liveMutations?.operationContext??null
+  });
+  moduleDeps=Object.freeze({
+    storageBroker:core.storageBroker,
+    auditJournal:core.auditJournal,
+    humanTasks:core.humanTasks,
+    recoveryHold:core.recoveryHold,
+    accounts:core.accounts,
+    deployer:core.deployer,
+    timers,
+    schedules:moduleSchedules,
+    gateFor:(accountId)=>providerGates.get(accountId),
+    clock
+  });
+  moduleSupervisor=createModuleSupervisor({
+    moduleRegistry:core.moduleRegistry,
+    moduleRuntime:core.moduleRuntime,
+    moduleLifecycle:core.moduleLifecycle,
+    timerServices,
+    timers,
+    humanTasks:core.humanTasks,
+    auditJournal:core.auditJournal,
+    storageBroker:core.storageBroker,
+    schedules:moduleSchedules,
+    clock
+  });
+
+  async function initialize(options){
+    const recovery=await core.initialize(options);
+    // Every admitted module's scheduler exists before the first due pass of this context.
+    const schedulerModules=await moduleSupervisor.initialize();
+    return Object.freeze({...recovery,schedulerModules});
+  }
+
+  async function declareTimerSchedules(input){
+    const declared=await continuityFixture.declare(input);
+    try{await moduleSupervisor.declare(input);}catch{}
+    return declared;
+  }
 
   // The answer is recorded durably first; reconciliation then reads it.
   async function answerHandoff(taskId,outcome) {
@@ -89,16 +154,20 @@ export function createBackgroundPcmsCore({
 
   return Object.freeze({
     ...core,
+    initialize,
     personaBroker,
     timers,
     timerServices,
-    declareTimerSchedules:continuityFixture.declare,
+    modules:moduleSupervisor.api,
+    moduleSupervisor,
+    declareTimerSchedules,
     bindTimerAlarmRearm(handler){
       if(handler!==null&&typeof handler!=="function")throw new TypeError("PCMS timer alarm rearm hook is invalid");
       timerAlarmRearm=handler;
     },
     close(){
       timerAlarmRearm=null;
+      try{moduleRuntimeOptions.dispose();}catch{}
       core.close();
     },
     providerHandoff:Object.freeze({

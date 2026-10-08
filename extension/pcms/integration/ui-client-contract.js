@@ -82,6 +82,20 @@ export const PCMS_UI_OPERATIONS=Object.freeze({
   "providerHandoff.describe":query(1),
   "providerHandoff.answer":command(2,["attention","modules","recovery"]),
 
+  // P031 runtime-module lifecycle, executed live by the background module supervisor.
+  // Install/update take the canonical pcms.module.archive/v1 text (at most 1 MiB).
+  "modules.list":query(0),
+  "modules.get":query(1),
+  "modules.install":command(1,["modules","attention"]),
+  "modules.approve":command(2,["modules","attention"]),
+  "modules.reject":command(2,["modules","attention"]),
+  "modules.disable":command(1,["modules"]),
+  "modules.enable":command(1,["modules","attention"]),
+  "modules.rollback":command(2,["modules","attention"]),
+  "modules.remove":command(1,["modules","attention"]),
+  "modules.purge":command(1,["modules"]),
+  "modules.call":command(3,["modules","attention"]),
+
   "recoveryHold.getStatus":query(0),
   "remoteOps.listUnresolved":query(0),
 
