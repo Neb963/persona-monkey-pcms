@@ -1,7 +1,7 @@
 // A039-01/02/03: exact pinned FDE, real product broker/execution; loopback provider.
 import assert from "node:assert/strict";
 import {createServer} from "node:http";
-import {mkdir,readFile,rm} from "node:fs/promises";
+import {appendFile,mkdir,readFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {execFileText,loadBrowserPin,sha256File,writeJson} from "../../../tools/firefox/lib.mjs";
@@ -17,7 +17,7 @@ const report={schemaVersion:1,phase:"P039",commitSha:process.env.GITHUB_SHA||(aw
   productXpiSha256:await sha256File(xpi),checks:{},facts:{},sourceState:process.env.CI?"actions-checkout":"local-worktree",
   contentSandboxDisabled:process.env.MOZ_DISABLE_CONTENT_SANDBOX==="1",
   worktreeDirty:Boolean((await execFileText("git",["status","--porcelain"])).stdout.trim())};
-let h,server,probe,productTab,changed=false;
+let h,server,denyProxy,probe,productTab,changed=false;
 const requests=[];
 const escape=s=>s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 async function page(code,args=[]){
@@ -39,7 +39,26 @@ try{
   });
   await new Promise(done=>server.listen(0,"127.0.0.1",done));
   const origin="http://127.0.0.1:"+server.address().port;
-  h=await PackagedFirefox.create({root:join(root,"profiles")});await h.start();
+  // Fail-closed local proxy applies before Firefox starts, so even built-in
+  // startup requests cannot contact an external service before Marionette's
+  // parent observer is installed. Only loopback bypasses this rejecting proxy.
+  denyProxy=createServer((_req,res)=>{res.writeHead(403,{"connection":"close"});res.end();});
+  denyProxy.on("connect",(_req,socket)=>socket.end("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n"));
+  await new Promise(done=>denyProxy.listen(0,"127.0.0.1",done));
+  const proxyPort=denyProxy.address().port;
+  h=await PackagedFirefox.create({root:join(root,"profiles")});
+  await appendFile(join(h.profilePath,"user.js"),[
+    'user_pref("network.proxy.type", 1);',
+    'user_pref("network.proxy.http", "127.0.0.1");',
+    `user_pref("network.proxy.http_port", ${proxyPort});`,
+    'user_pref("network.proxy.ssl", "127.0.0.1");',
+    `user_pref("network.proxy.ssl_port", ${proxyPort});`,
+    'user_pref("network.proxy.no_proxies_on", "127.0.0.1,localhost,[::1]");',
+    'user_pref("network.proxy.failover_direct", false);',
+    'user_pref("network.dns.disablePrefetch", true);',
+    'user_pref("network.trr.mode", 5);'
+  ].join("\n")+"\n");
+  await h.start();
   // CI-only parent HTTP observer: all product and fixture requests are confined
   // to the exact loopback origin, including PersonaMonkey's catalog refreshes.
   await h.client.script(`const origin=arguments[0];
@@ -47,7 +66,7 @@ try{
       const channel=subject.QueryInterface(Components.interfaces.nsIHttpChannel);
       if(channel.URI.prePath!==origin)channel.cancel(Components.results.NS_ERROR_ABORT);
     }},"http-on-modify-request");`,[origin]);
-  report.facts.networkIsolation={mode:"parent-http-observer",allowedOrigin:origin};
+  report.facts.networkIsolation={mode:"startup-rejecting-proxy-and-parent-http-observer",allowedOrigin:origin};
   assert.equal(await h.install(xpi),PRODUCT);
   productTab=await h.openPage(PRODUCT,"options/options.html");
   await waitFor(()=>h.pageScript('return !!document.getElementById("integrationEnabled")'),"PersonaMonkey security settings load");
@@ -138,7 +157,9 @@ try{
   throw error;
 }
 finally{
-  await h?.stop();await new Promise(done=>server?server.close(done):done());await writeJson(reportPath,report);
+  await h?.stop();await new Promise(done=>server?server.close(done):done());
+  denyProxy?.closeAllConnections();await new Promise(done=>denyProxy?denyProxy.close(done):done());
+  await writeJson(reportPath,report);
   if(h)await rm(h.profilePath,{recursive:true,force:true});
 }
 console.log(JSON.stringify(report));
