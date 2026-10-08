@@ -1054,11 +1054,11 @@
     },
     {
       "sourcePath": "extension/popup/popup.js",
-      "destinationPath": "extension/popup/popup.js",
+      "destinationPath": "docs/upstream/source/extension/popup/popup.js",
       "sourceBlobSha": "dce9344adac4825bae77030cd73b5e99029266fb",
       "mode": "100644",
       "size": 8126,
-      "disposition": "root-exact"
+      "disposition": "snapshot-exact"
     },
     {
       "sourcePath": "extension/tests/background-routing-init.test.mjs",
@@ -1838,9 +1838,9 @@
     {
       "destinationPath": "extension/popup/popup.html",
       "upstreamBlobSha": "700aff9da9276f87beb88062d1a1df7b1abcf4d7",
-      "derivativeBlobSha": "211f9fafe3e8c31248005399950457bafcd14ed4",
-      "derivativeSize": 1727,
-      "reason": "P025 corrective release makes the toolbar popup lead with the PCMS control surface while retaining PersonaMonkey settings"
+      "derivativeBlobSha": "825e32f9212296ae0aac3118f47e45d3f020e145",
+      "derivativeSize": 2211,
+      "reason": "P035 popup status and account navigation extend PersonaMonkey's fixed-width ESR-safe toolbar surface"
     },
     {
       "destinationPath": "scripts/build-extension.mjs",
@@ -1852,9 +1852,9 @@
     {
       "destinationPath": "extension/popup/popup.css",
       "upstreamBlobSha": "72d4e7d3e1014c85d9041bfc71599ff28f7beef7",
-      "derivativeBlobSha": "726ab9deb6a44ec186e6731cb4834605b52fc80b",
-      "derivativeSize": 5808,
-      "reason": "P026 live Firefox ESR correction replaces viewport-relative popup sizing with a stable intrinsic body width"
+      "derivativeBlobSha": "2012bbf11c101e1de002c015bc93f879f93bc825",
+      "derivativeSize": 6494,
+      "reason": "P035 popup status and account navigation extend PersonaMonkey's fixed-width ESR-safe toolbar surface"
     },
     {
       "destinationPath": "extension/lib/recovery-bootstrap.js",
@@ -1869,6 +1869,13 @@
       "derivativeBlobSha": "77c1971ee5aa48317da978ee7a25f0c22b5bea8e",
       "derivativeSize": 28222,
       "reason": "P028 regression evidence: the PCMS background entry's synchronous message listener precedes PersonaMonkey's, after the routing guards"
+    },
+    {
+      "destinationPath": "extension/popup/popup.js",
+      "upstreamBlobSha": "dce9344adac4825bae77030cd73b5e99029266fb",
+      "derivativeBlobSha": "b51bd7ba50f93814db72a418e04418a290ef8f28",
+      "derivativeSize": 12930,
+      "reason": "P035 preserves the frozen PersonaMonkey popup source while adding read-only PCMS status and account deep linking"
     }
   ]
 }
