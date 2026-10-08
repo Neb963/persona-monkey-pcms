@@ -9,6 +9,7 @@ import { createRefresherService, REFRESHER_MODE } from "../../../pcms-modules/p0
 import { createStatisticsService } from "../../../pcms-modules/p018/statistics.js";
 import { createProvisioningService } from "../../../pcms-modules/p019/provisioning.js";
 import { makeCore, UID_A, HASH_A } from "./harness.mjs";
+import { confirmStagedRestore } from "../../../extension/pcms/recovery/schema.js";
 
 const factories=Object.freeze({
   accounts:createAccountsService,
@@ -164,7 +165,7 @@ test("A023-03 backup/restore restores integrated module + Attention state and re
   assert.equal((await integration.humanTasks.listAttention()).length,2);
 
   const staged=await integration.backupRestore.stageRestore(backup);
-  const applied=await integration.backupRestore.applyStagedRestore(staged);
+  const applied=await integration.backupRestore.applyStagedRestore(confirmStagedRestore(staged,"RESTORE"));
   assert.equal(applied.backupId,"integration-1");
   assert.equal((await core.recoveryHold.getStatus()).value.state,"RECOVERY_HOLD");
 
