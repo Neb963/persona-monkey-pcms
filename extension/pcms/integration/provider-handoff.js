@@ -43,10 +43,30 @@ function normalizeRecord(row,operationId){
     ||value.operationId!==operationId||!Number.isSafeInteger(value.seq)||value.seq<1
     ||typeof value.taskId!=="string"||typeof value.title!=="string"||typeof value.instructions!=="string"
     ||(value.source!==null&&typeof value.source!=="string")
-    ||(value.sourceHash!==null&&typeof value.sourceHash!=="string")) {
+    ||(value.sourceHash!==null&&typeof value.sourceHash!=="string")
+    ||(value.payload!==undefined&&value.payload!==null&&!releasePayloadShape(value.payload))) {
     throw new Error("Provider handoff record is corrupt");
   }
   return Object.freeze({revision:row.revision,value});
+}
+
+// P036 generator.update v2 handoff payload: code and HTML separately, optional JPEG thumbnail
+// (base64) and the listing wording. Older records carry no payload and read as null.
+const LISTING_WORDS=Object.freeze(["Publicly listed","Unlisted"]);
+function releasePayloadShape(value){
+  return Boolean(value)&&typeof value==="object"&&!Array.isArray(value)
+    &&typeof value.code==="string"&&typeof value.html==="string"
+    &&(value.thumbnail===null||typeof value.thumbnail==="string")
+    &&LISTING_WORDS.includes(value.listing)
+    &&typeof value.payloadHash==="string"&&value.payloadHash.length<=128
+    &&(value.label===null||(typeof value.label==="string"&&value.label.length<=160));
+}
+function releasePayload(value){
+  if(value===null||value===undefined) return null;
+  if(!releasePayloadShape(value)||value.code.length+value.html.length>MAX_SOURCE_LENGTH||(value.thumbnail?.length||0)>1500000) {
+    throw new TypeError("Provider handoff payload is invalid");
+  }
+  return Object.freeze({code:value.code,html:value.html,thumbnail:value.thumbnail,listing:value.listing,payloadHash:value.payloadHash,label:value.label});
 }
 
 export function createProviderHandoff({storageBroker,humanTasks,clock=()=>new Date().toISOString()}={}){
@@ -84,7 +104,7 @@ export function createProviderHandoff({storageBroker,humanTasks,clock=()=>new Da
     }
   }
 
-  async function writeNext(current,operationId,{title,instructions,source,sourceHash,subjectRef}){
+  async function writeNext(current,operationId,{title,instructions,source,sourceHash,subjectRef,payload=null}){
     const seq=(current?.value.seq||0)+1;
     const value=Object.freeze({
       schemaVersion:1,
@@ -97,6 +117,7 @@ export function createProviderHandoff({storageBroker,humanTasks,clock=()=>new Da
       source:source===null||source===undefined?(current?.value.source??null):text(source,MAX_SOURCE_LENGTH),
       sourceHash:sourceHash===null||sourceHash===undefined?(current?.value.sourceHash??null):text(sourceHash,128),
       subjectRef:subject(subjectRef)??current?.value.subjectRef??null,
+      payload:releasePayload(payload)??current?.value.payload??null,
       openedAt:new Date(clock()).toISOString()
     });
     const row=await store.compareAndSwap(operationId,{expectedRevision:current?.revision||0,value});
@@ -104,14 +125,14 @@ export function createProviderHandoff({storageBroker,humanTasks,clock=()=>new Da
   }
 
   // Operator interface used by the live provider driver (same shape as the P026 bridge).
-  async function choose({operationId,phase,title,instructions,source=null,sourceHash=null,subjectRef=null,choices=[]}={}){
+  async function choose({operationId,phase,title,instructions,source=null,sourceHash=null,subjectRef=null,payload=null,choices=[]}={}){
     const opId=id(operationId,"operationId");
     if(phase!=="dispatch"&&phase!=="reconcile") throw new TypeError("Provider handoff phase is invalid");
     if(!Array.isArray(choices)||choices.length<1) throw new TypeError("Operator choices are required");
     const current=await read(opId);
 
     if(phase==="dispatch"){
-      const record=await writeNext(current,opId,{title,instructions,source,sourceHash,subjectRef});
+      const record=await writeNext(current,opId,{title,instructions,source,sourceHash,subjectRef,payload});
       await ensureTask(record.value);
       // Handoff recorded; the outcome is unknown until the operator answers.
       return null;
@@ -158,6 +179,7 @@ export function createProviderHandoff({storageBroker,humanTasks,clock=()=>new Da
       source:record.value.source,
       sourceHash:record.value.sourceHash,
       subjectRef:record.value.subjectRef,
+      payload:record.value.payload??null,
       state:task?.value.state||null,
       outcomes:PROVIDER_HANDOFF_OUTCOMES
     });

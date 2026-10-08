@@ -167,15 +167,15 @@ export function bindPcmsLiveControls({runtime,documentRef=globalThis.document,re
         }
       }
 
-      if(deployment.operation.status==="RETRYABLE"&&deployment.desired.sourceHash!==sourceHash){
+      if(deployment.operation.status==="RETRYABLE"&&deployment.desired.payloadHash!==sourceHash){
         throw new Error("Retryable deployment must prove the existing intent first; desired source cannot change yet.");
       }
 
-      if(deployment.operation.status==="SUCCEEDED"&&deployment.desired.sourceHash===sourceHash){
+      if(deployment.operation.status==="SUCCEEDED"&&deployment.desired.payloadHash===sourceHash){
         return "Deployer: already in sync ("+sourceHash.slice(0,12)+"…).";
       }
 
-      if(deployment.desired.sourceHash!==sourceHash){
+      if(deployment.desired.payloadHash!==sourceHash){
         const desired=await runtime.deployer.setDesired(deploymentId,{
           expectedRevision:revision,
           expectedDesiredRevision:deployment.desired.revision,

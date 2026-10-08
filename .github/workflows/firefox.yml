@@ -79,6 +79,9 @@ jobs:
       - name: Verify P041 previewed restore, recovery checklist and Settings views
         run: npm run test:p041 && node --test tests/pcms/p020/*.test.mjs
 
+      - name: Verify P036 Deployer v2 migration, status table, Perchance driver v2 and Generators deploy flow
+        run: npm run test:p036
+
       - name: Install and drive packaged XPI, lifecycle and platform probes
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
@@ -345,5 +348,47 @@ jobs:
         with:
           name: firefox-packaged-p041
           path: ${{ runner.temp }}/firefox-p041-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  # P036 Generators: the real dashboard against the real background Core, then the shipped
+  # Generators view and Deployer modules driving an assisted manual deploy, in their own
+  # disposable packaged Firefox.
+  p036-packaged:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Install Firefox runtime libraries
+        timeout-minutes: 6
+        run: |
+          packages="libgtk-3-0 libdbus-glib-1-2 libasound2t64 libx11-xcb1 libxt6"
+          if dpkg -s $packages >/dev/null 2>&1; then exit 0; fi
+          apt_opts="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30"
+          for attempt in 1 2 3; do
+            if sudo timeout 150 apt-get $apt_opts update && sudo timeout 150 apt-get $apt_opts install -y $packages; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - name: Install exact pinned Firefox Developer Edition
+        id: install
+        env:
+          FIREFOX_INSTALL_ROOT: ${{ runner.temp }}/pcms-firefox
+        run: npm run firefox:install
+      - name: Render Generators from the Core index and run an assisted manual deploy in packaged Firefox
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged-p036
+          FIREFOX_P036_REPORT: ${{ runner.temp }}/firefox-p036-report.json
+        run: npm run firefox:packaged:p036
+      - name: Upload P036 packaged evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-packaged-p036
+          path: ${{ runner.temp }}/firefox-p036-report.json
           if-no-files-found: warn
           retention-days: 7

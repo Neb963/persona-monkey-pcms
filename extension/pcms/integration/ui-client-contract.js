@@ -57,6 +57,12 @@ export const PCMS_UI_OPERATIONS=Object.freeze({
   "deployer.prepareRetry":command(2,["modules"]),
   "deployer.deploy":command(2,["modules","attention","recovery"]),
   "deployer.reconcileDeployment":command(2,["modules","attention","recovery"]),
+  "deployer.setPaused":command(2,["modules"]),
+
+  // P036 pcms.generator-index/v1: the rebuildable Core view behind the Generators pages.
+  "generators.list":query(1),
+  "generators.get":query(1),
+  "generators.search":query(2),
 
   "refresher.listCohorts":query(0),
   "refresher.listCohortViews":query(0),

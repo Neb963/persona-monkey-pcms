@@ -1,8 +1,9 @@
 import { getPersonaBrokerCommand } from "../core/persona-broker-contract.js";
 import { createPerchanceProviderAdapter } from "../providers/perchance/adapter.js";
+import { PERCHANCE_ASSISTED_CAPABILITIES, createPerchanceAssistedReleaseMethods } from "../providers/perchance/assisted-driver.js";
 import {
   PERCHANCE_DRIVER_CONTRACT_ID,
-  PERCHANCE_DRIVER_CONTRACT_VERSION,
+  PERCHANCE_DRIVER_CONTRACT_VERSION_V2,
   PERCHANCE_GENERATOR_UPDATE_ACTION,
   PERCHANCE_PROVIDER_ID
 } from "../providers/perchance/contract.js";
@@ -259,16 +260,29 @@ export function createPcmsLiveMutationIntegration({
   const client=createLiveBrokerClient({broker:personaBroker});
   const operationContext=createLiveOperationContext({storageBroker});
 
+  // pcms.perchance.driver/v2 (P036): the same assisted generator.update also takes release
+  // payloads. Every unattended/observe/listing capability stays off until live phases.
+  const release=createPerchanceAssistedReleaseMethods({
+    operator,
+    async openTarget({operationId,generatorId,phase}){
+      const context=await requireContext(operationContext,operationId);
+      await openPersona(client,context,"https://perchance.org/"+encodeURIComponent(generatorId),operationId,phase);
+      return context;
+    }
+  });
   const driver=Object.freeze({
     async probe(){
       await client.request("system.status",{});
       return Object.freeze({
         contractId:PERCHANCE_DRIVER_CONTRACT_ID,
-        contractVersion:PERCHANCE_DRIVER_CONTRACT_VERSION,
+        contractVersion:PERCHANCE_DRIVER_CONTRACT_VERSION_V2,
         providerId:PERCHANCE_PROVIDER_ID,
-        operations:Object.freeze([PERCHANCE_GENERATOR_UPDATE_ACTION])
+        operations:Object.freeze([PERCHANCE_GENERATOR_UPDATE_ACTION]),
+        capabilities:PERCHANCE_ASSISTED_CAPABILITIES
       });
     },
+    updateGeneratorRelease:release.updateGeneratorRelease,
+    reconcileGeneratorRelease:release.reconcileGeneratorRelease,
     async updateGenerator({operationId,generatorId,sourceHash,source}={}){
       const context=await requireContext(operationContext,operationId);
       await openPersona(client,context,"https://perchance.org/"+encodeURIComponent(generatorId),operationId,"open");
