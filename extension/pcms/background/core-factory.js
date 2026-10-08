@@ -8,6 +8,8 @@ import { createHumanTaskService } from "../services/human-tasks.js";
 import { createCoreServiceRegistry } from "../services/registry.js";
 import { createTimerService } from "../services/timers.js";
 import { createAccountProviderGateResolver } from "../integration/adapters.js";
+import { createPcmsBundledModuleLoader } from "../integration/bundled-modules.js";
+import { PCMS_UI_PUBLISH_CAPABILITY, createPcmsUiContributionHost } from "../integration/ui-contributions.js";
 import { createModuleCapabilityHandlers, createPerchanceModuleCapabilityHandlers } from "./modules/capabilities.js";
 import { createBackgroundModuleRuntimeOptions } from "./modules/host.js";
 import { createModuleScheduleStore } from "./modules/schedules.js";
@@ -49,17 +51,25 @@ export function createBackgroundPcmsCore({
   clock=()=>new Date().toISOString(),
   storageBroker=null,
   auditJournal=null,
-  moduleHost=null
+  moduleHost=null,
+  bundledModules=null,
+  importBundledModule=null
 }={}) {
   const personaBroker=createPersonaBroker({transport});
   let handoff=null;
   // Capability set v1 handlers are bound before the services they front exist.
   let moduleDeps=null;
+  let uiHost=null;
   const moduleRuntimeOptions=createBackgroundModuleRuntimeOptions({
     ...(moduleHost||{}),
     capabilities:{
       ...createModuleCapabilityHandlers({resolve:()=>moduleDeps}),
-      ...createPerchanceModuleCapabilityHandlers({resolve:()=>moduleDeps})
+      ...createPerchanceModuleCapabilityHandlers({resolve:()=>moduleDeps}),
+      // pcms.ui-contribution/v1: a runtime module publishes its UI for Core to cache (P033).
+      [PCMS_UI_PUBLISH_CAPABILITY]:(args,context)=>{
+        if(!uiHost) throw new Error("PCMS UI contribution host is unavailable");
+        return uiHost.capabilities[PCMS_UI_PUBLISH_CAPABILITY](args,context);
+      }
     }
   });
   const core=createPcmsLiveCore({
@@ -131,6 +141,22 @@ export function createBackgroundPcmsCore({
     clock
   });
 
+  // P033: one contribution host merges built-in and runtime module UI for every dashboard.
+  uiHost=createPcmsUiContributionHost({
+    storageBroker:core.storageBroker,
+    modules:moduleSupervisor.api,
+    moduleRegistry:core.moduleRegistry,
+    recoveryHold:core.recoveryHold,
+    auditJournal:core.auditJournal,
+    clock,
+    // The shipped list by default; tests may pass another list and an import function.
+    loadBundled:createPcmsBundledModuleLoader({
+      core,
+      ...(Array.isArray(bundledModules)?{entries:bundledModules}:{}),
+      ...(typeof importBundledModule==="function"?{importModule:importBundledModule}:{})
+    })
+  });
+
   async function initialize(options){
     const recovery=await core.initialize(options);
     // Every admitted module's scheduler exists before the first due pass of this context.
@@ -160,6 +186,7 @@ export function createBackgroundPcmsCore({
     timerServices,
     modules:moduleSupervisor.api,
     moduleSupervisor,
+    ui:uiHost.api,
     declareTimerSchedules,
     bindTimerAlarmRearm(handler){
       if(handler!==null&&typeof handler!=="function")throw new TypeError("PCMS timer alarm rearm hook is invalid");

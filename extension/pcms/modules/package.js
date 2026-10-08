@@ -3,6 +3,10 @@ import { MODULE_ERROR_CODES, moduleError } from "./errors.js";
 
 export const PCMS_MODULE_ARCHIVE_FORMAT = "pcms.module.archive/v1";
 export const PCMS_MODULE_MANIFEST_VERSION = 1;
+// pcms.module-manifest/v2 (P033) is additive: v1 plus an optional `ui` entry naming the
+// package file that runs in the sandboxed module-UI frame. v1 archives keep their bytes and hashes.
+export const PCMS_MODULE_MANIFEST_VERSIONS = Object.freeze([1, 2]);
+export const MODULE_MAX_UI_BYTES = 256 * 1024;
 export const MODULE_MAX_ARCHIVE_BYTES = 1024 * 1024;
 export const MODULE_MAX_FILES = 32;
 export const MODULE_MAX_FILE_BYTES = 256 * 1024;
@@ -57,19 +61,26 @@ export function validateModuleArchivePath(value) {
 
 function normalizeManifest(value) {
   if (!plainObject(value)) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
+  if (!PCMS_MODULE_MANIFEST_VERSIONS.includes(value.schemaVersion)) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
   const keys = Object.keys(value);
   const expected = ["schemaVersion", "moduleId", "version", "controller", "authority"];
-  if (keys.length !== expected.length || !expected.every((key) => Object.hasOwn(value, key))) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
-  if (value.schemaVersion !== PCMS_MODULE_MANIFEST_VERSION) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
+  const allowed = value.schemaVersion === 2 ? [...expected, "ui"] : expected;
+  if (!expected.every((key) => Object.hasOwn(value, key)) || !keys.every((key) => allowed.includes(key))) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
   const controller = validateModuleArchivePath(value.controller);
   if (!controller.endsWith(".js")) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
-  return Object.freeze({
-    schemaVersion: PCMS_MODULE_MANIFEST_VERSION,
+  const manifest = {
+    schemaVersion: value.schemaVersion,
     moduleId: assertModuleId(value.moduleId),
     version: validateVersion(value.version),
     controller,
     authority: normalizeModuleAuthority(value.authority)
-  });
+  };
+  if (Object.hasOwn(value, "ui")) {
+    const ui = validateModuleArchivePath(value.ui);
+    if (!ui.endsWith(".js") || ui === controller) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
+    manifest.ui = ui;
+  }
+  return Object.freeze(manifest);
 }
 
 function normalizeFiles(value) {
@@ -98,21 +109,34 @@ function normalizeDefinition(value) {
   if (!Object.hasOwn(files, manifest.controller)) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
   const controllerBytes = TEXT_ENCODER.encode(files[manifest.controller]).byteLength;
   if (controllerBytes < 1 || controllerBytes > MODULE_MAX_CONTROLLER_BYTES) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
+  if (manifest.ui !== undefined) {
+    if (!Object.hasOwn(files, manifest.ui)) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
+    const uiBytes = TEXT_ENCODER.encode(files[manifest.ui]).byteLength;
+    if (uiBytes < 1 || uiBytes > MODULE_MAX_UI_BYTES) fail(MODULE_ERROR_CODES.INVALID_MANIFEST);
+  }
   return Object.freeze({ format: PCMS_MODULE_ARCHIVE_FORMAT, manifest, files });
 }
+
+// Key order is part of the canonical bytes: v1 stays byte-identical, v2 appends `ui`.
+export function canonicalModuleManifest(manifest) {
+  const out = {
+    schemaVersion: manifest.schemaVersion,
+    moduleId: manifest.moduleId,
+    version: manifest.version,
+    controller: manifest.controller,
+    authority: { capabilities: [...manifest.authority.capabilities] }
+  };
+  if (manifest.ui !== undefined) out.ui = manifest.ui;
+  return out;
+}
+const canonicalManifest = canonicalModuleManifest;
 
 function canonicalObject(definition) {
   const files = Object.create(null);
   for (const path of Object.keys(definition.files).sort()) files[path] = definition.files[path];
   return {
     format: PCMS_MODULE_ARCHIVE_FORMAT,
-    manifest: {
-      schemaVersion: PCMS_MODULE_MANIFEST_VERSION,
-      moduleId: definition.manifest.moduleId,
-      version: definition.manifest.version,
-      controller: definition.manifest.controller,
-      authority: { capabilities: [...definition.manifest.authority.capabilities] }
-    },
+    manifest: canonicalManifest(definition.manifest),
     files
   };
 }
