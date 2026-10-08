@@ -1238,7 +1238,7 @@
     {
       "id": "P029",
       "title": "Durable PCMS timers woken by extension alarms",
-      "status": "MERGED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P028"
       ],
@@ -1492,7 +1492,7 @@
     {
       "id": "P034",
       "title": "Accounts UX with Persona/account pickers",
-      "status": "CLAIMED",
+      "status": "PR_OPEN",
       "dependsOn": [
         "P032"
       ],

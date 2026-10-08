@@ -264,13 +264,13 @@ Merge wave: 12
 - [x] T028.3 — T028.3 UI client protocol, revision signal, status summary; dashboard becomes a client
 
 ## P029 — Durable PCMS timers woken by extension alarms
-Status: **MERGED**  
+Status: **ACCEPTED**  
 Depends on: P028  
 Merge wave: 13
 
-- [ ] T029.1 — T029.1 Alarm mapping (next-due + heartbeat) and cold-start recreation
-- [ ] T029.2 — T029.2 Due pass, interrupted-timer recovery, declared schedules (timers.ensure), bounded work steps
-- [ ] T029.3 — T029.3 Background continuity proof with zero PCMS tabs and forced unloads
+- [x] T029.1 — T029.1 Alarm mapping (next-due + heartbeat) and cold-start recreation
+- [x] T029.2 — T029.2 Due pass, interrupted-timer recovery, declared schedules (timers.ensure), bounded work steps
+- [x] T029.3 — T029.3 Background continuity proof with zero PCMS tabs and forced unloads
 
 ## P030 — Production sandbox pages + background-hosted controller frames
 Status: **ACCEPTED**  
@@ -309,7 +309,7 @@ Merge wave: 15
 - [ ] T033.3 — T033.3 Statistics pilot and fixture runtime-module UI proof, including lifecycle presentation states
 
 ## P034 — Accounts UX with Persona/account pickers
-Status: **CLAIMED**  
+Status: **PR_OPEN**  
 Depends on: P032  
 Merge wave: 14
 
