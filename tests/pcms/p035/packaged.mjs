@@ -90,8 +90,11 @@ try {
   report.facts={bodyWidth:snapshot.bodyWidth,mainHeight:snapshot.mainHeight,status:snapshot.state};
   const before=await windows();
   await h.pageScript('document.getElementById("p035-frame").contentDocument.getElementById("pcmsOpenAccount").click();');
-  await waitFor(()=>h.pageScript('return location.hash === "#/accounts/p035-acceptance";'),"popup navigates existing dashboard to account",20000);
-  assert.equal((await windows()).length,before.length);
+  await waitFor(async()=>{
+    const tabs=await page('return api.tabs.query({});');
+    return tabs.some(tab=>tab.url?.endsWith("#/accounts/p035-acceptance"));
+  },"popup navigates an existing dashboard to account",20000);
+  assert.equal((await windows()).length,before.length,"reuses a PCMS tab without opening another");
   report.checks.pinnedFirefoxAccountDeepLinkReusesTab=true;
   report.facts.accountRoute="#/accounts/"+accountId;
   report.passed=true;
