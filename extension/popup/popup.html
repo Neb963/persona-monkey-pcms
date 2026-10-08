@@ -13,6 +13,13 @@
       <span id="status" class="badge" role="status" aria-live="polite" aria-atomic="true">…</span>
     </header>
     <div id="context" class="card context-card"></div>
+    <section id="pcmsBlock" class="card pcms-block hidden" aria-label="PCMS status">
+      <div class="pcms-heading"><strong>PCMS</strong><span id="pcmsState" role="status" aria-live="polite">Starting</span></div>
+      <p id="pcmsAccount" class="pcms-detail"></p>
+      <p id="pcmsAttention" class="pcms-detail" aria-live="polite"></p>
+      <p id="pcmsAsOf" class="pcms-asof"></p>
+      <button id="pcmsOpenAccount" type="button" hidden>Open account in PCMS</button>
+    </section>
     <section class="route-section">
       <label>Active route<select id="route" disabled></select></label>
       <div id="directWarning" class="direct-warning hidden" role="group" aria-labelledby="directWarningTitle">
