@@ -9,7 +9,7 @@ const FOLDER=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$/;
 const BATCH=8;
 function defaultState(){return {schemaVersion:1,config:null,defaultListing:"UNLISTED",
-  mode:"assisted",identityEpoch:1,scanSequence:0,links:{},snapshot:null,scan:null,
+  mode:"assisted",identityEpoch:1,scanSequence:0,links:{},needsApply:false,snapshot:null,scan:null,
   lastCheckedAt:null,lastSuccessfulScanAt:null,lastFailure:null};}
 function sameId(a,b){return a&&b&&a.provider===b.provider&&a.owner===b.owner&&a.repo===b.repo&&a.root===b.root;}
 function sameConfig(a,b){return sameId(a,b)&&a.ref===b.ref&&JSON.stringify(a.access)===JSON.stringify(b.access);}
@@ -56,7 +56,7 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
     const current=await read();
     if(current.revision!==expectedRevision||current.value.scan!==null)fail(REPO_ERRORS.PROTOCOL);
     const links={...current.value.links,[folder]:accountId};
-    return cas(current,{...current.value,links});
+    return cas(current,{...current.value,links,needsApply:true});
   }
   async function unlinkFolder({folder,expectedRevision}={}){
     if(!FOLDER.test(folder))fail(REPO_ERRORS.PROTOCOL);
@@ -64,7 +64,7 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
     if(current.revision!==expectedRevision||current.value.scan!==null)fail(REPO_ERRORS.PROTOCOL);
     const links={...current.value.links};
     delete links[folder];
-    return cas(current,{...current.value,links});
+    return cas(current,{...current.value,links,needsApply:true});
   }
   async function startScan(){
     const current=await read();
@@ -136,10 +136,15 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
         const unchanged=state.snapshot?.commitId===resolved.commitId
           &&state.snapshot?.validatorVersion===GENERATOR_REPOSITORY_VALIDATOR_VERSION;
         if(unchanged){
-          await cas(current,{...state,scan:null,lastCheckedAt:clock(),lastFailure:null});
-          return Object.freeze({done:true,status:"UNCHANGED"});
+          if(state.needsApply){
+            await cas(current,{...state,scan:{...scan,step:"APPLY",commitId:resolved.commitId},lastFailure:null});
+          }else{
+            await cas(current,{...state,scan:null,lastCheckedAt:clock(),lastFailure:null});
+            return Object.freeze({done:true,status:"UNCHANGED"});
+          }
+        }else{
+          await cas(current,{...state,scan:{...scan,step:"VALIDATE",commitId:resolved.commitId}});
         }
-        await cas(current,{...state,scan:{...scan,step:"VALIDATE",commitId:resolved.commitId}});
       }else if(scan.step==="VALIDATE"){
         // Refetched at the pinned SHA on each bounded step; no giant tree or file payloads in DB.
         const tree=await repositoryProvider.listTree(config,scan.commitId);
@@ -157,7 +162,7 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
           items:part.items,problems:part.problems}});
       }else if(scan.step==="FINALIZE"){
         const snapshot=finalizeRepositorySnapshot({commitId:scan.commitId,items:scan.items,problems:scan.problems});
-        await cas(current,{...state,snapshot,scan:{...scan,step:"APPLY",items:[],problems:[],applied:0},
+        await cas(current,{...state,snapshot,needsApply:true,scan:{...scan,step:"APPLY",items:[],problems:[],applied:0},
           lastCheckedAt:clock(),lastSuccessfulScanAt:clock(),lastFailure:null});
         if(auditJournal&&state.snapshot?.commitId!==snapshot.commitId){
           try{await auditJournal.append({type:"deployer.repository.scanned",subject:{kind:"module",id:"deployer"},
@@ -179,7 +184,7 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
         current=await read();state=current.value;
         if(state.scan?.scanId!==scan.scanId)fail(REPO_ERRORS.PROTOCOL);
         if(state.scan.applied===(state.snapshot?.items.length??0)){
-          await cas(current,{...state,scan:null});
+          await cas(current,{...state,scan:null,needsApply:false});
           return Object.freeze({done:true,status:"SUCCESS",snapshot:state.snapshot});
         }
       }else fail(REPO_ERRORS.PROTOCOL);
@@ -234,7 +239,7 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
     const existing=await deployer.getDeployment(deploymentId);
     if(!existing||existing.desired.origin.kind!=="REPOSITORY")fail(REPO_ERRORS.PROTOCOL);
     const item=state.snapshot?.items.find(v=>v.slug===existing.targetRef.id);
-    if(!item||item.payloadHash!==existing.desired.payloadHash||item.thumbnailHash!==existing.desired.thumbnailHash
+    if(!item||item.deploy==="hold"||item.payloadHash!==existing.desired.payloadHash||item.thumbnailHash!==existing.desired.thumbnailHash
        ||item.listing!==existing.desired.listing||existing.desired.origin.commitId!==state.snapshot.commitId)
       fail(REPO_ERRORS.PROTOCOL);
     const payload=await readRepositoryRelease({provider:repositoryProvider,config:state.config,
