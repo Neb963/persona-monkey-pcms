@@ -67,6 +67,9 @@ jobs:
       - name: Verify P032 dashboard routes, receipt read API and multi-tab durability
         run: npm run test:p032
 
+      - name: Verify P034 Accounts models and durable rebind fencing
+        run: npm run test:p034
+
       - name: Install and drive packaged XPI, lifecycle and platform probes
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
@@ -170,3 +173,44 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+
+  # P034 Accounts fixture runs in a separate disposable packaged Firefox,
+  # avoiding shared-profile navigation races with inherited packaged checks.
+  p034-packaged:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Install Firefox runtime libraries
+        timeout-minutes: 6
+        run: |
+          packages="libgtk-3-0 libdbus-glib-1-2 libasound2t64 libx11-xcb1 libxt6"
+          if dpkg -s $packages >/dev/null 2>&1; then exit 0; fi
+          apt_opts="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30"
+          for attempt in 1 2 3; do
+            if sudo timeout 150 apt-get $apt_opts update && sudo timeout 150 apt-get $apt_opts install -y $packages; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - name: Install exact pinned Firefox Developer Edition
+        id: install
+        env:
+          FIREFOX_INSTALL_ROOT: ${{ runner.temp }}/pcms-firefox
+        run: npm run firefox:install
+      - name: Exercise P034 Accounts table, detail and guarded rebind in packaged Firefox
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged-p034
+          FIREFOX_P034_REPORT: ${{ runner.temp }}/firefox-p034-report.json
+        run: npm run firefox:packaged:p034
+      - name: Upload P034 packaged evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-packaged-p034
+          path: ${{ runner.temp }}/firefox-p034-report.json
+          if-no-files-found: warn
+          retention-days: 7

@@ -1342,7 +1342,7 @@
     {
       "id": "P031",
       "title": "Runtime module lifecycle live in production",
-      "status": "BLOCKED",
+      "status": "CLAIMED",
       "dependsOn": [
         "P029",
         "P030"
@@ -1353,7 +1353,9 @@
           "extension/pcms/modules/**",
           "extension/pcms/runtime/**",
           "extension/pcms/background/modules/**",
-          "extension/pcms/integration/**",
+          "extension/pcms/background/core-factory.js",
+          "extension/pcms/integration/live-core.js",
+          "extension/pcms/integration/ui-client-contract.js",
           "tests/fixtures/modules/**",
           "tests/pcms/p031/**",
           "docs/evidence/P031/**"
@@ -1363,7 +1365,8 @@
           "pcms.ui-client/v1"
         ],
         "contractWrites": [
-          "pcms.module-capabilities/v1"
+          "pcms.module-capabilities/v1",
+          "pcms.ui-client/v1"
         ],
         "resources": [],
         "migrationSlots": []
@@ -1492,7 +1495,7 @@
     {
       "id": "P034",
       "title": "Accounts UX with Persona/account pickers",
-      "status": "CLAIMED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "P032"
       ],
