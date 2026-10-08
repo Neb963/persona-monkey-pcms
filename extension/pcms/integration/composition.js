@@ -13,6 +13,8 @@ import {
 import { createExplorerDeployerBridge } from "./explorer-deployer.js";
 import { createGeneratorIndexService } from "./generator-index.js";
 import { createGithubRepositoryProvider } from "../providers/repository/github.js";
+import { createSecretStore } from "../secrets/secret-store.js";
+import { createNativeSecretBackend, createFirefoxNativeSecretTransport } from "../secrets/native-secret-backend.js";
 import { createDeployerRepositoryService } from "../../../pcms-modules/p015/repository-service.js";
 import { createIntegrationRecoveryChecks } from "./recovery-checks.js";
 
@@ -141,7 +143,18 @@ export function createPcmsModuleIntegration({
   const repository=createDeployerRepositoryService({
     stateStore:createSingletonStateStore({storageBroker,namespace:"module.deployer.repository"}),
     ledgerStore:storageBroker.namespace("module.deployer.repository.ledger"),
-    repositoryProvider:repositoryProvider??createGithubRepositoryProvider(),
+    repositoryProvider:repositoryProvider??createGithubRepositoryProvider({
+      // Secrets are resolved in the privileged background only, never stored in the
+      // repository state or returned to dashboard clients.
+      secretResolver:async(secretRef)=>{
+        const runtime=globalThis.browser?.runtime;
+        if(!runtime)throw new TypeError("Dedicated secret host is unavailable");
+        const store=createSecretStore({backend:createNativeSecretBackend({
+          sendNativeMessage:createFirefoxNativeSecretTransport(runtime)})});
+        try{return await store.resolveForPrivilegedUse(secretRef);}
+        finally{store.close();}
+      }
+    }),
     deployer,accounts,recoveryHold,auditJournal,clock
   });
 

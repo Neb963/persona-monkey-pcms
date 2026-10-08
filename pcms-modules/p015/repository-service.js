@@ -208,6 +208,11 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
     }
     return Object.freeze({done:false,status:"CONTINUE"});
   }
+  async function getDeploymentForSlug(slug){
+    if(typeof slug!=="string"||!/^[a-z0-9][a-z0-9_-]{0,99}$/.test(slug))fail(REPO_ERRORS.PROTOCOL);
+    const result=await deployer.listDeployments();
+    return Object.freeze({revision:result.revision,deployment:result.deployments.find(d=>d.targetRef.id===slug)??null});
+  }
   async function adopt({slug,expectedRevision}={}){
     const state=(await read()).value;
     const item=state.snapshot?.items.find(v=>v.slug===slug);
@@ -236,5 +241,5 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
       snapshotItem:item,commitId:state.snapshot.commitId});
     return deployer.deploy(deploymentId,{expectedRevision,payload});
   }
-  return Object.freeze({read,configure,linkFolder,unlinkFolder,startScan,scanStep,scanNow,adopt,deployFromRepository});
+  return Object.freeze({read,configure,linkFolder,unlinkFolder,startScan,scanStep,scanNow,getDeploymentForSlug,adopt,deployFromRepository});
 }
