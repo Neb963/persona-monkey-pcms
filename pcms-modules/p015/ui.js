@@ -22,6 +22,8 @@ export function createUiContribution({moduleId="deployer",service}={}){
     {id:"continue",label:"Continue scan",appliesTo:"module",risk:"LOCAL"},
     {id:"verification",label:"Verification settings",appliesTo:"module",risk:"LOCAL",input:[
       {key:"sweepLimit",label:"Verify up to this many generators per check",kind:"integer",required:true,min:1,max:100,default:20}]},
+    {id:"automatic-on",label:"Turn on automatic deployment",appliesTo:"module",risk:"EXTERNAL_MUTATION"},
+    {id:"automatic-off",label:"Turn off automatic deployment",appliesTo:"module",risk:"LOCAL"},
     {id:"link",label:"Link account folder",appliesTo:"module",risk:"BINDING",input:[
       {key:"folder",label:"Repository folder",kind:"text",required:true,maxLength:100},
       {key:"account",label:"PCMS account",kind:"entity",entityKind:"account",required:true}]},
@@ -29,6 +31,20 @@ export function createUiContribution({moduleId="deployer",service}={}){
     {id:"deploy",label:"Deploy assisted",appliesTo:"module-object:generator",risk:"EXTERNAL_MUTATION"}
   ];
   const href="#/m/"+moduleId;
+  // P042: Automatic is shown only as the operator's choice plus whether every gate holds.
+  async function deploymentMode(){
+    if(!service.automatic)return "Assisted";
+    const status=await service.automatic.status();
+    return !status.enabled?"Assisted":status.ready?"Automatic":"Automatic (waiting: gate unmet)";
+  }
+  async function automaticConditions(){
+    if(!service.automatic)return [];
+    const status=await service.automatic.status();
+    if(!status.enabled||status.ready)return [];
+    return status.gates.filter(g=>!g.met).map(g=>({key:"automatic-gate:"+g.id,priority:"HIGH",
+      status:{token:"WARNING",label:"Automatic deployment waiting"},title:"Automatic deployment is not running: "+g.label.toLowerCase()+" is not met.",
+      subject:{kind:"module",id:moduleId}}));
+  }
   function displayItems(value){
     const normal=(value.snapshot?.items??[]).map(item=>({id:item.slug,item,error:null}));
     const errors=(value.snapshot?.problems??[]).map((bad,i)=>({id:"problem:"+i,item:null,error:bad}));
@@ -42,7 +58,7 @@ export function createUiContribution({moduleId="deployer",service}={}){
       {id:"release",label:"Release",kind:"text"},
       {id:"folder",label:"Folder",kind:"text"},
       {id:"state",label:"State",kind:"text"}],rowHref:"generator",
-      actions:["connect","check","continue","link","verification"]},
+      actions:["connect","check","continue","link","verification","automatic-on","automatic-off"]},
       {id:"generator",title:"Generator",type:"detail",actions:["adopt","deploy"]}]},
     async summary(){
       const {value}=await service.read();
@@ -54,13 +70,14 @@ export function createUiContribution({moduleId="deployer",service}={}){
         facts:[{label:"Commit",value:value.snapshot?.commitId?.slice(0,12)??"—"},
           {label:"Last successful check",value:value.lastSuccessfulScanAt??"Never"},
           {label:"Problems",value:String(value.snapshot?.problems?.length??0)},
-          {label:"Scan step",value:value.scan?.step??"Idle"}],href};
+          {label:"Deployment",value:await deploymentMode()}],href};
     },
     async conditions(){
       const {value}=await service.read();
       const out=value.lastFailure?[{key:"repo-scan-failed",priority:"HIGH",status:{token:"ERROR",label:"Repository unavailable"},
         title:"Last repository scan failed ("+String(value.lastFailure.code).slice(0,80)+")",
         subject:{kind:"module",id:moduleId}}]:[];
+      out.push(...await automaticConditions());
       if(service.observations){
         for(const item of value.snapshot?.items??[]){
           const {deployment}=await service.getDeploymentForSlug(item.slug);if(!deployment)continue;
@@ -95,6 +112,16 @@ export function createUiContribution({moduleId="deployer",service}={}){
         {label:"Validation",value:bad?.code??"Valid"}]}]};
     },
     async invoke(_ctx,actionId,ref,input,{mode}={}){
+      if(mode==="preview"&&actionId==="automatic-on"){
+        if(!service.automatic)throw new TypeError("Automatic deployment is unavailable");
+        const unmet=(await service.automatic.gates()).gates.filter(g=>g.id!=="operator"&&!g.met);
+        return {status:{token:unmet.length?"WARNING":"INFO",label:unmet.length?"Gates unmet":"Ready"},
+          message:unmet.length?"Automatic deployment cannot be turned on until every gate holds.":"Eligible repository releases will deploy to Perchance in the background, without a dashboard.",
+          impact:{title:"Turn on automatic deployment",consequences:[...(unmet.length?unmet.map(g=>"Unmet: "+g.label):[]),
+            "Only targets marked deploy: auto that are ready, unpaused, not drifted, not uncertain and not failed are dispatched.",
+            "At most 10 deployments per repository check, one at a time, at least 20 seconds apart; nothing is retried blindly."],
+            confirmLabel:"Turn on"}};
+      }
       if(mode==="preview"){
         return {status:{token:"INFO",label:"Ready"},message:"Review the repository action before continuing.",
           impact:{title:"Confirm Deployer action",consequences:["Only explicitly approved assisted deployments can mutate Perchance."],
@@ -123,6 +150,16 @@ export function createUiContribution({moduleId="deployer",service}={}){
         const next=await service.scanStep();
         return receipt(next.done?"Repository check complete.":"Scan checkpoint saved; continue until complete.",
           next.status==="FAILED"?"WARNING":"INFO",next.status==="FAILED"?"Check failed":"Scan");
+      }
+      if(actionId==="automatic-on"){
+        if(!service.automatic)throw new TypeError("Automatic deployment is unavailable");
+        await service.automatic.enable();
+        return receipt("Automatic deployment is on. Eligible releases deploy in the background after each repository check.");
+      }
+      if(actionId==="automatic-off"){
+        if(!service.automatic)throw new TypeError("Automatic deployment is unavailable");
+        await service.automatic.disable();
+        return receipt("Automatic deployment is off. Releases wait for you to deploy them.");
       }
       if(actionId==="verification"){
         if(!service.observations)throw new TypeError("Verification is unavailable");

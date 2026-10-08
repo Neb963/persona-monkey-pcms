@@ -94,6 +94,9 @@ jobs:
       - name: Verify P040 Refresher v2 migration, background passes, module pages and legacy-form removal
         run: npm run test:p040
 
+      - name: Verify P042 unattended execution-artifact driver, automatic gates, eligibility and bounded passes
+        run: npm run test:p042
+
       - name: Install and drive packaged XPI, lifecycle and platform probes
         env:
           FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
@@ -523,5 +526,45 @@ jobs:
         with:
           name: firefox-packaged-p040
           path: ${{ runner.temp }}/firefox-p040-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  # P042: automatic deployment woken only by its durable timer alarm with zero tabs.
+  p042-packaged:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - name: Install Firefox runtime libraries
+        timeout-minutes: 6
+        run: |
+          packages="libgtk-3-0 libdbus-glib-1-2 libasound2t64 libx11-xcb1 libxt6"
+          if dpkg -s $packages >/dev/null 2>&1; then exit 0; fi
+          apt_opts="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30"
+          for attempt in 1 2 3; do
+            if sudo timeout 150 apt-get $apt_opts update && sudo timeout 150 apt-get $apt_opts install -y $packages; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - name: Install exact pinned Firefox Developer Edition
+        id: install
+        env:
+          FIREFOX_INSTALL_ROOT: ${{ runner.temp }}/pcms-firefox
+        run: npm run firefox:install
+      - name: Deploy unattended through a leased execution artifact and verify it after a zero-tab alarm wake in packaged Firefox
+        env:
+          FIREFOX_BIN: ${{ steps.install.outputs.firefox_bin }}
+          FIREFOX_PACKAGED_DIR: ${{ runner.temp }}/pcms-packaged-p042
+          FIREFOX_P042_REPORT: ${{ runner.temp }}/firefox-p042-report.json
+        run: npm run firefox:packaged:p042
+      - name: Upload P042 packaged evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-packaged-p042
+          path: ${{ runner.temp }}/firefox-p042-report.json
           if-no-files-found: warn
           retention-days: 7

@@ -307,6 +307,20 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
     const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
     return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find((item)=>item.deploymentId===deploymentId)});
   }
+  // P042 (04 §E.9): two consecutive automatic NOT_APPLIED outcomes for the same desired
+  // revision pause that target. LOCAL; the operator resumes it explicitly with setPaused.
+  async function pauseRepeatedFailure(rawDeploymentId,{expectedRevision,desiredRevision:rawDesired}={}) {
+    const deploymentId=normalizeDeploymentId(rawDeploymentId); const expected=revision(expectedRevision);
+    const expectedDesired=desiredRevision(rawDesired); const current=await read();
+    if(current.revision!==expected) fail(DEPLOYER_ERROR_CODES.REVISION_CONFLICT,{currentRevision:current.revision});
+    const existing=current.value.deployments.find((item)=>item.deploymentId===deploymentId);
+    if(!existing) fail(DEPLOYER_ERROR_CODES.NOT_FOUND);
+    if(existing.desired.revision!==expectedDesired) fail(DEPLOYER_ERROR_CODES.INVALID_TRANSITION);
+    if(existing.policy.paused) return Object.freeze({revision:current.revision,changed:false,deployment:existing});
+    const next=Object.freeze({...existing,policy:Object.freeze({paused:true,pauseReason:"REPEATED_FAILURE"}),updatedAt:isoNow(clock)});
+    const saved=await commit(current.revision,replaceDeployment(current,deploymentId,next));
+    return Object.freeze({revision:saved.revision,changed:true,deployment:saved.value.deployments.find((item)=>item.deploymentId===deploymentId)});
+  }
   // Persists MIG-P036-deployer-state-v2 when the stored state is still v1. Idempotent.
   // P037: explicit LOCAL adoption of an existing manual target. No provider call.
   async function adoptRepository(rawDeploymentId,input={}){
@@ -521,13 +535,13 @@ export function createDeployerService({stateStore,accountsService,providerGateRe
   }
   // GeneratorListing for the Core generator index (pcms.generator-index/v1). Deployments are
   // passed by the index when it already read them; otherwise they are read here.
-  async function listGeneratorListing({deployments=null,healthyAccounts=new Set(),openHandoffTargets=new Set(),recovery="NORMAL",now=null}={}) {
+  async function listGeneratorListing({deployments=null,healthyAccounts=new Set(),openHandoffTargets=new Set(),recovery="NORMAL",mode="ASSISTED",now=null}={}) {
     const source=deployments ?? (await read()).value.deployments;
     const observationMap=observations?await observations.listForStatus(source):new Map();
     const observeAvailable=observations?await observations.available():false;
-    return deployerGeneratorListing({deployments:source,healthyAccounts,openHandoffTargets,recovery,now:now ?? isoNow(clock),observations:observationMap,observeAvailable});
+    return deployerGeneratorListing({deployments:source,healthyAccounts,openHandoffTargets,recovery,mode,now:now ?? isoNow(clock),observations:observationMap,observeAvailable});
   }
-  return Object.freeze({createDeployment,getDeployment,listDeployments,listDeploymentViews,listGeneratorListing,setDesired,setPaused,adoptRepository,setRepositoryOrigin,prepareRetry,deploy,reconcileDeployment,migrateState,
+  return Object.freeze({createDeployment,getDeployment,listDeployments,listDeploymentViews,listGeneratorListing,setDesired,setPaused,pauseRepeatedFailure,adoptRepository,setRepositoryOrigin,prepareRetry,deploy,reconcileDeployment,migrateState,
     recordProviderObservation,prepareOverwrite,bindObservations(service){if(observations)throw new Error("Observations already bound");observations=service;}});
 }
 export { DEPLOYMENT_OPERATION_STATUS };

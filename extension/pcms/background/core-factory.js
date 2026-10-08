@@ -19,6 +19,10 @@ const verificationModuleUrl=import.meta.url.startsWith("file:")
   ?new URL("../../../pcms-modules/p015/verification-sweep.js",import.meta.url).href
   :"/pcms-modules/p015/verification-sweep.js";
 const {createVerificationSweep,VERIFICATION_SERVICE}=await import(verificationModuleUrl);
+const automaticModuleUrl=import.meta.url.startsWith("file:")
+  ?new URL("../../../pcms-modules/p015/automatic.js",import.meta.url).href
+  :"/pcms-modules/p015/automatic.js";
+const {AUTOMATIC_SERVICE}=await import(automaticModuleUrl);
 import { createAccountProviderGateResolver } from "../integration/adapters.js";
 import { createPcmsBundledModuleLoader } from "../integration/bundled-modules.js";
 import { PCMS_UI_PUBLISH_CAPABILITY, createPcmsUiContributionHost } from "../integration/ui-contributions.js";
@@ -140,6 +144,11 @@ export function createBackgroundPcmsCore({
   const continuityFixture=createPcmsContinuityFixture({timers,clock});
   const verificationSweep=core.observations?createVerificationSweep({observations:core.observations,timers,clock}):null;
   if(verificationSweep)timerServices.register(VERIFICATION_SERVICE,{onTimer:verificationSweep.onTimer},{ownerId:"core",generation:0});
+  // P042: the automatic pass is a Core timer service; one bounded dispatch per occurrence.
+  if(core.automatic){
+    core.automatic.bindTimers(timers);
+    timerServices.register(AUTOMATIC_SERVICE,{onTimer:event=>core.automatic.onTimer(event)},{ownerId:"core",generation:0});
+  }
   // P038: built-in scheduler owns only repository checks, not provider deployments.
   const repositorySync=core.repository?createDeployerRepositorySync({
     repository:core.repository,
@@ -148,7 +157,11 @@ export function createBackgroundPcmsCore({
       storageBroker:core.storageBroker,namespace:"module.deployer.repository.sync"
     }),
     clock,
-    afterCheck:cycle=>core.observations?.enqueueSweep(cycle)
+    afterCheck:async cycle=>{
+      await core.observations?.enqueueSweep(cycle);
+      // Observation failures never strand the automatic cycle, and vice versa.
+      if(core.automatic){try{await core.automatic.enqueueCycle(cycle);}catch{}}
+    }
   }):null;
   if(repositorySync)timerServices.register(REPOSITORY_SYNC_SERVICE,Object.freeze({
     onTimer:event=>repositorySync.onTimer(event)
@@ -217,6 +230,7 @@ export function createBackgroundPcmsCore({
       if(repo.lastCheckedAt)await core.observations.enqueueSweep(repo.lastCheckedAt);
     }
     if(verificationSweep){await core.observations.recover();await verificationSweep.declare();}
+    if(core.automatic){try{await core.automatic.declare();}catch{}}
     try{await moduleSupervisor.declare(input);}catch{}
     try{await refresherScheduler.declare();}catch{}
     return declared;

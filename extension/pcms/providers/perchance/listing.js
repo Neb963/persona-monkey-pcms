@@ -29,3 +29,10 @@ export function parseGeneratorListing(raw) {
 export function describeGeneratorListing(listing) {
   return normalizeGeneratorListing(listing) === "UNLISTED" ? "Unlisted" : "Publicly listed";
 }
+
+// Reviewed fixture-editor wire mapping for the unattended deployment artifact (P042):
+// desired listing → the fixture editor's isPrivate checkbox. Real Perchance stays gated.
+export const DEPLOY_FIXTURE_LISTING_SOURCE = `const listingControl = page.querySelector('[data-setting="isPrivate"]');
+  if (!listingControl || typeof input.settings?.isPrivate !== "boolean") fail();
+  listingControl.checked = input.settings.isPrivate;
+  listingControl.dispatchEvent(new Event("change", { bubbles:true }));`;

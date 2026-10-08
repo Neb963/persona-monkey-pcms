@@ -14,6 +14,7 @@ import { createExplorerDeployerBridge } from "./explorer-deployer.js";
 import { createGeneratorIndexService } from "./generator-index.js";
 import { createGithubRepositoryProvider } from "../providers/repository/github.js";
 import { createDeployerObservationIntegration } from "./deployer-observations.js";
+import { createDeployerAutomaticIntegration } from "./deployer-automatic.js";
 import { createSecretStore } from "../secrets/secret-store.js";
 import { createNativeSecretBackend, createFirefoxNativeSecretTransport } from "../secrets/native-secret-backend.js";
 import { createIntegrationRecoveryChecks } from "./recovery-checks.js";
@@ -176,7 +177,10 @@ export function createPcmsModuleIntegration({
   const observations=typeof deployer.recordProviderObservation==="function"?createDeployerObservationIntegration({
     deployer,accounts,providerProbes,storageBroker,humanTasks,recoveryHold,repository,clock
   }):null;
-  if(repository&&observations)repository=Object.freeze({...repository,observations});
+  // P042: Automatic mode is gated on the unattended driver, observation, recovery and challenge state.
+  const automatic=createDeployerAutomaticIntegration({deployer,accounts,providerProbes,storageBroker,recoveryHold,
+    repository,observations,clock});
+  if(repository&&observations)repository=Object.freeze({...repository,observations,...(automatic?{automatic}:{})});
 
   const explorer=factories.explorer({
     stateStore:createSingletonStateStore({storageBroker,namespace:PCMS_INTEGRATION_NAMESPACES.explorer}),
@@ -220,7 +224,7 @@ export function createPcmsModuleIntegration({
   const uiProjection=createPcmsUiProjectionService({humanTasks,accounts});
   const explorerDeployer=createExplorerDeployerBridge({explorer,deployer});
   // pcms.generator-index/v1: a rebuildable Core view joined from module listings (P036).
-  const generators=createGeneratorIndexService({deployer,accounts,humanTasks,recoveryHold,observations,clock});
+  const generators=createGeneratorIndexService({deployer,accounts,humanTasks,recoveryHold,observations,automatic,clock});
   const recoveryChecks=createIntegrationRecoveryChecks({accounts,providerProbes});
   const moduleLifecycle=createModuleLifecycleService({storageBroker,moduleRegistry,moduleRuntime});
   const backupRestore=createBackupRestoreService({
@@ -255,6 +259,7 @@ export function createPcmsModuleIntegration({
     deployer,
     repository,
     observations,
+    automatic,
     explorer,
     refresher,
     statistics,
