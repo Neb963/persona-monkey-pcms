@@ -20,7 +20,7 @@ State: **PR_OPEN**. Claim CLM-P034-001, claimEpoch 1, branch `agent/gpt-6/p034-t
 | --- | --- |
 | A034-01 | `tests/pcms/p034/accounts-model.test.mjs` validates auto-generated IDs and picker usage; packaged Firefox creates the dialog and verifies read-only key and picker DOM |
 | A034-02 | `tests/pcms/p034/rebind-guard.test.mjs` checks initial/racing unresolved guards, unchanged account state and successful resolved rebind; packaged Firefox verifies disabled rebind and visible warning |
-| A034-03 | 52-account Node fixture validates page/sort/filter/deep links; `tests/pcms/p034/packaged.mjs` drives 25/25/2 rows and detail in exact pinned Firefox Developer Edition 154.0b10 |
+| A034-03 | 52-account Node fixture validates page/sort/filter/deep links; `tests/pcms/p034/packaged.mjs` drives 25/25/2 rows, interactive search, descending sort, a URL-backed status filter and detail in exact pinned Firefox Developer Edition 154.0b10 |
 
 ## CI evidence and limitations
 - Repository verification for checkpoint `1e4c3d4d373856d2f84ffb7c53ed8a574d76362d`: [verify #37709932604](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37709932604) — PASS.

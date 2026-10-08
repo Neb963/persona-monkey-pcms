@@ -45,6 +45,7 @@ try{
  });
  const personas=accounts.map(a=>({personaUid:a.personaUid,name:"Persona "+a.accountId,managed:true,
   cookieStoreId:"firefox-container-test",health:{status:"blocked",checkedAt:"2026-10-08T00:00:00Z"}}));
+ for(let i=0;i<3;i++)personas[i].health.status="direct";
  const spare={personaUid:"00000000-0000-4000-8000-00000000ffff",name:"Spare",managed:true,
   cookieStoreId:"firefox-container-test-spare",health:{status:"direct"}};
  personas.push(spare);
@@ -62,11 +63,26 @@ try{
  await view.render({accounts,revision:52,route:{id:null,filter:""}});
  const first=document.querySelectorAll("#accountsV2 .accounts-table tbody tr").length;
  const initialSummary=document.querySelector("#accountsV2 .accounts-summary").textContent;
+ const searchBox=fixtureRoot.querySelector(".accounts-search");
+ searchBox.value="Account 44";searchBox.dispatchEvent(new Event("input",{bubbles:true}));
+ const searchCount=fixtureRoot.querySelectorAll(".accounts-table tbody tr").length;
+ const searchHref=fixtureRoot.querySelector(".accounts-table tbody a")?.getAttribute("href");
+ searchBox.value="";searchBox.dispatchEvent(new Event("input",{bubbles:true}));
+ const sortBox=fixtureRoot.querySelector(".accounts-sort");
+ sortBox.value="id";sortBox.dispatchEvent(new Event("change",{bubbles:true}));
+ fixtureRoot.querySelector('[data-accounts-action="direction"]').click();
+ const sortedFirst=fixtureRoot.querySelector(".accounts-table tbody a")?.getAttribute("href");
+ fixtureRoot.querySelector('[data-accounts-action="direction"]').click();
  fixtureRoot.querySelector('[data-accounts-action="next"]').click();
  const second=document.querySelectorAll("#accountsV2 .accounts-table tbody tr").length;
  fixtureRoot.querySelector('[data-accounts-action="next"]').click();
  const third=document.querySelectorAll("#accountsV2 .accounts-table tbody tr").length;
  const lastHref=fixtureRoot.querySelector(".accounts-table tbody a").getAttribute("href");
+ const filterBox=fixtureRoot.querySelector(".accounts-filter");
+ filterBox.value="status:direct";filterBox.dispatchEvent(new Event("change",{bubbles:true}));
+ const filterHash=location.hash;
+ await view.render({accounts,revision:52,route:{id:null,filter:"status:direct"}});
+ const filteredCount=fixtureRoot.querySelectorAll(".accounts-table tbody tr").length;
  await view.render({accounts,revision:52,route:{id:"acct-01",filter:""}});
  const details=fixtureRoot.querySelector(".accounts-details")?.textContent||"";
  const heading=fixtureRoot.querySelector(".accounts-detail h3")?.textContent||"";
@@ -81,10 +97,15 @@ try{
  const generated=fixtureRoot.querySelector(".accounts-advanced input")?.readOnly===true;
  const personaPicker=fixtureRoot.querySelector('.entity-picker [role="listbox"]')!==null;
  view.destroy();fixtureRoot.remove();original.id="accountsV2";
- return {first,second,third,initialSummary,lastHref,heading,details,blocked,disabled,freeText,generated,personaPicker};
+ return {first,second,third,initialSummary,searchCount,searchHref,sortedFirst,lastHref,filterHash,filteredCount,heading,details,blocked,disabled,freeText,generated,personaPicker};
  `);
  assert.deepEqual([result.first,result.second,result.third],[25,25,2]);
  assert.match(result.initialSummary,/52 account/);
+ assert.equal(result.searchCount,1);
+ assert.equal(result.searchHref,"#/accounts/acct-44");
+ assert.equal(result.sortedFirst,"#/accounts/acct-52");
+ assert.equal(result.filterHash,"#/accounts?f=status%3Adirect");
+ assert.equal(result.filteredCount,3);
  assert.equal(result.lastHref,"#/accounts/acct-51");
  assert.equal(result.heading,"Account 01");
  assert.match(result.details,/acct-01/);
@@ -93,6 +114,7 @@ try{
  assert.equal(result.disabled,true);
  assert.equal(result.freeText,true);assert.equal(result.generated,true);assert.equal(result.personaPicker,true);
  report.checks.paged52InPackagedFirefox=true;
+ report.checks.sortedAndFilteredInPackagedFirefox=true;
  report.checks.accountDetailDeepLink=true;
  report.checks.rebindFailClosed=true;
  report.checks.generatedIdsAndPicker=true;
