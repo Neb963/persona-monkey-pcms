@@ -16,6 +16,7 @@ import {
 } from "./contract.js";
 import { parseGeneratorListing, serializeGeneratorListing } from "./listing.js";
 import { PERCHANCE_PROVIDER_ERROR_CODES, perchanceProviderError } from "./errors.js";
+import { normalizeProviderObservation } from "./observation.js";
 
 function plain(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -121,29 +122,18 @@ export function createPerchanceProviderAdapter({ driver } = {}) {
 
   // generator.observe (read; no RemoteOperation). Capability-gated and fail-closed: it is
   // enabled for real Perchance only after live confirmation (P039/P043).
-  async function observe(generatorId) {
+  async function observe(generatorId, options = {}) {
     const compatibility = await requireV2("observeGenerator");
     if (!compatibility.capabilities.observe) throw perchanceProviderError(PERCHANCE_PROVIDER_ERROR_CODES.INCOMPATIBLE);
-    if (typeof generatorId !== "string" || generatorId.length < 1 || generatorId.length > 256) {
+    if (typeof generatorId !== "string" || !/^[a-z0-9][a-z0-9_-]{0,99}$/.test(generatorId)
+        || !plain(options) || Object.keys(options).some(key => !["personaUid", "readId", "includeContent"].includes(key))
+        || (options.includeContent !== undefined && typeof options.includeContent !== "boolean")) {
       throw perchanceProviderError(PERCHANCE_PROVIDER_ERROR_CODES.INVALID_ARGUMENT);
     }
-    const raw = await guarded(() => transport.observeGenerator(Object.freeze({ generatorId })));
-    if (!plain(raw) || ![true, false, null].includes(raw.exists) || typeof raw.challenge !== "boolean") {
-      throw perchanceProviderError(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
-    }
-    let payloadHash = null;
-    if (raw.exists === true && typeof raw.code === "string" && typeof raw.html === "string") {
-      payloadHash = await guarded(() => generatorPayloadHash(raw.code, raw.html));
-    }
-    let observedThumbnailHash = null;
-    if (raw.exists === true && raw.thumbnail != null) {
-      if (typeof raw.thumbnail !== "string") throw perchanceProviderError(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
-      observedThumbnailHash = await guarded(() => thumbnailHash(raw.thumbnail));
-    }
-    const listing = raw.exists === true ? parseGeneratorListing(raw.settings) : "UNKNOWN";
-    if (raw.exists === true && listing === "UNKNOWN") listingUnknownSeen = true;
-    if (payloadHash !== null && !isSha256Hex(payloadHash)) throw perchanceProviderError(PERCHANCE_PROVIDER_ERROR_CODES.PROTOCOL);
-    return Object.freeze({ exists: raw.exists, payloadHash, thumbnailHash: observedThumbnailHash, listing, challenge: raw.challenge });
+    const raw = await guarded(() => transport.observeGenerator(Object.freeze({ generatorId, ...options })));
+    const observed = await guarded(() => normalizeProviderObservation(raw, options));
+    if (observed.exists === true && observed.listing === "UNKNOWN") listingUnknownSeen = true;
+    return observed;
   }
 
   const providerDescriptor = Object.freeze({

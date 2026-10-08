@@ -1788,7 +1788,7 @@
     {
       "id": "P039",
       "title": "Perchance observation, verification and drift (capability-gated)",
-      "status": "CLAIMED",
+      "status": "IN_PROGRESS",
       "dependsOn": [
         "P038"
       ],
