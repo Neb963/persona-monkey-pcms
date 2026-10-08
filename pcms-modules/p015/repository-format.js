@@ -183,6 +183,9 @@ export function finalizeRepositorySnapshot({commitId,items=[],problems=[]}={}){
   const blocked=new Set([...counts].filter(([,n])=>n>1).map(([slug])=>slug));
   // A malformed manifest still claims its folder/slug, preventing accidental cross-account adoption.
   for(const bad of problems){
+    // A bad optional changelog is a warning on the same release, not a
+    // competing slug declaration; it must never turn a valid item into a duplicate.
+    if(bad.code===GENERATOR_REPO_PROBLEM_CODES.CHANGELOG)continue;
     if(!bySlug.has(bad.slug))bySlug.set(bad.slug,[]);
     bySlug.get(bad.slug).push(bad);
     if(bySlug.get(bad.slug).length>1)blocked.add(bad.slug);
