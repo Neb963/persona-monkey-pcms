@@ -1,7 +1,7 @@
 # P041 evidence — Backup/restore and module management UX
 
 Claim `CLM-P041-001` (epoch 1), base `b89d5d244dd3a74e81226f82b906bdb81a8650f0`.
-State: **PR_OPEN / CI_VERIFIED** — PR #55.
+State: **ACCEPTED** — merged to `main` as `74b7a27b8f48572c62d54162d167484d58a8f499` (PR #55) with green merged-main CI.
 
 ## What shipped
 
@@ -88,3 +88,11 @@ PR head `ec388c601d428cd7fead9a9375da70ddc0f21390` (code identical to the eviden
   restore stayed disabled for `restore` and ran for `RESTORE`; after it every check passed (each row linked to
   its subject) and Resume returned PCMS to `NORMAL`. The failing-check paths of A041-02 are covered by the
   U/I suites, as the gate requires.
+
+## Merged-main CI (MERGED → ACCEPTED)
+
+Merge commit `74b7a27b8f48572c62d54162d167484d58a8f499` on `main` (PR #55):
+
+- `firefox-developer-edition` run `37759789178` — success (`pinned-firefox` incl. `test:p041`, and the
+  `p031`/`p032`/`p033`/`p034`/`p041` packaged jobs).
+- `verify` run `37759789135` — success (`npm run verify` incl. `test:p041`).
