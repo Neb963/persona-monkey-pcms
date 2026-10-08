@@ -1639,7 +1639,8 @@
           "extension/pcms/app/app.js",
           "extension/pcms/integration/ui-client-contract.js",
           "package.json",
-          ".github/workflows/firefox.yml"
+          ".github/workflows/firefox.yml",
+          "tests/pcms/p041/packaged.mjs"
         ],
         "contractReads": [
           "pcms.ui-client/v1",
