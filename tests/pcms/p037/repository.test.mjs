@@ -20,7 +20,7 @@ function blobs({version="1.0.0",code="alpha",html="<main>A</main>",listing="UNLI
     [base+"releases/"+version+"/code.perchance"]:code,
     [base+"releases/"+version+"/page.html"]:html};
 }
-function fixture({versions={[sha1]:blobs()},failures={}}={}){
+function fixture({versions={[sha1]:blobs()},failures={},deployerOverride=null}={}){
   const ctx=setup();
   const provider=createFixtureRepositoryProvider({refs:{main:sha1},commits:Object.fromEntries(
     Object.entries(versions).map(([sha,blobs])=>[sha,{blobs,committedAt:"2026-10-01T12:00:00.000Z"}])),failures});
@@ -28,7 +28,7 @@ function fixture({versions={[sha1]:blobs()},failures={}}={}){
   const repo=createDeployerRepositoryService({stateStore:createSingletonStateStore({
     storageBroker:ctx.storage,namespace:"module.deployer.repository"}),
     ledgerStore:ctx.storage.namespace("module.deployer.repository.ledger"),
-    repositoryProvider:provider,deployer:ctx.deployer,accounts:ctx.accounts.service,
+    repositoryProvider:provider,deployer:deployerOverride?deployerOverride(ctx.deployer):ctx.deployer,accounts:ctx.accounts.service,
     recoveryHold:ctx.recoveryHold,clock});
   return {ctx,provider,repo};
 }
@@ -199,4 +199,70 @@ test("A037-02 binary JPEG round-trips as a base64 release without changing finge
   // Content is recovered from the exact release commit only at dispatch; no blob
   // bytes or token contents are persisted in the immutable repository snapshot.
   assert.equal(JSON.stringify(result.snapshot).includes("/9j/"),false);
+});
+
+
+test("A037-03 busy deployment retains queued release across unchanged-ref scans",async()=>{
+  let busy=true;
+  const fx=fixture({versions:{[sha1]:blobs(),[sha2]:blobs({code:"next",version:"2.0.0"})},
+    deployerOverride:base=>({
+      ...base,
+      async setDesired(...args){
+        if(busy)throw Object.assign(new Error("busy"),{code:"PCMS_DEPLOYER_OPERATION_BUSY"});
+        return base.setDesired(...args);
+      }
+    })
+  });
+  await configure(fx.repo);
+  assert.equal((await finish(fx.repo)).status,"SUCCESS");
+  fx.provider.setRef("main",sha2);
+  assert.equal((await finish(fx.repo)).status,"SUCCESS");
+  assert.equal((await fx.repo.read()).value.needsApply,true);
+  assert.equal((await fx.ctx.deployer.listDeployments()).deployments[0].desired.revision,1);
+  busy=false;
+  assert.equal((await finish(fx.repo)).status,"SUCCESS");
+  assert.equal((await fx.repo.read()).value.needsApply,false);
+  assert.equal((await fx.ctx.deployer.listDeployments()).deployments[0].desired.revision,2);
+  assert.equal((await finish(fx.repo)).status,"UNCHANGED");
+});
+test("A037-03 repository identity changes revoke old folder bindings",async()=>{
+  const fx=fixture();await configure(fx.repo);
+  assert.equal((await finish(fx.repo)).status,"SUCCESS");
+  const before=(await fx.repo.read());
+  await fx.repo.configure({expectedRevision:before.revision,
+    config:{...config,repo:"another-repository"}});
+  const after=(await fx.repo.read()).value;
+  assert.equal(after.identityEpoch,before.value.identityEpoch+1);
+  assert.deepEqual(Object.keys(after.links),[]);
+  assert.equal(after.snapshot,null);
+  assert.equal(after.needsApply,false);
+  assert.equal((await finish(fx.repo)).status,"SUCCESS");
+  assert.equal((await fx.ctx.deployer.listDeployments()).deployments.length,1);
+});
+test("A037-03 GitHub read bounds abort slow requests and oversize streaming bodies",async()=>{
+  let aborted=false;
+  const stalled=createGithubRepositoryProvider({timeoutMs:5,fetchImpl:(_url,{signal})=>{
+    signal.addEventListener("abort",()=>{aborted=true;});
+    return new Promise(()=>{});
+  }});
+  await assert.rejects(stalled.resolveRef(config),{code:REPO_ERRORS.UNAVAILABLE});
+  assert.equal(aborted,true);
+  const huge=createGithubRepositoryProvider({maxResponseBytes:64,fetchImpl:async()=>({
+    ok:true,status:200,headers:{get:()=>null},
+    body:{getReader:()=>({
+      read:async()=>({done:false,value:Uint8Array.from({length:80},()=>65)}),
+      releaseLock(){}
+    })}
+  })});
+  await assert.rejects(huge.resolveRef(config),{code:REPO_ERRORS.TOO_LARGE});
+});
+test("A037-01 secondary rate limiting maps 403 Retry-After without a false auth error",async()=>{
+  const provider=createGithubRepositoryProvider({fetchImpl:async()=>({
+    ok:false,status:403,headers:{get(key){return key==="retry-after"?"120":key==="x-ratelimit-remaining"?"10":null;}}
+  })});
+  await assert.rejects(provider.resolveRef(config),error=>{
+    assert.equal(error.code,REPO_ERRORS.RATE_LIMITED);
+    assert.equal(typeof error.resetAt,"string");
+    return true;
+  });
 });
