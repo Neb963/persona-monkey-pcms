@@ -4,7 +4,7 @@
   "phaseId": "P031",
   "taskId": "T031.1",
   "claimEpoch": 1,
-  "state": "ACTIVE",
+  "state": "ACCEPTED",
   "owner": {
     "agentId": "claude-thread-1xtuan"
   },
@@ -50,5 +50,5 @@
     "A031-02",
     "A031-03"
   ],
-  "lastCheckpointSha": "0d81b897ca83835d06304be7848f8865f7b92328"
+  "lastCheckpointSha": "370131a9c337cd9f5272f6f8e4c6b732ed1992ff"
 }
