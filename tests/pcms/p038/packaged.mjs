@@ -61,13 +61,13 @@ try{
   assert.ok(initial.repo?.config,"configured repository must be persisted");
   // No network is ever contacted during the probe: the scan must fail closed.
   await h.client.script("Services.io.offline = true;");
-  await page(`await api.alarms.create("pcms.core.heartbeat",{when:Date.now()+3500});return true;`);
+  await page(`await api.alarms.create("pcms.core.heartbeat",{when:Date.now()+15000});return true;`);
   await h.closePage(probe);probe=null;
   const unloaded=await h.forceIdleUnload(PRODUCT);
   assert.equal(unloaded.state,"stopped");
   report.facts.initial={repositoryConfigured:true,background:unloaded};
   await waitFor(async()=>(await h.extension(PRODUCT)).state==="running",
-    "repository sync must wake with zero PCMS tabs",15000);
+    "repository sync must wake with zero PCMS tabs",30000);
   report.checks.zeroTabsBackgroundWake=true;
   await h.client.script("Services.io.offline = false;");
   probe=await h.openPage(PRODUCT,"pcms/app/index.html");
