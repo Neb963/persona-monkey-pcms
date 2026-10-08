@@ -118,6 +118,8 @@ test("A039-02 explicit resume after Keep prepares a fresh operation and reports 
   ]){
     const h=harness();await h.create("alpha","REPOSITORY");h.advance();await h.alter("alpha",change);
     await h.obs.verifyNow("gen:alpha");await h.obs.keep("gen:alpha",await h.choice());
+    h.advance();await h.obs.verifyNow("gen:alpha");
+    assert.deepEqual((await h.deployer.getDeployment("gen:alpha")).policy,{paused:true,pauseReason:"OPERATOR"});
     const before=await h.deployer.listDeployments(),old=before.deployments[0],dispatches=h.emulator.dispatched().length;
     const resumed=await h.deployer.setPaused("gen:alpha",{expectedRevision:before.revision,paused:false});
     assert.equal(resumed.deployment.desired.revision,old.desired.revision+1);

@@ -148,13 +148,17 @@ export function createDeployerObservations({deployer,accounts,provider=null,stor
       ||latest.operation.operationId!==d.operation.operationId||bound?.personaUid!==account.personaUid
       ||bound?.bindingEpoch!==account.bindingEpoch)return {status:"STALE"};
     const value=await saveObservation(d,account,observed);
+    // Adopted listing/thumbnail baselines live in the fenced keep record. Apply
+    // the same effective baseline used by status before updating domain policy.
+    const effective=await statusObservation(d);
+    if(!effective)return {status:"STALE"};
     if(observed.challenge){await challenge(d.accountId,value.observedAt);return {status:"CHALLENGE"};}
     if(d.confirmed.payloadHash!==null){
       try{await deployer.recordProviderObservation(deploymentId,{expectedRevision:current.revision,
-        confirmedOperationId:d.confirmed.operationId,observation:value});}
+        confirmedOperationId:d.confirmed.operationId,observation:effective});}
       catch(error){if(error?.code==="PCMS_DEPLOYER_REVISION_CONFLICT")return {status:"STALE"};throw error;}
     }
-    return {status:"OBSERVED",observation:value,...(includeContent?{content:observed.content}: {})};
+    return {status:"OBSERVED",observation:effective,...(includeContent?{content:observed.content}: {})};
   }
   async function verifyNow(id){return readOne(id);}
   async function afterConfirmed(d){
