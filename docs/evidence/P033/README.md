@@ -1,0 +1,74 @@
+# P033 evidence — Module UI contribution contract v1 for built-in and runtime modules
+
+Claim `CLM-P033-001` (epoch 1), base `9717eb215c7485bda84830d4a69c9cb610df0b76`.
+State: **COMMITTED** — CI evidence is recorded below once independent CI has run.
+
+## What shipped
+
+- **`pcms.ui-contribution/v1`** — `extension/pcms/integration/ui-contribution-contract.js`: strict, bounded
+  validation of descriptors (nav, actions with InputSpec, settings, page views, facet kinds, HumanTask action
+  bindings), summaries, search hits, facets, conditions, list pages, details, receipts (impact only from
+  previews, downloads only from READ actions), activity lines and the runtime publish payload (≤ 64 KiB).
+  Unknown keys and accessors are rejected; text is plain text; `contractVersion ≠ 1` is reported as
+  *unsupported* (shown as "Needs a newer PCMS"), not as corrupt data.
+- **Background contribution host** — `extension/pcms/integration/ui-contributions.js`, created in
+  `background/core-factory.js` and exposed to UI clients as `ui.*` operations of `pcms.ui-client/v1`
+  (`snapshot`, `search`, `facets`, `listRows`, `getDetail`, `preview`, `frame`, `activity`, `getSettings`
+  queries; `invoke`, `setSetting` commands with durable receipts). It merges built-in and runtime modules
+  and computes every 03 §6 presentation state (active, update awaiting approval, updating, failed with
+  last-known-good, installing, disabled, removed, not installed, incompatible, awaiting UI, unsupported
+  Firefox, recovery hold).
+- **Runtime modules** publish with the new `core.ui.publish` capability (granted through their authority
+  envelope like every capability-set-v1 name). Core stores the latest publish durably, keyed to the publishing
+  package, re-validates it on every read and serves it while the module is not activated. Facets, rows,
+  details and actions are pulled on demand through the P031 supervisor (`uiFacet`, `uiListRows`,
+  `uiGetDetail`, `uiInvoke` controller methods), which activates the module lazily.
+- **`pcms.module-manifest/v2`** — additive optional `ui` entry naming the package file that runs in the
+  module-UI frame. v1 archives keep byte-identical canonical text and hashes; the registry stores v2 manifests.
+- **Sandboxed module page surface** — `extension/pcms/sandbox/module-ui.{html,js,css}` (classic script, the
+  declared sandbox page under the shared sandbox CSP). The dashboard (`app/module-frame-host.js`) embeds it
+  with `sandbox="allow-scripts"`, fails closed if it can reach the frame document, hands it one private
+  `MessagePort`, and validates every request: reads of the module's own projections, its declared actions,
+  EntityRef navigation and a bounded height. The kit renders text only (no markup, no free attributes).
+- **Core-rendered confirmation** — `app/module-actions.js`: preview → Core dialog for
+  `EXTERNAL_MUTATION`/`BINDING`/`DESTRUCTIVE`/`RESOLUTION` → execute with the same idempotency key. Core
+  repeats the checks: an execute of a confirm-risk action without the dialog's confirmation is refused, and
+  recovery hold blocks mutating actions before the module is called. The dialog is non-modal (P028 forbids
+  tab-local modal operator state); closing the tab simply cancels.
+- **Core merge points in the shell** (`app/app.js`, `app/contributions.js`, `app/module-view.js`): navigation
+  (module order, status dot, greyed when incompatible), Overview module cards, Search, derived Attention
+  conditions, Account-page facets (1.5 s bound per module), module pages (declarative list/detail views or
+  the runtime frame), Activity lines, module settings (persisted in `module.<id>.settings`), and the
+  Settings → Modules state list. A disabled module's HumanTasks stay listed with "… is disabled — enable it to
+  act" and no action buttons. Module deep links (`#/m/<id>`) resolve for every known module, including
+  runtime ids such as `acme.reports`, and explain disabled/removed/never-installed modules.
+- **Statistics pilot** — `pcms-modules/p018/ui.js` contributes summary, metric rows and detail, search and a
+  READ CSV export; the shipped bundled-module list (`integration/bundled-modules.js`) has exactly this entry.
+  Built-in contributions load lazily in the background from the list; no shell file names a module.
+
+Not in this phase: a trusted in-dashboard `renderPage` for built-ins (no consumer yet; built-ins use the
+declarative views), `listGenerators` / the Core generator index (P036 Generators), and migrating the other
+inherited P026 module cards (their later phases). Those cards keep rendering unchanged.
+
+## Acceptance mapping
+
+| Gate | Evidence | Where |
+|---|---|---|
+| A033-01 (U, I, C) | Contract validation and manifest v2 (`contract.test.mjs`); built-in + runtime fixtures through the real background Core in nav, Overview, Search, facets and Attention, module pages, Statistics pilot, one-entry bundled list with no fixture named in Core (`merge.test.mjs`) | `npm run test:p033` |
+| A033-01 (FDE/PKG) | Statistics and a run-time-built module appear in the packaged dashboard nav, Overview, Search and Attention | `tests/pcms/p033/packaged.mjs` |
+| A033-02 (SEC) | Core refuses unconfirmed risky executes, undeclared actions, bad targets/input, held actions; frame requests scoped to the frame's module; module-UI kit refuses markup; page/CSP/host static rules (`actions.test.mjs`, `boundary.test.mjs`) | `npm run test:p033` |
+| A033-02 (FDE, PKG) | Packaged module page in the sandboxed frame: opaque origin, no `browser`/`chrome`, no network, no dashboard DOM; its DESTRUCTIVE request opens the Core dialog outside the frame; nothing runs until confirmed; cancel executes nothing | `tests/pcms/p033/packaged.mjs` |
+| A033-03 (U, I) | Every presentation state from lifecycle/runtime/validation; disabled/removed/purged/failed/incompatible/unsupported through the real Core; a hanging facet is cut off at 1.5 s; dashboards served from the publish cache after an unload without waking the module (`lifecycle.test.mjs`) | `npm run test:p033` |
+| A033-03 (FDE) | Packaged: reopened dashboard after a forced event-page unload shows the module without activating it; failed update banner with last-known-good; disabled, incompatible, removed and purged pages | `tests/pcms/p033/packaged.mjs` |
+
+## Local verification (this commit)
+
+- `npm run test:p033` — 31 tests pass.
+- `npm run verify` — passes (now includes `test:p033`).
+- `node --test tests/pcms/*.test.mjs tests/pcms/*/*.test.mjs` — 434 pass; the 3 failures
+  (`A023-01` ×2, `P025 production runtime composes…`) fail identically on `origin/main` `9717eb2` and are not
+  run by CI.
+- `tests/pcms/p030/manifest.test.mjs` — the "module-UI page is inert until P033" assertion now checks the
+  activated page: no external URL, no iframe/form/object/embed, exactly `module-ui.js` and `module-ui.css`.
+- Packaged Firefox could not run in this session (the pinned archive host is outside the session's network
+  policy); FDE/PKG evidence comes from the independent `p033-packaged` CI job.

@@ -72,10 +72,13 @@ test("A030-01 SEC one shared sandbox CSP (ADR-003 option 1) keeps every P004 net
   assert.doesNotMatch(html, /<(?:iframe|form|img|link)\b/i);
 });
 
-test("A030-01 SEC module-UI page is inert until P033 and has no external surface", async () => {
+test("A030-01 SEC module-UI page has no external surface (P033 activates it with its own kit only)", async () => {
   const html = await readFile("extension/pcms/sandbox/module-ui.html", "utf8");
   assert.doesNotMatch(html, /https?:\/\//i);
-  assert.doesNotMatch(html, /<(?:script|iframe|form|object|embed|link)\b/i);
+  assert.doesNotMatch(html, /<(?:iframe|form|object|embed)\b/i);
+  // P033: exactly one classic script and one stylesheet, both packaged next to the page.
+  assert.deepEqual([...html.matchAll(/<script\b[^>]*>/gi)].map((match) => match[0]), ['<script src="module-ui.js">']);
+  assert.deepEqual([...html.matchAll(/<link\b[^>]*>/gi)].map((match) => match[0]), ['<link rel="stylesheet" href="module-ui.css">']);
 });
 
 test("A030-01 SEC sandbox pages and frame factory never touch extension APIs", async () => {
