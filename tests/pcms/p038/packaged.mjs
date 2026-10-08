@@ -69,7 +69,8 @@ try{
   await waitFor(async()=>(await h.extension(PRODUCT)).state==="running",
     "repository sync must wake with zero PCMS tabs",30000);
   report.checks.zeroTabsBackgroundWake=true;
-  await h.client.script("Services.io.offline = false;");
+  // Keep the process offline until the durable scan result is observed; an
+  // early reconnect races the background fetch and can turn UNAVAILABLE into 404.
   probe=await h.openPage(PRODUCT,"pcms/app/index.html");
   const completed=await waitFor(async()=>{
     const state=await backup();
@@ -83,6 +84,7 @@ try{
   report.facts.afterOffline={failureCode:completed.repo.lastFailure.code,
     nextDueAt:completed.sync.nextDueAt,scanSequence:completed.repo.scanSequence};
   report.checks.failedCheckPreservesStateAndSchedulesOneRetry=true;
+  await h.client.script("Services.io.offline = false;");
   await h.closePage(probe);probe=null;
   await h.restart();
   assert.equal((await h.extension(PRODUCT)).id,PRODUCT);
