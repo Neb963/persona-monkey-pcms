@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { execFile as execFileCallback } from "node:child_process";
+import { promisify } from "node:util";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 // P035 is included in the existing independent CI verification entrypoint.
 import "../pcms/p035/popup.test.mjs";
@@ -70,4 +74,37 @@ test("root package composes PCMS verification without mutating upstream package 
   assert.equal(typeof root.scripts["verify:repo"], "string");
   assert.equal(typeof root.scripts["test:firefox"], "string");
   assert.equal(typeof root.scripts["verify:upstream"], "string");
+});
+
+
+const execFile=promisify(execFileCallback);
+// P035 owns this acceptance hook; parallel phases own package.json and .github
+// workflow files. Execute pinned FDE under the independent verify CI runner,
+// without altering shared CI resource ownership or relying on Firefox DevTools.
+test("A035-01/A035-03 — packaged Firefox popup layout and account deep link",{
+  skip:process.env.GITHUB_ACTIONS!=="true",
+  timeout:360_000
+},async()=>{
+  const dir=await mkdtemp(join(tmpdir(),"pcms-p035-ci-"));
+  const env={...process.env,FIREFOX_INSTALL_ROOT:join(dir,"fde"),FIREFOX_P035_ROOT:join(dir,"packaged")};
+  async function run(script,timeout){
+    const result=await execFile(process.execPath,[script],{env,timeout,maxBuffer:8*1024*1024});
+    return result.stdout.trim();
+  }
+  try{
+    const install=JSON.parse((await run("tools/firefox/install-pinned.mjs",150_000)).split("\n").at(-1));
+    assert.equal(install.installed,true);
+    env.FIREFOX_BIN=install.firefoxBin;
+    await run("scripts/build-extension.mjs",90_000);
+    const output=await run("tests/pcms/p035/packaged.mjs",180_000);
+    const report=JSON.parse(output.split("\n").at(-1));
+    assert.equal(report.passed,true);
+    assert.equal(report.checks.managedPersonaContext,true);
+    assert.equal(report.checks.coreAccountStatusProjection,true);
+    assert.equal(report.checks.pinnedFirefoxIntrinsicPopupSizing,true);
+    assert.equal(report.checks.pinnedFirefoxStatusAndAccountLink,true);
+    assert.equal(report.checks.pinnedFirefoxAccountDeepLinkReusesTab,true);
+  } finally {
+    await rm(dir,{recursive:true,force:true});
+  }
 });
