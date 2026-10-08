@@ -1,10 +1,10 @@
 # P032 — PCMS dashboard shell v2 as UI client
 
-State: **COMMITTED; focused CI PASS at prior implementation checkpoint; final CI pending; PR #42 DRAFT**. This record does not claim MERGED or ACCEPTED.
+State: **ACCEPTED; PR #42 merged at 76ac9e7239ef58ddbcacb4dde85d5023930ee270**. All phase acceptance gates have independent CI evidence.
 
 ## Governance and provenance
 
-- ACTIVE claim CLM-P032-001, epoch 1, owner gpt-5-6-sol; branch agent/gpt-5-6-sol/p032-t032-1.
+- ACCEPTED claim CLM-P032-001, epoch 1, owner gpt-5-6-sol; branch agent/gpt-5-6-sol/p032-t032-1.
 - Original base main: 4d1dfb314fef2f64bf5e89c67f6060c8d897d899.
 - The P028 pcms.ui-client/v1 protocol was accepted at 401fa524225b35c45eaf239112974c27492d3bbc.
 - P029 merged in PR #41 at 28651a46b1a0f37a56cbe4c327eea81e9bcc7c97.
@@ -55,6 +55,12 @@ State: **COMMITTED; focused CI PASS at prior implementation checkpoint; final CI
 - The old A032-02 blocker was confirmed: second/reopened tabs saw no receipts from the first tab using the P028-only response protocol. Its root cause is addressed by the amended claim and Core read-only receipt-list facade, not by UI-owned state or raw storage access.
 - Hosted pinned Firefox CI is distinct from final provider-live testing, reserved for P043/P044. No successor phase is started.
 
-## Pending integration steps
+## Final integration and acceptance evidence
 
-Wait for full verify and pinned Firefox CI at the final head. Record exact SHA/run IDs in the PR; verify current claim epoch, write scope, absence of unauthorized changes and accepted contract compatibility. Only then mark PR #42 ready for merge. Once merged, update P032 claim and plan acceptance bookkeeping under serialized governance. A green test or open PR alone does not mean P032 is ACCEPTED.
+- Final P032 PR head: d28affccad9b30a5fa94c815cc4ce0fb7096f7c1.
+- Native P032 tests and repository verification: [verify run 37706520958](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37706520958), **PASS**.
+- Exact pinned Firefox Developer Edition: [run 37706521058](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37706521058), **PASS**, including isolated A032-02 packaged two-tab, all-tabs-closed/background-unload/reopen receipt visibility proof, and inherited P027/P029/P030 packaged probes.
+- Earlier shared-run navigation failures affected a later packaged probe. Isolating the new P032 packaged test onto a separate runner restored the P027/P029/P030 job sequence. No P029 runtime sources were changed.
+- Scope audit: epoch 1 ACTIVE at integration, 20 modified paths within P032 claim ownership, branch zero behind main, no migrations or successor implementation.
+- [PR #42](https://github.com/Neb963/persona-monkey-pcms/pull/42) merged with exact expected head at 76ac9e7239ef58ddbcacb4dde85d5023930ee270.
+- This governance update transitions the claim and plan to ACCEPTED and regenerates status/roadmap views; no runtime changes.
