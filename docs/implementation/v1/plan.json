@@ -1503,11 +1503,22 @@
           "extension/pcms/app/ui/picker/**",
           "pcms-modules/p014/**",
           "tests/pcms/p034/**",
-          "docs/evidence/P034/**"
+          "docs/evidence/P034/**",
+          "extension/pcms/app/app.js",
+          "extension/pcms/app/index.html",
+          "extension/pcms/app/app.css",
+          "extension/pcms/integration/composition.js",
+          "package.json",
+          ".github/workflows/firefox.yml"
         ],
         "contractReads": [],
         "contractWrites": [],
-        "resources": [],
+        "resources": [
+          {
+            "key": "ci-workflows",
+            "mode": "exclusive"
+          }
+        ],
         "migrationSlots": []
       },
       "tasks": [
