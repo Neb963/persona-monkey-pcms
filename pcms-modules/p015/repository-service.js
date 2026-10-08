@@ -46,6 +46,10 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
     const changed=!sameConfig(current.value.config,normalized)||current.value.defaultListing!==defaultListing;
     const next={...current.value,config:normalized,defaultListing,
       identityEpoch:current.value.identityEpoch+(changedIdentity?1:0),
+      // Account-folder names have meaning only inside a repository identity.
+      // Switching owner/repo/root must never inherit bindings from the old one.
+      links:changedIdentity?{}:current.value.links,
+      needsApply:changed?false:current.value.needsApply,
       snapshot:changed?null:current.value.snapshot,lastCheckedAt:changed?null:current.value.lastCheckedAt,
       lastFailure:null};
     return cas(current,next);
@@ -71,7 +75,7 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
     if(!current.value.config)fail(REPO_ERRORS.NOT_FOUND);
     if(current.value.scan!==null)return Object.freeze({alreadyRunning:true,scan:current.value.scan});
     const scanSequence=current.value.scanSequence+1;
-    const scan={scanId:scanSequence,step:"RESOLVE",commitId:null,cursor:0,items:[],problems:[],applied:0};
+    const scan={scanId:scanSequence,step:"RESOLVE",commitId:null,cursor:0,items:[],problems:[],applied:0,deferred:false};
     await cas(current,{...current.value,scanSequence,scan,lastFailure:null});
     return Object.freeze({alreadyRunning:false,scan});
   }
@@ -173,16 +177,18 @@ export function createDeployerRepositoryService({stateStore,ledgerStore,reposito
         const remaining=state.snapshot?.items??[];
         let cursor=scan.applied;
         for(let n=0;n<batchSize&&cursor<remaining.length;n++,cursor++){
-          await applyOne(state,remaining[cursor]);
-          // Checkpoint each idempotent local command; a torn result is safe to retry.
+          const outcome=await applyOne(state,remaining[cursor]);
+          // BUSY never discards a newer repository intent. A future unchanged-ref
+          // scan will retry these local preparations after reconciliation.
           current=await read();state=current.value;
           if(state.scan?.scanId!==scan.scanId||state.scan.step!=="APPLY")fail(REPO_ERRORS.PROTOCOL);
-          await cas(current,{...state,scan:{...state.scan,applied:cursor+1}});
+          await cas(current,{...state,scan:{...state.scan,applied:cursor+1,
+            deferred:state.scan.deferred===true||outcome==="QUEUED"}});
         }
         current=await read();state=current.value;
         if(state.scan?.scanId!==scan.scanId)fail(REPO_ERRORS.PROTOCOL);
         if(state.scan.applied===(state.snapshot?.items.length??0)){
-          await cas(current,{...state,scan:null,needsApply:false});
+          await cas(current,{...state,scan:null,needsApply:state.scan.deferred===true});
           return Object.freeze({done:true,status:"SUCCESS",snapshot:state.snapshot});
         }
       }else fail(REPO_ERRORS.PROTOCOL);
