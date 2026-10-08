@@ -291,13 +291,13 @@ Merge wave: 14
 - [ ] T031.3 — T031.3 Live update/disable/enable/rollback/remove/purge and packaged end-to-end proof
 
 ## P032 — PCMS dashboard shell v2 as UI client
-Status: **CLAIMED**  
+Status: **ACCEPTED**  
 Depends on: P028  
 Merge wave: 13
 
-- [ ] T032.1 — T032.1 Shell, tokens, primitives, router v2 with legacy routes
-- [ ] T032.2 — T032.2 Core status, durable receipts and Attention v2 over durable HumanTasks
-- [ ] T032.3 — T032.3 Diagnostics page and multi-tab behaviour
+- [x] T032.1 — T032.1 Shell, tokens, primitives, router v2 with legacy routes
+- [x] T032.2 — T032.2 Core status, durable receipts and Attention v2 over durable HumanTasks
+- [x] T032.3 — T032.3 Diagnostics page and multi-tab behaviour
 
 ## P033 — Module UI contribution contract v1 for built-in and runtime modules
 Status: **BLOCKED**  
