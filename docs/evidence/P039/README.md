@@ -1,14 +1,12 @@
 # P039 — Perchance observation, verification and drift
 
-Claim `CLM-P039-001`, epoch 1, remains **ACTIVE**. Phase remains **IN_PROGRESS**.
-Implementation is locally **COMMITTED**; independent CI, integration verification,
-product PR, merge and acceptance remain pending.
-
-Claim acquisition: [PR #65](https://github.com/Neb963/persona-monkey-pcms/pull/65),
-merged as `6a9f9f43ddf6289ec1e902b4317b4f350911d72b`. P038 is accepted and there
-is no conflicting active claim. Final source checkpoint:
-`9996f36ad60f0ead25bc9026613a19e624573cf6`. Last published checkpoint:
-`bc1dbc5514993407060f6629ae5e52ab051be707`.
+P039 is **ACCEPTED** after independent PR and merged-main verification. Claim
+`CLM-P039-001`, epoch 1, owns A039-01/02/03. Product [PR #66](https://github.com/Neb963/persona-monkey-pcms/pull/66)
+merged as `4d2d4a2a40bfea8cd6b11874c3a35c00102ba455`; the delayed-alarm regression
+[PR #67](https://github.com/Neb963/persona-monkey-pcms/pull/67) merged as
+`29f2fcec3a19a661abf871d779e57634650dfba1`. Production Perchance observation
+remains disabled until final live compatibility acceptance. No successor phase
+has been started.
 
 ## Implemented scope
 
@@ -60,35 +58,62 @@ is no conflicting active claim. Final source checkpoint:
   `packaged-local-diagnostic.json`. The product XPI digest is
   `a9bf90b68126cfb0973eb38b301c94556ddd730ba6fb643264a8093996f356e3`.
 
-The container cannot launch Firefox content processes with their normal namespace
-sandbox (`uid_map: EPERM`). The successful local browser diagnostic used
-`MOZ_DISABLE_CONTENT_SANDBOX=1`; its report marks this explicitly. It does **not**
-establish independent sandbox-enabled FDE/PKG acceptance. The committed Actions
-job rejects that override and must pass before CI verification or acceptance.
 
-The packaged test uses a fresh disposable profile, a startup rejecting proxy and
-a parent HTTP observer allowing only its exact loopback fixture origin. This
-prevents Firefox startup services and PersonaMonkey catalog refreshes from making
-external HTTP requests. Optional userscript permission is granted only to this
-test profile; add-on disable/enable reinitializes the signal listener while keeping
-the HTTP observer active. Product files are copied byte-for-byte from the built
-XPI into the separate test add-on; reads use the real installed PersonaMonkey.
+## Independent evidence
 
-## Publication and remaining gates
+- Product head `60dda591709c963aea2b38623de586c8e66eaff5`, integration candidate
+  `cee02bb32090b0b7cb46b0eaf16eb1b98158f9ae`: [repository verification](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37809086388)
+  and [pinned Firefox](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37809086414)
+  SUCCESS; all ten Firefox jobs passed.
+- Final test head `c91f8961e9af0d1359a487d016813e91b94a42af`, integration candidate
+  `f2816d6412815b035ea97bfacc1a7228103200ad`: [repository verification](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37810887281)
+  and [pinned Firefox](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37810887573)
+  SUCCESS; all ten Firefox jobs passed, including the deliberately delayed alarm.
+- Final merged-main SHA `29f2fcec3a19a661abf871d779e57634650dfba1`:
+  [repository verification](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37811636044)
+  and [pinned Firefox](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37811636104)
+  SUCCESS; all ten Firefox jobs passed.
 
-Automatic approval review rejected both checkpoint push attempts as publication
-to a public GitHub repository without recognized end-user authorization, including
-the retry after checking the exact repository, account push permission, branch,
-claim epoch and ownership of every changed path. No alternative upload or ref
-update was used. New checkpoints are local and have not been published.
+Machine-readable evidence separates COMMITTED, CI_VERIFIED, INTEGRATION_VERIFIED,
+MERGED and ACCEPTED and records exact source SHAs, run/job IDs, artifacts and
+browser reports. Firefox Developer Edition is exactly **154.0b10**, archive SHA-256
+`681913108bba655d7ec6fadfac2731141b23e48dca88d1988a4d95a6bdaff164`. The product
+XPI SHA-256 remains `a9bf90b68126cfb0973eb38b301c94556ddd730ba6fb643264a8093996f356e3`.
+Hosted browser reports use the normal content sandbox and clean Actions checkouts.
 
-`local-verification.json` records the local evidence and pending states.
-`pr-description.md` contains the prepared product PR description. After publishing
-is authorized, re-fetch main and revalidate the active claim/epoch; publish a
-non-skip-CI evidence head, open the product PR, verify required independent
-repository and pinned Firefox jobs on the actual candidate, merge only when green,
-then verify merged-main CI and record MERGED/ACCEPTED separately. Never mark an
-unexecuted gate as PASS.
+## Timing regression
 
-Real Perchance compatibility remains disabled until final live acceptance captures
-and validates it. P042 and successor phases have not been started.
+The initial merged-main [Firefox run](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37809824252)
+failed its strict zero-tab assertion: inspection opened at the nominal deadline
+plus 12.5 seconds, while a delayed alarm's second read began just afterward. The
+failed report is retained. This was corrected in a separate reviewed test commit.
+The fixture now emits a content-free loopback receipt only after the timer handler
+and durable challenge writes settle. Inspection waits for that receipt. Every
+alarm handoff deliberately waits three seconds to exercise the timing case; the
+strict read/start timing, ten-second spacing, drift, challenge and hash-only
+assertions remain enforced. The receipt endpoint and exact loopback host permission
+belong only to the separate fixture add-on. Product source and XPI are unchanged.
+
+## Scope and verification limits
+
+The historical local browser report used `MOZ_DISABLE_CONTENT_SANDBOX=1` because
+the container could not create content namespaces. It is retained as a local
+diagnostic, and does not establish independent browser acceptance. The Actions
+job rejects that override; independent hosted reports establish the browser gates.
+
+Publication used the authorized connected GitHub Git Data API because local Git
+push had no HTTPS credentials. All seven checkpoint trees and the timing fix tree
+were checked against their local Git object hashes. The original local commits are
+preserved, and publication mappings record their corresponding durable GitHub
+commits. Existing branch history was advanced without force.
+
+The packaged fixture uses a fresh disposable profile, a startup rejecting proxy
+and a parent HTTP observer allowing only its exact loopback origin. Product files
+are copied byte-for-byte from the built XPI into the separate test add-on; provider
+reads use the real installed PersonaMonkey broker and execution artifacts. This is
+deterministic hosted browser evidence. Real provider compatibility remains gated
+for the final live phases.
+
+`independent-ci.json` is the acceptance ledger. The three successful hosted reports,
+the initial failed merged-main report and `api-publication.json` preserve the exact
+source/run/artifact provenance. The claim and generated roadmap/status are ACCEPTED.
