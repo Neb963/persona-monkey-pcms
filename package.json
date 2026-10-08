@@ -17,7 +17,7 @@
     "test:upstream-integrity": "node --test tests/upstream/import-integrity.test.mjs",
     "test:upstream-baseline": "node tests/upstream/run-baseline.mjs",
     "verify:upstream": "npm run test:upstream-integrity && npm run test:upstream-baseline",
-    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims && npm run test:p032 && npm run test:firefox && npm run verify:upstream",
+    "verify": "npm run verify:repo && npm run verify:views && npm run verify:claims && npm run test:p032 && npm run test:firefox && npm run verify:upstream && npm run test:p034",
     "firefox:packaged": "node scripts/build-extension.mjs && node tools/firefox/packaged.mjs",
     "test:p027": "node --test tests/pcms/p027/*.test.mjs",
     "test:p028": "node --test tests/pcms/p028/*.test.mjs",
@@ -26,6 +26,8 @@
     "test:p029": "node --test tests/pcms/p029/*.test.mjs",
     "firefox:packaged:p029": "node scripts/build-extension.mjs && node tests/pcms/p029/packaged.mjs",
     "test:p032": "node --test tests/pcms/p032/*.test.mjs",
-    "firefox:packaged:p032": "node scripts/build-extension.mjs && node tests/pcms/p032/packaged.mjs"
+    "firefox:packaged:p032": "node scripts/build-extension.mjs && node tests/pcms/p032/packaged.mjs",
+    "test:p034": "node --test tests/pcms/p034/*.test.mjs",
+    "firefox:packaged:p034": "node scripts/build-extension.mjs && node tests/pcms/p034/packaged.mjs"
   }
 }

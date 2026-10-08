@@ -89,9 +89,10 @@ function normalizePersonaSnapshot(raw, expectedPersonaUid, {requireContainer=fal
   return Object.freeze({personaUid,cookieStoreId});
 }
 
-export function createAccountsService({ stateStore, personaResolver, clock = () => new Date().toISOString() } = {}) {
+export function createAccountsService({ stateStore, personaResolver, operationInspector = null, clock = () => new Date().toISOString() } = {}) {
   const store=snapshotMethods(stateStore,["read","compareAndSwap"],"Accounts state store");
   const personas=snapshotMethods(personaResolver,["get"],"Accounts Persona resolver");
+  const inspector=operationInspector===null?null:snapshotMethods(operationInspector,["assertSafeRebind"],"Accounts operation inspector");
   if(typeof clock !== "function") throw new TypeError("Accounts clock must be a function");
 
   async function read() {
@@ -187,7 +188,11 @@ export function createAccountsService({ stateStore, personaResolver, clock = () 
       return Object.freeze({revision:current.revision,changed:false,account});
     }
     if(current.value.accounts.some((item,index2)=>index2!==index && item.personaUid===targetUid)) fail(ACCOUNTS_ERROR_CODES.PERSONA_CONFLICT);
+    // Reject rebind before and after the asynchronous Persona lookup.
+    // OperationInspector reads Core RemoteOps; the UI is never the safety authority.
+    if(inspector) await inspector.assertSafeRebind(accountId);
     await requirePersona(targetUid);
+    if(inspector) await inspector.assertSafeRebind(accountId);
     const next={
       ...account,
       personaUid:targetUid,
