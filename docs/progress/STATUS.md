@@ -3,7 +3,7 @@
 > Generated from docs/implementation/v1/plan.json. Do not hand-edit.
 
 - Baseline: **v1**
-- Accepted: **P000, P001, P002, P003, P004, P005, P006, P007, P008, P009, P010, P011, P012, P013, P014, P015, P016, P017, P018, P019, P020, P021, P022, P023, P024, P025, P026, P027, P028, P030, P032**
+- Accepted: **P000, P001, P002, P003, P004, P005, P006, P007, P008, P009, P010, P011, P012, P013, P014, P015, P016, P017, P018, P019, P020, P021, P022, P023, P024, P025, P026, P027, P028, P029, P030, P032**
 - Ready: **none**
 - Claimed/In progress: **P034, P035**
 - Final live phases: **P043, P044**

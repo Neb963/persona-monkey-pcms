@@ -45,3 +45,15 @@ An earlier same-head-family duplicate push run exposed a harness race: querying 
 - Work remains confined to the P029 claim plus its explicitly claimed background/CI/governance paths.
 - P029 is **PR_OPEN / CI_VERIFIED / INTEGRATION_VERIFIED** by deterministic packaged Firefox evidence. It is **not MERGED or ACCEPTED**; those states require their own repository transitions and merged-main verification.
 - No successor phase is started.
+
+## Merged-main verification and acceptance
+
+[PR #41](https://github.com/Neb963/persona-monkey-pcms/pull/41) was merged at the operator's request as
+`28651a46b1a0f37a56cbe4c327eea81e9bcc7c97`. That exact merged-main commit passed:
+
+- [verify 37698756404](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37698756404);
+- [firefox-developer-edition 37698756419](https://github.com/Neb963/persona-monkey-pcms/actions/runs/37698756419),
+  including the P029 unit and packaged XPI steps.
+
+**A029-01 PASS · A029-02 PASS · A029-03 PASS.** Phase P029 and claim CLM-P029-001, epoch 1, are **ACCEPTED** at the
+operator's instruction. This supersedes the "not MERGED or ACCEPTED" line above, which recorded the pre-merge state.
