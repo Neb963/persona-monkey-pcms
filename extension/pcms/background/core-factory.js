@@ -9,7 +9,7 @@ import { createCoreServiceRegistry } from "../services/registry.js";
 import { createTimerService } from "../services/timers.js";
 import { createSingletonStateStore } from "../integration/adapters.js";
 import {createDeployerRepositorySync,REPOSITORY_SYNC_SERVICE,REPOSITORY_SYNC_OWNER,REPOSITORY_SYNC_GENERATION}
-  from "/pcms-modules/p015/repository-sync.js";
+  from "../../../pcms-modules/p015/repository-sync.js";
 import { createAccountProviderGateResolver } from "../integration/adapters.js";
 import { createPcmsBundledModuleLoader } from "../integration/bundled-modules.js";
 import { PCMS_UI_PUBLISH_CAPABILITY, createPcmsUiContributionHost } from "../integration/ui-contributions.js";
